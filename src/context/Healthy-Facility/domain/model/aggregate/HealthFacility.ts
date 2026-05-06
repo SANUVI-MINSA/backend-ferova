@@ -101,7 +101,10 @@ export class HealthFacility {
                 this.operatingSchedule.toPrimitives(),
             scheduleOfOperation:
             this.scheduleOfOperation,
-            status: this.status
+            status: this.status,
+            nurseAssignments: this.nurseAssignments.map(
+                assignment => assignment.toPrimitives()
+            )
         };
     }
 }
