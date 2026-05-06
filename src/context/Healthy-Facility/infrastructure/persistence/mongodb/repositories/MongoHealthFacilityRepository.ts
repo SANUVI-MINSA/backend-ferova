@@ -68,13 +68,12 @@ export class MongoHealthFacilityRepository implements HealthyFacilityRepository 
             .toDomain(createdFacility);
     }
 
-    /**
     async update(
         facility: HealthFacility
     ): Promise<void> {
 
         const data =
-            HealthFacilityMapper
+            HealthyFacilityMapper
                 .toPersistence(facility);
 
         await HealthFacilityModel.updateOne(
@@ -84,6 +83,4 @@ export class MongoHealthFacilityRepository implements HealthyFacilityRepository 
             data
         );
     }
-     **/
-
 }
