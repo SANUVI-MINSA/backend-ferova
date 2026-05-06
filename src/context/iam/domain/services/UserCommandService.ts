@@ -3,6 +3,7 @@ import {CreateStaffUserCommand} from "../model/commands/CreateStaffUserCommand";
 import {LoginUserCommand} from "../model/commands/LoginUserCommand";
 import {RequestResetCodeCommand} from "../model/commands/RequestResetCodeCommand ";
 import {ResetPasswordCommand} from "../model/commands/ResetPasswordCommand";
+import {VerifyResetCodeCommand} from "../model/commands/VerifyResetCodeCommand";
 
 export interface UserCommandService {
 
@@ -24,5 +25,9 @@ export interface UserCommandService {
 
     resetPassword(
         command: ResetPasswordCommand
+    ): Promise<void>;
+
+    verifyResetCode(
+        command: VerifyResetCodeCommand
     ): Promise<void>;
 }
