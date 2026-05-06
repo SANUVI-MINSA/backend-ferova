@@ -1,4 +1,4 @@
-import {GoogleMapsAdapter} from "../../application/outbound-services/GoogleMapsAdapter";
+import {GoogleMapsAdapter} from "../../application/internal/outbound-services/GoogleMapsAdapter";
 
 export class GoogleMapsService
     implements GoogleMapsAdapter {
