@@ -41,4 +41,12 @@ export class UserFacade {
             data
         );
     }
+
+    async verifyResetCode(
+        data: any
+    ): Promise<void> {
+        await this.commandService.verifyResetCode(
+            data
+        );
+    }
 }
