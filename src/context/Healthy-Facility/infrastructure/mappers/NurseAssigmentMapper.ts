@@ -1,4 +1,4 @@
-import {NurseAssignment} from "../../../../domain/model/entities/NurseAssignment";
+import {NurseAssignment} from "../../domain/model/entities/NurseAssignment";
 
 export class NurseAssigmentMapper {
     static toDomain(document: any): NurseAssignment {

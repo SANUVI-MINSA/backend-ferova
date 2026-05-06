@@ -1,8 +1,8 @@
-import {HealthFacility} from "../../../../domain/model/aggregate/HealthFacility";
-import {Coordinates} from "../../../../domain/model/value-object/Coordinates";
-import {OperatingSchedule} from "../../../../domain/model/value-object/OperatingSchedule";
-import {FacilityStatus} from "../../../../domain/model/value-object/FacilityStatus";
-import {NurseAssignment} from "../../../../domain/model/entities/NurseAssignment";
+import {HealthFacility} from "../../domain/model/aggregate/HealthFacility";
+import {Coordinates} from "../../domain/model/value-object/Coordinates";
+import {OperatingSchedule} from "../../domain/model/value-object/OperatingSchedule";
+import {FacilityStatus} from "../../domain/model/value-object/FacilityStatus";
+import {NurseAssignment} from "../../domain/model/entities/NurseAssignment";
 
 export class HealthyFacilityMapper {
 

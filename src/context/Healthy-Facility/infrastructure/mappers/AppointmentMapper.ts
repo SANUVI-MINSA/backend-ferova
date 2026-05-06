@@ -1,4 +1,4 @@
-import {Appointment} from "../../../../domain/model/entities/Appointment";
+import {Appointment} from "../../domain/model/entities/Appointment";
 
 export class AppointmentMapper {
     static toDomain(document: any): Appointment {
