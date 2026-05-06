@@ -62,10 +62,15 @@ export class User {
             id: this.id.getValue(),
             name: this.name,
             lastname: this.lastname,
+            password: this.password,
             role: this.role,
             dni: this.dni.getValue(),
             email: this.email.getValue(),
             phone: this.phone.getValue()
         };
+    }
+
+    public getPassword(): Password {
+        return this.password;
     }
 }
