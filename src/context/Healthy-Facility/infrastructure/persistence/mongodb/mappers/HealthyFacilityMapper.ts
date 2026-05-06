@@ -37,6 +37,8 @@ export class HealthyFacilityMapper {
             document.scheduleOfOperation,
 
             document.status as FacilityStatus,
+
+            // Mapeo de asignaciones de enfermería si existen, de lo contrario se asigna un array vacío
             document.nurseAssignments?.map(
                 (assignment: any) =>
                     new NurseAssignment(
