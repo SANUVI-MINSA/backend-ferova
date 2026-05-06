@@ -139,6 +139,25 @@ export class UserController {
         }
     };
 
+    verifyCode = async(
+        req: Request,
+        res: Response
+    )=> {
+        try {
+            await this.userFacade.verifyResetCode(
+                req.body
+            );
+
+            res.status(200).json({
+                message: "Code verified successfully"
+            });
+        } catch (error: any) {
+            res.status(400).json({
+                error: error.message
+                }
+            )
+        }
+    }
 
 
 }
