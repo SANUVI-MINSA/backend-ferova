@@ -1,3 +1,3 @@
-export type cancelAppointmentCommand = Readonly<{
+export type CancelAppointmentCommand = Readonly<{
     appointmentId: string;
 }>
