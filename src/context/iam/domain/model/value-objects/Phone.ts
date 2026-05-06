@@ -22,6 +22,17 @@ export class Phone {
         return phone.replace(/\D/g, "");
     }
 
+    public static fromPersistence(
+        phone: string
+    ): Phone {
+        const instance =
+            Object.create(Phone.prototype);
+
+        instance.value = phone;
+
+        return instance;
+    }
+
     public getValue(): string {
         return this.value;
     }
