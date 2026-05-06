@@ -8,7 +8,8 @@ export class Appointment {
         private readonly patientId: string,
         private readonly motherId: string,
         private nurseId: string | null,
-        private readonly date: Date,
+        private readonly appointmentDate: string,
+        private readonly appointmentTime: string,
         private status: AppointmentStatus
     ) {
         this.validate();
@@ -34,9 +35,15 @@ export class Appointment {
             );
         }
 
-        if (!(this.date instanceof Date)) {
+        if (!this.appointmentDate?.trim()) {
             throw new Error(
-                "Valid appointment date is required"
+                "Appointment date is required"
+            );
+        }
+
+        if (!this.appointmentTime?.trim()) {
+            throw new Error(
+                "Appointment time is required"
             );
         }
     }
@@ -94,8 +101,12 @@ export class Appointment {
         return this.nurseId;
     }
 
-    public getDate(): Date {
-        return this.date;
+    public getAppointmentDate(): string {
+        return this.appointmentDate;
+    }
+
+    public getAppointmentTime(): string {
+        return this.appointmentTime;
     }
 
     public getStatus(): AppointmentStatus {
@@ -109,7 +120,8 @@ export class Appointment {
             patientId: this.patientId,
             motherId: this.motherId,
             nurseId: this.nurseId,
-            date: this.date,
+            appointmentDate: this.appointmentDate,
+            appointmentTime: this.appointmentTime,
             status: this.status
         };
     }
