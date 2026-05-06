@@ -1,7 +1,16 @@
 import app from "./app";
 import { env } from "./src/shared/infrastructure/config/env";
+import {MongoConnection} from "./src/shared/infrastructure/persitence/mongodb/MongoConnection";
 
-app.listen(env.port, () => {
-    console.log(`Server running on port ${env.port}`);
-    console.log(`Swagger docs: http://localhost:${env.port}/api-docs`);
-});
+async function startServer() {
+    await MongoConnection.connect();
+
+    app.listen(env.port, () => {
+        console.log(`Server running on ${env.port}`);
+        console.log(
+            `Swagger docs: http://localhost:${env.port}/api-docs`
+        );
+    });
+}
+
+startServer();
