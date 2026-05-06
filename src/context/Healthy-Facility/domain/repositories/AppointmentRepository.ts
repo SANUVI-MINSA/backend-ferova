@@ -13,11 +13,10 @@ export interface AppointmentRepository{
      * Finds an appointment by its ID.
      * @param id
      */
-    /**
+
     findById(
         id: string
     ): Promise<Appointment | null>;
-    **/
 
     /**
      * Finds an PatientId
