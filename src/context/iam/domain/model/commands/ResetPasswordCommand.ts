@@ -1,5 +1,5 @@
 export type ResetPasswordCommand = Readonly<{
     email: string;
-    token: string;
+    code: string;
     newPassword: string;
 }>;

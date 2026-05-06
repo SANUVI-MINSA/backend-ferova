@@ -1,4 +1,4 @@
 export type LoginUserCommand = Readonly<{
-    email: string;
+    dni: string;
     password: string;
 }>;
