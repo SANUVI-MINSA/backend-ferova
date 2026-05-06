@@ -1,7 +1,9 @@
 export class Dni {
 
+    private readonly value: string;
+
     constructor(
-        private readonly value: string
+        value: string
     ) {
         if (!value) {
             throw new Error("DNI is required");
@@ -14,6 +16,8 @@ export class Dni {
                 "DNI must contain exactly 8 numeric digits"
             );
         }
+
+        this.value = value;
     }
 
     public getValue(): string {
