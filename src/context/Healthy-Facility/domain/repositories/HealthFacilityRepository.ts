@@ -31,11 +31,12 @@ export interface HealthyFacilityRepository {
     /**
      * Updates the health facility in the repository.
      * @param facility
+     *
      */
-    /**
+
      update(
      facility: HealthFacility
      ): Promise<void>
-     **/
+
 
 }
