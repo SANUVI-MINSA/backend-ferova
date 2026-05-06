@@ -8,7 +8,8 @@ export class AppointmentMapper {
             document.patientId,
             document.motherId,
             document.nurseId,
-            document.date,
+            document.appointmentDate,
+            document.apointmentTime,
             document.status
         )
     }
@@ -22,7 +23,8 @@ export class AppointmentMapper {
             patientId: data.patientId,
             motherId: data.motherId,
             nurseId: data.nurseId,
-            date: data.date,
+            appointmentDate: data.appointmentDate,
+            appointmentTime: data.appointmentTime,
             status: data.status
         }
     }
