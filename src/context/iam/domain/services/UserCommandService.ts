@@ -1,7 +1,7 @@
 import {RegisterMotherCommand} from "../model/commands/RegisterMotherCommand";
 import {CreateStaffUserCommand} from "../model/commands/CreateStaffUserCommand";
 import {LoginUserCommand} from "../model/commands/LoginUserCommand";
-import {RequestPasswordResetCommand} from "../model/commands/RequestPasswordResetCommand";
+import {RequestResetCodeCommand} from "../model/commands/RequestResetCodeCommand ";
 import {ResetPasswordCommand} from "../model/commands/ResetPasswordCommand";
 
 export interface UserCommandService {
@@ -18,8 +18,8 @@ export interface UserCommandService {
         command: LoginUserCommand
     ): Promise<string>;
 
-    requestPasswordReset(
-        command: RequestPasswordResetCommand
+    requestResetCode(
+        command: RequestResetCodeCommand
     ): Promise<void>;
 
     resetPassword(
