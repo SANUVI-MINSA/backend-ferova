@@ -29,40 +29,6 @@ export class HealthFacilityCommandServiceImpl
         NurseAssignmentRepository
     ) {}
 
-    async registerHealthFacility(
-        command: RegisterHealthFacilityCommand
-    ): Promise<void> {
-
-        const facility =
-            new HealthFacility(
-                randomUUID(),
-                command.name,
-                command.address,
-                command.districtId,
-                command.districtName,
-
-                new Coordinates(
-                    command.latitude,
-                    command.longitude
-                ),
-
-                command.phoneNumber,
-                command.services,
-
-                new OperatingSchedule(
-                    command.availableDays,
-                    command.availableSlots
-                ),
-
-                command.scheduleOfOperation,
-                FacilityStatus.ACTIVE,
-                []
-            );
-
-        await this.healthFacilityRepository
-            .save(facility);
-    }
-
     async assignNurseToFacility(
         command: AssignNurseToFacilityCommand
     ): Promise<void> {
@@ -151,7 +117,34 @@ export class HealthFacilityCommandServiceImpl
             .update(appointment);
     }
 
-    registerFacility(command: RegisterHealthFacilityCommand): Promise<void> {
-        return Promise.resolve(undefined);
+    async registerFacility(command: RegisterHealthFacilityCommand): Promise<void> {
+        const facility =
+            new HealthFacility(
+                randomUUID(),
+                command.name,
+                command.address,
+                command.districtId,
+                command.districtName,
+
+                new Coordinates(
+                    command.latitude,
+                    command.longitude
+                ),
+
+                command.phoneNumber,
+                command.services,
+
+                new OperatingSchedule(
+                    command.availableDays,
+                    command.availableSlots
+                ),
+
+                command.scheduleOfOperation,
+                FacilityStatus.ACTIVE,
+                []
+            );
+
+        await this.healthFacilityRepository
+            .save(facility);
     }
 }
