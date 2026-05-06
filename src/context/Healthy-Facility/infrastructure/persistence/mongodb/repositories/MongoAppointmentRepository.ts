@@ -66,4 +66,22 @@ export class MongoAppointmentRepository implements AppointmentRepository {
         )
     }
 
+    async findById(
+        id: string
+    ): Promise<Appointment | null> {
+
+        const appointment =
+            await AppointmentModel.findOne({
+                id
+            });
+
+        if (!appointment) {
+            return null;
+        }
+
+        return AppointmentMapper
+            .toDomain(appointment);
+    }
+
+
 }
