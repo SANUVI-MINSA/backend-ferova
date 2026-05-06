@@ -54,28 +54,19 @@ router.post(
  *             properties:
  *               name:
  *                 type: string
- *                 example: Carlos
  *               lastname:
  *                 type: string
- *                 example: Perez
  *               dni:
  *                 type: string
- *                 example: "87654321"
  *               email:
  *                 type: string
- *                 example: vitalybaca92@gmail.com
  *               phone:
  *                 type: string
- *                 example: "+51 912345678"
  *               password:
  *                 type: string
- *                 example: Admin123@
  *               role:
  *                 type: string
- *                 enum:
- *                   - Nurse
- *                   - Admin
- *                 example: Nurse
+ *                 example: "Admin/Nurse"
  *     responses:
  *       201:
  *         description: Staff user registered successfully
@@ -194,4 +185,34 @@ router.post(
     userController.resetPassword
 );
 
+/**
+ * @swagger
+ * /api/users/password/verify-code:
+ *   post:
+ *     summary: Verify password reset code
+ *     tags:
+ *       - Users
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: "string"
+ *               code:
+ *                 type: string
+ *                 example: "string"
+ *     responses:
+ *       200:
+ *         description: Code verified successfully
+ *       400:
+ *         description: Invalid or expired code
+ */
+router.post(
+    "/password/verify-code",
+    userController.verifyCode
+)
 export default router;
