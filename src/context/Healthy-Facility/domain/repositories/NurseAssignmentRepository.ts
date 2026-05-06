@@ -15,7 +15,7 @@ export interface NurseAssignmentRepository{
      */
     findByFacilityId(
         facilityId: string
-    ): Promise<NurseAssignment[] | null>
+    ): Promise<NurseAssignment[]>
 
     /**
      * Finds all nurse assignments by nurse id.
@@ -23,7 +23,7 @@ export interface NurseAssignmentRepository{
      */
     findByNurseId(
         nurseId: string
-    ): Promise<NurseAssignment[] | null>
+    ): Promise<NurseAssignment | null>
 
 
 }
