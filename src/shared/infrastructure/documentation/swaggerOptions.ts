@@ -10,13 +10,13 @@ const swaggerOptions: Options = {
         },
         servers: [
             {
-                url: "http://localhost:3000/api",
+                url: "http://localhost:3000",
                 description: "Local server"
             }
         ]
     },
     apis: [
-        "./src/contexts/**/*.ts"
+        "src/context/**/interfaces/routes/**.ts",
     ]
 };
 
