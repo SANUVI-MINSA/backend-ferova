@@ -16,6 +16,7 @@ import {LoginUserCommand} from "../../../domain/model/commands/LoginUserCommand"
 import {RequestResetCodeCommand} from "../../../domain/model/commands/RequestResetCodeCommand ";
 import {EmailService} from "../outbound-services/EmailService";
 import { ResetPasswordCommand } from "../../../domain/model/commands/ResetPasswordCommand";
+import { VerifyResetCodeCommand } from "../../../domain/model/commands/VerifyResetCodeCommand";
 
 
 export class UserCommandServiceImpl implements UserCommandService {
@@ -164,18 +165,6 @@ export class UserCommandServiceImpl implements UserCommandService {
 
         const email = new Email(command.email);
 
-        const isValid =
-            await this.userRepository.validateResetCode(
-                email,
-                command.code
-            );
-
-        if (!isValid) {
-            throw new Error(
-                "Invalid or expired code"
-            );
-        }
-
         const hashedPassword =
             await this.bcryptService.hash(
                 command.newPassword
@@ -189,5 +178,20 @@ export class UserCommandServiceImpl implements UserCommandService {
         await this.userRepository.clearResetCode(
             email
         );
+    }
+
+    async verifyResetCode(command: VerifyResetCodeCommand): Promise<void> {
+        const email = new Email(command.email);
+
+        const isValid =
+            await this.userRepository.validateResetCode(
+                email,
+                command.code);
+
+        if(!isValid) {
+            throw new Error(
+                "Invalid or expired code"
+            )
+        }
     }
 }
