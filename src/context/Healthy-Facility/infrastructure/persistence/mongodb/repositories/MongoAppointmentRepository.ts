@@ -119,27 +119,54 @@ export class MongoAppointmentRepository implements AppointmentRepository {
         );
     }
 
+    /**
+     * Encuentra la próxima cita confirmada y futura para una madre.
+     *
+     * @description
+     * Reglas de negocio:
+     * - Solo considera citas CONFIRMADAS
+     * - Solo considera citas con fecha posterior a hoy
+     * - Para citas de hoy, solo considera las que aún no han pasado (hora actual < hora de cita)
+     * - Retorna la cita más próxima (menor fecha y hora)
+     *
+     * @param motherId - ID de la madre
+     * @returns La próxima cita futura o null si no existe
+     */
     async findNextAppointmentByMotherId(
         motherId: string
     ): Promise<Appointment | null> {
 
-        const appointment =
-            await AppointmentModel
-                .findOne({
-                    motherId,
-                    status: "CONFIRMED"
-                })
-                .sort({
-                    appointmentDate: 1,
-                    appointmentTime: 1
-                });
+        // Obtener fecha y hora actual en formato ISO (YYYY-MM-DD y HH:MM)
+        const now = new Date();
+        const today = now.toISOString().split('T')[0]; // YYYY-MM-DD
+        const currentTime = now.toTimeString().slice(0, 5); // HH:MM
+
+        // Construir query compleja
+        const appointment = await AppointmentModel
+            .findOne({
+                motherId,
+                status: "CONFIRMED",
+                $or: [
+                    // Citas con fecha futura (cualquier hora)
+                    {
+                        appointmentDate: { $gt: today }
+                    },
+                    // Citas de hoy que aún no han pasado la hora
+                    {
+                        appointmentDate: today,
+                        appointmentTime: { $gt: currentTime }
+                    }
+                ]
+            })
+            .sort({
+                appointmentDate: 1,  // Ordenar por fecha ascendente
+                appointmentTime: 1   // Y por hora ascendente
+            });
 
         if (!appointment) {
             return null;
         }
 
-        return AppointmentMapper
-            .toDomain(appointment);
+        return AppointmentMapper.toDomain(appointment);
     }
-
 }
