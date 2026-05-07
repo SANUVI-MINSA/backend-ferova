@@ -1,4 +1,4 @@
-import {AnemiaStatus} from "../value-objects/AnemiStatus";
+import {AnemiaStatus} from "../enum/AnemiStatus";
 import {HemoglobinLevel} from "../value-objects/HemoglobinLevel";
 
 export class Control {
