@@ -1,6 +1,6 @@
 import app from "./app";
 import { env } from "./src/shared/infrastructure/config/env";
-import {MongoConnection} from "./src/shared/infrastructure/persitence/mongodb/MongoConnection";
+import {MongoConnection} from "./src/shared/infrastructure/persistence/mongodb/MongoConnection";
 
 async function startServer() {
     await MongoConnection.connect();
