@@ -18,7 +18,7 @@ export class Patient {
         private gender: Gender,
         private facilityId: string,
         private status: PatientStatus,
-        private medicalRecord: MedicalRecord // Asociación con MedicalRecord, Por que cada paciente tiene un historial médico asociado
+        private medicalRecord?: MedicalRecord | null // Asociación con MedicalRecord, Por que cada paciente tiene un historial médico asociado. Tambien puede ser null inicialmente, ya que el historial médico se crea después de registrar al paciente.
 ) {}
 
     private ensureMotherExists(): void {
@@ -89,8 +89,32 @@ export class Patient {
             status:
             this.status,
 
+            // MedicalRecord se convierte a un objeto primitivo utilizando su método toPrimitives() si existe, de lo contrario se asigna null.
+            //  Esto permite incluir la información del historial médico del paciente en la representación primitiva del
+            //  paciente, facilitando su uso en otras partes de la aplicación, como en la capa de infraestructura o en la presentación.
             medicalRecord:
-            this.medicalRecord.toPrimitives()
+                this.medicalRecord
+                    ? this.medicalRecord
+                        .toPrimitives()
+                    : null
         };
+    }
+
+    /**
+     * Metodo para crear el historial medico del paciente, se asegura de que el paciente no tenga un historial médico previo antes de asignar uno nuevo.
+     * @param medicalRecord
+     */
+    createMedicalRecord(
+        medicalRecord: MedicalRecord
+    ): void {
+
+        if (this.medicalRecord) {
+            throw new Error(
+                "Patient already has a medical record"
+            );
+        }
+
+        this.medicalRecord =
+            medicalRecord;
     }
 }
