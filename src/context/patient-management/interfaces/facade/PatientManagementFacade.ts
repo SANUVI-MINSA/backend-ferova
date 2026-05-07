@@ -14,6 +14,7 @@ import {GetMedicalRecordQuery} from "../../domain/model/queries/GetMedicalRecord
 import {ListPatientsByMotherQuery} from "../../domain/model/queries/ListPatientsByMotherQuery";
 import {SearchMotherByDniQuery} from "../../domain/model/queries/SearchMotherByDniQuery";
 import {GetPatientsAssignedToNurseQuery} from "../../domain/model/queries/GetPatientsAssignedToNurseQuery";
+import {GetHemoglobinEvolutionChartQuery} from "../../domain/model/commands/getHemoglobinEvolutionChart";
 
 export class PatientManagementFacade {
 
@@ -173,4 +174,17 @@ export class PatientManagementFacade {
                 query
             );
     }
+
+    async getHemoglobinEvolutionChart(
+        query:
+        GetHemoglobinEvolutionChartQuery
+    ): Promise<any> {
+
+        return await this
+            .queryService
+            .getHemoglobinEvolutionChart(
+                query
+            );
+    }
+
 }

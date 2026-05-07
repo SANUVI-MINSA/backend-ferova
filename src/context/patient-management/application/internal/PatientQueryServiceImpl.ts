@@ -12,6 +12,7 @@ import {GetPatientsAssignedToNurseQuery} from "../../domain/model/queries/GetPat
 import {PdfService} from "../../infrastructure/services/PdfService";
 import {DownloadMedicalRecordPdfQuery} from "../../domain/model/queries/DownloadMedicalRecordPdfQuery";
 import {DownloadHemoglobinReportPdfQuery} from "../../domain/model/queries/DownloadHemoglobinReportPdfQuery";
+import {GetHemoglobinEvolutionChartQuery} from "../../domain/model/commands/getHemoglobinEvolutionChart";
 
 export class PatientQueryServiceImpl
     implements PatientQueryService {
@@ -295,5 +296,59 @@ export class PatientQueryServiceImpl
                 };
             }
         );
+    }
+
+    async getHemoglobinEvolutionChart(
+        query: GetHemoglobinEvolutionChartQuery
+    ): Promise<any> {
+
+        const medicalRecord =
+            await this
+                .medicalRecordRepository
+                .findByPatientId(
+                    query.patientId
+                );
+
+        if (!medicalRecord) {
+            throw new Error(
+                "Medical record not found"
+            );
+        }
+
+        const controls =
+            medicalRecord
+                .toPrimitives()
+                .controls;
+
+        const sortedControls =
+            controls.sort(
+                (a: any, b: any) =>
+                    new Date(a.date).getTime() -
+                    new Date(b.date).getTime()
+            );
+
+        const chartData =
+            sortedControls.map(
+                (control: any) => ({
+                    date: control.date,
+                    hemoglobinLevel:
+                    control.hemoglobinLevel
+                })
+            );
+
+        const latestValue =
+            sortedControls.length > 0
+                ? sortedControls[
+                sortedControls.length - 1
+                    ].hemoglobinLevel
+                : null;
+
+        return {
+            currentHemoglobin:
+            latestValue,
+
+            chart:
+            chartData
+        };
     }
 }

@@ -6,6 +6,7 @@ import {DownloadMedicalRecordPdfQuery} from "../model/queries/DownloadMedicalRec
 import {DownloadHemoglobinReportPdfQuery} from "../model/queries/DownloadHemoglobinReportPdfQuery";
 import {GetPatientsEligibleForDischargeQuery} from "../model/queries/GetPatientsEligibleForDischargeQuery";
 import {GetPatientsAssignedToNurseQuery} from "../model/queries/GetPatientsAssignedToNurseQuery";
+import {GetHemoglobinEvolutionChartQuery} from "../model/commands/getHemoglobinEvolutionChart";
 
 export interface PatientQueryService {
 
@@ -47,4 +48,8 @@ export interface PatientQueryService {
     getPatientsAssignedToNurse(
         query: GetPatientsAssignedToNurseQuery
     ): Promise<any[]>;
+
+    getHemoglobinEvolutionChart(
+        query: GetHemoglobinEvolutionChartQuery
+    ): Promise<any>;
 }

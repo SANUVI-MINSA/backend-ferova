@@ -375,4 +375,31 @@ export class PatientManagementController {
         };
 
 
+    getHemoglobinEvolutionChart =
+        async (
+            req: Request,
+            res: Response
+        ) => {
+            try {
+
+                const result =
+                    await this.patientFacade
+                        .getHemoglobinEvolutionChart({
+                            patientId:
+                            req.params.patientId as string
+                        });
+
+                res.status(200).json(
+                    result
+                );
+
+            } catch (error: any) {
+                res.status(400).json({
+                    error:
+                    error.message
+                });
+            }
+        };
+
+
 }

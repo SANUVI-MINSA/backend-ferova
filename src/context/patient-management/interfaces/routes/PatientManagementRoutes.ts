@@ -631,4 +631,27 @@ router.get(
         .getPatientsAssignedToNurse
 );
 
+/**
+ * @swagger
+ * /api/patients/{patientId}/hemoglobin-evolution:
+ *   get:
+ *     summary: Get hemoglobin evolution chart
+ *     tags:
+ *       - Patients
+ *     parameters:
+ *       - in: path
+ *         name: patientId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Hemoglobin evolution retrieved successfully
+ */
+router.get(
+    "/:patientId/hemoglobin-evolution",
+    patientManagementController
+        .getHemoglobinEvolutionChart
+);
+
 export default router;
