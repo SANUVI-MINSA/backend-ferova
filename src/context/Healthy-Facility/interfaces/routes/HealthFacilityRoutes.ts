@@ -291,6 +291,11 @@ router.post(
  *       500:
  *         description: Internal server error
  */
+router.get(
+    "/health-facilities/{facilityId}/available-slots",
+    healthFacilityController
+        .getFacilityAvailableSlots
+);
 
 /**
  * @swagger
