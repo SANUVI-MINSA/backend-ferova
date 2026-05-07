@@ -24,8 +24,9 @@ export class MedicalRecord {
         private controls: Control[],
         private nusrel: string,
         private patientId: string,
-        private nurseId: string
-) {}
+        private nurseId: string,
+        private sintomas: string[]
+    ) {}
 
     addControl(
         control: Control
@@ -122,7 +123,10 @@ export class MedicalRecord {
             this.patientId,
 
             nurseId:
-                this.nurseId
+                this.nurseId,
+
+            sintomas:
+                this.sintomas
         };
     }
 
