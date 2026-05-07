@@ -280,8 +280,8 @@ export class PatientManagementController {
                     });
 
             res.setHeader(
-                "Content-Type",
-                "application/pdf"
+                "Content-Disposition",
+                "attachment; filename=medical-record.pdf"
             );
 
             res.send(pdf);
@@ -310,8 +310,8 @@ export class PatientManagementController {
                         });
 
                 res.setHeader(
-                    "Content-Type",
-                    "application/pdf"
+                    "Content-Disposition",
+                    "attachment; filename=hemoglobin-report.pdf"
                 );
 
                 res.send(pdf);

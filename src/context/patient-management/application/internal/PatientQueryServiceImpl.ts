@@ -9,6 +9,9 @@ import {SearchMotherByDniQuery} from "../../domain/model/queries/SearchMotherByD
 import {UserRepository} from "../../../iam/domain/repositories/UserRepository";
 import {Error, Promise} from "mongoose";
 import {GetPatientsAssignedToNurseQuery} from "../../domain/model/queries/GetPatientsAssignedToNurseQuery";
+import {PdfService} from "../../infrastructure/services/PdfService";
+import {DownloadMedicalRecordPdfQuery} from "../../domain/model/queries/DownloadMedicalRecordPdfQuery";
+import {DownloadHemoglobinReportPdfQuery} from "../../domain/model/queries/DownloadHemoglobinReportPdfQuery";
 
 export class PatientQueryServiceImpl
     implements PatientQueryService {
@@ -24,16 +27,64 @@ export class PatientQueryServiceImpl
         private userRepository: UserRepository
     ) {}
 
-    async downloadHemoglobinReportPdf(): Promise<Buffer> {
-        return Buffer.from(
-            "Hemoglobin Report PDF"
-        );
+    async downloadHemoglobinReportPdf(
+        query: DownloadHemoglobinReportPdfQuery
+    ): Promise<Buffer> {
+
+        const medicalRecord =
+            await this.medicalRecordRepository
+                .findById(
+                    query.medicalRecordId
+                );
+
+        if (!medicalRecord) {
+            throw new Error(
+                "Medical record not found"
+            );
+        }
+
+        return await PdfService
+            .generateHemoglobinReportPdf(
+                medicalRecord.toPrimitives()
+            );
     }
 
-    async downloadMedicalRecordPdf(): Promise<Buffer> {
-        return Buffer.from(
-            "Medical Record PDF"
-        );
+    async downloadMedicalRecordPdf(
+        query: DownloadMedicalRecordPdfQuery
+    ): Promise<Buffer> {
+
+        const medicalRecord =
+            await this.medicalRecordRepository
+                .findById(
+                    query.medicalRecordId
+                );
+
+        if (!medicalRecord) {
+            throw new Error(
+                "Medical record not found"
+            );
+        }
+
+        const medicalData =
+            medicalRecord.toPrimitives();
+
+        const patient =
+            await this.patientRepository
+                .findById(
+                    medicalData.patientId
+                );
+
+        if (!patient) {
+            throw new Error(
+                "Patient not found"
+            );
+        }
+
+        return await PdfService
+            .generateMedicalRecordPdf(
+                patient.toPrimitives(),
+                medicalData
+            );
     }
 
 
