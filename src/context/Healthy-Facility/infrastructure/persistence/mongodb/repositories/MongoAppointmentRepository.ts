@@ -83,5 +83,63 @@ export class MongoAppointmentRepository implements AppointmentRepository {
             .toDomain(appointment);
     }
 
+    async findConfirmedByNurseId(
+        nurseId: string
+    ): Promise<Appointment[]> {
+
+        const appointments =
+            await AppointmentModel.find({
+                nurseId,
+                status: "CONFIRMED"
+            });
+
+        return appointments.map(
+            appointment =>
+                AppointmentMapper
+                    .toDomain(appointment)
+        );
+    }
+
+    async findByFacilityAndDate(
+        facilityId: string,
+        appointmentDate: string
+    ): Promise<Appointment[]> {
+
+        const appointments =
+            await AppointmentModel.find({
+                facilityId,
+                appointmentDate,
+                status: "CONFIRMED"
+            });
+
+        return appointments.map(
+            appointment =>
+                AppointmentMapper
+                    .toDomain(appointment)
+        );
+    }
+
+    async findNextAppointmentByMotherId(
+        motherId: string
+    ): Promise<Appointment | null> {
+
+        const appointment =
+            await AppointmentModel
+                .findOne({
+                    motherId,
+                    status: "CONFIRMED"
+                })
+                .sort({
+                    appointmentDate: 1,
+                    appointmentTime: 1
+                });
+
+        if (!appointment) {
+            return null;
+        }
+
+        return AppointmentMapper
+            .toDomain(appointment);
+    }
 
 }
