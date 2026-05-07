@@ -14,6 +14,7 @@ import {BookAppointmentCommand} from "../../../domain/model/commands/BookAppoint
 import {Appointment} from "../../../domain/model/entities/Appointment";
 import {AppointmentStatus} from "../../../domain/model/enum/AppointmentStatus";
 import {CancelAppointmentCommand} from "../../../domain/model/commands/CancelAppointmentCommand";
+import {DistrictRepository} from "../../../../../shared/catalogs/district/DistrictRepository";
 
 export class HealthFacilityCommandServiceImpl
     implements HealthyFacilityCommandService {
@@ -26,7 +27,10 @@ export class HealthFacilityCommandServiceImpl
         AppointmentRepository,
 
         private nurseAssignmentRepository:
-        NurseAssignmentRepository
+        NurseAssignmentRepository,
+
+        private districtRepository:
+        DistrictRepository
     ) {}
 
     async assignNurseToFacility(
@@ -118,14 +122,33 @@ export class HealthFacilityCommandServiceImpl
     }
 
     async registerFacility(command: RegisterHealthFacilityCommand): Promise<void> {
+
+        const scheduleOfOperation =
+            this.buildScheduleOfOperation(
+                command.availableDays,
+                command.availableSlots
+            );
+
+        // Validar que el distrito exista antes de crear la instalación
+        const district =
+            this.districtRepository.findById(
+                command.districtId
+            );
+
+        // Si el distrito no existe, lanzar un error
+        if (!district) {
+            throw new Error(
+                "District not found"
+            );
+        }
+
         const facility =
             new HealthFacility(
                 randomUUID(),
                 command.name,
                 command.address,
                 command.districtId,
-                command.districtName,
-
+                district.getName(),
                 new Coordinates(
                     command.latitude,
                     command.longitude
@@ -139,12 +162,38 @@ export class HealthFacilityCommandServiceImpl
                     command.availableSlots
                 ),
 
-                command.scheduleOfOperation,
+                scheduleOfOperation,
+
                 FacilityStatus.ACTIVE,
                 []
             );
 
         await this.healthFacilityRepository
             .save(facility);
+    }
+
+    // Método privado para construir el scheduleOfOperation a partir de los días y slots disponibles
+    private buildScheduleOfOperation(
+        availableDays: string[],
+        availableSlots: string[]
+    ): string {
+
+        const firstDay =
+            availableDays[0];
+
+        const lastDay =
+            availableDays[
+            availableDays.length - 1
+                ];
+
+        const firstSlot =
+            availableSlots[0];
+
+        const lastSlot =
+            availableSlots[
+            availableSlots.length - 1
+                ];
+
+        return `${firstDay} to ${lastDay} from ${firstSlot} to ${lastSlot}`;
     }
 }
