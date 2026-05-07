@@ -273,14 +273,14 @@ export class HealthFacilityController {
         try {
 
             const facilityId = this.getStringParam(req.params.facilityId);
-            const appointmentsdate = this.getStringParam(req.params.appointmentsDate);
+            const appointmentDate = this.getStringParam(req.query.date as string);
 
 
             if (!facilityId) {
                 return res.status(400).json({ error: "Facility ID is required" });
             }
 
-            if (!appointmentsdate) {
+            if (!appointmentDate) {
                 return res.status(400).json({ error: "Appointment date is required" });
             }
 
@@ -290,7 +290,7 @@ export class HealthFacilityController {
                     .getFacilityAvailableSlots({
                         facilityId,
 
-                        appointmentDate: appointmentsdate
+                        appointmentDate: appointmentDate
                     });
 
             res.status(200).json(

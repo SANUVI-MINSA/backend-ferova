@@ -15,6 +15,8 @@ import {Appointment} from "../../../domain/model/entities/Appointment";
 import {AppointmentStatus} from "../../../domain/model/enum/AppointmentStatus";
 import {CancelAppointmentCommand} from "../../../domain/model/commands/CancelAppointmentCommand";
 import {DistrictRepository} from "../../../../../shared/catalogs/district/DistrictRepository";
+import {UserRepository} from "../../../../iam/domain/repositories/UserRepository";
+import {PatientRepository} from "../../../../patient-management/domain/repositories/PatientRepository";
 
 export class HealthFacilityCommandServiceImpl
     implements HealthyFacilityCommandService {
@@ -30,9 +32,37 @@ export class HealthFacilityCommandServiceImpl
         NurseAssignmentRepository,
 
         private districtRepository:
-        DistrictRepository
+        DistrictRepository,
+
+        private userRepository: UserRepository,
+
+        private patientRepository: PatientRepository,
     ) {}
 
+    /**
+     * Asigna un enfermero a un establecimiento de salud (posta).
+     *
+     * @description
+     * Este método ejecuta la lógica de negocio para asignar un enfermero a una posta,
+     * garantizando la integridad de las reglas de dominio:
+     *
+     * 1. Una posta solo puede tener un enfermero activo a la vez.
+     * 2. Un enfermero solo puede estar asignado a una única posta.
+     *
+     * @param command - Comando con los identificadores de la posta y el enfermero
+     * @throws {Error} Si la posta no existe
+     * @throws {Error} Si el enfermero no existe
+     * @throws {Error} Si la posta ya tiene un enfermero asignado
+     * @throws {Error} Si el enfermero ya está asignado a otra posta
+     *
+     * @example
+     * ```typescript
+     * await assignNurseToFacility({
+     *     facilityId: "facility-123",
+     *     nurseId: "nurse-456"
+     * });
+     * ```
+     */
     async assignNurseToFacility(
         command: AssignNurseToFacilityCommand
     ): Promise<void> {
@@ -42,33 +72,58 @@ export class HealthFacilityCommandServiceImpl
                 .findById(command.facilityId);
 
         if (!facility) {
+            throw new Error("Facility not found");
+        }
+
+        const userNurse = await this.userRepository
+            .findNurseById(command.nurseId);
+
+        if (!userNurse) {
+            throw new Error("Nurse not found");
+        }
+
+        // ✅ VALIDACIÓN: Verificar si la posta ya tiene enfermero
+        const existingAssignment =
+            await this.nurseAssignmentRepository
+                .findActiveByFacilityId(command.facilityId);
+
+        if (existingAssignment) {
             throw new Error(
-                "Facility not found"
+                `Facility already has an assigned nurse. ` +
+                `Current nurse ID: ${existingAssignment.getNurseId()}`
             );
         }
 
-        const assignment =
-            new NurseAssignment(
-                randomUUID(),
-                command.facilityId,
-                command.nurseId
-            );
+        const nurseExistingAssignment =
+            await this.nurseAssignmentRepository
+                .findActiveByNurseId(command.nurseId);  // ← Necesitas este método
 
-        facility.assignNurse(
-            assignment
+        if (nurseExistingAssignment) {
+            throw new Error(
+                `Nurse is already assigned to another facility. ` +
+                `Facility ID: ${nurseExistingAssignment.getFacilityId()}`
+            );
+        }
+
+        const userNurseData = userNurse.toPrimitives();
+
+        const assignment = new NurseAssignment(
+            randomUUID(),
+            command.facilityId,
+            userNurseData.id
         );
 
-        await this.nurseAssignmentRepository
-            .save(assignment);
+        facility.assignNurse(assignment);
 
-        await this.healthFacilityRepository
-            .update(facility);
+        await this.nurseAssignmentRepository.save(assignment);
+        await this.healthFacilityRepository.update(facility);
     }
 
     async bookAppointment(
         command: BookAppointmentCommand
     ): Promise<void> {
 
+        // 1. Verificar si ya existe una cita en ese horario
         const existingAppointment =
             await this.appointmentRepository
                 .findByFacilityAndDateTime(
@@ -83,13 +138,38 @@ export class HealthFacilityCommandServiceImpl
             );
         }
 
+        const patient = await this.patientRepository.findById(command.patientId);
+
+
+        // 2. OBTENER EL ENFERMERO ASIGNADO A LA POSTA
+        const nurseAssignment =
+            await this.nurseAssignmentRepository
+                .findActiveByFacilityId(command.facilityId);
+
+        if (!nurseAssignment) {
+            throw new Error(
+                "This facility has no assigned nurse. Cannot book appointment."
+            );
+        }
+
+        if (!patient) {
+            throw new Error(
+                "Patient Not Registered"
+            )
+        }
+
+
+        const nurseId = nurseAssignment.getNurseId();
+        const patientId = patient.toPrimitives()
+
+        // 3. Crear la cita con el nurseId asignado
         const appointment =
             new Appointment(
                 randomUUID(),
                 command.facilityId,
-                command.patientId,
-                command.motherId,
-                null,
+                patientId.id,
+                patientId.motherId,
+                nurseId, // tienes el enfermero asignado
                 command.appointmentDate,
                 command.appointmentTime,
                 AppointmentStatus.CONFIRMED

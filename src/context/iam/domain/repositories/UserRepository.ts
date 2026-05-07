@@ -28,4 +28,12 @@ export interface UserRepository {
     updatePassword(email: Email, newPassword: string): Promise<void>;
 
     clearResetCode(email: Email): Promise<void>;
+
+    findMotherByDni(
+        dni: string
+    ): Promise<User | null>;
+
+    findNurseById(
+        id: string
+    ): Promise<User | null>;
 }

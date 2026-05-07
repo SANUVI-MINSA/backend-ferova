@@ -41,7 +41,7 @@ export class Appointment {
             );
         }
 
-        if (!this.appointmentTime?.trim()) {
+        if (!this.appointmentTime) {
             throw new Error(
                 "Appointment time is required"
             );

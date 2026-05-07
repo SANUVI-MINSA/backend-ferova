@@ -18,6 +18,10 @@ import {
 import {HealthFacilityQueryServiceImpl} from "../../application/internal/queryServices/HealthFacilityQueryServiceImpl";
 import {HealthFacilityFacade} from "../acl/facade/HealthyFacilityFacade";
 import {HealthFacilityController} from "../HealthFacilityController";
+import {MongoUserRepository} from "../../../iam/infrastructure/persistence/mongodb/repositories/MongoUserRepository";
+import {
+    MongoPatientRepository
+} from "../../../patient-management/infrastructure/persistence/mongodb/repositories/MongoPatientRepository";
 
 
 const healthFacilityRepository =
@@ -32,13 +36,19 @@ const nurseAssignmentRepository =
 const districtRepository =
     new DistrictRepository();
 
+const userRepository = new MongoUserRepository
+
+const patientRepository = new MongoPatientRepository();
+
 // command service
 const healthFacilityCommandService =
     new HealthFacilityCommandServiceImpl(
         healthFacilityRepository,
         appointmentRepository,
         nurseAssignmentRepository,
-        districtRepository
+        districtRepository,
+        userRepository,
+        patientRepository
     );
 
 
