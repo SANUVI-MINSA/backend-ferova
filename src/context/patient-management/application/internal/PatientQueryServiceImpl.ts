@@ -7,6 +7,8 @@ import {GetPatientsEligibleForDischargeQuery} from "../../domain/model/queries/G
 import {ListPatientsByMotherQuery} from "../../domain/model/queries/ListPatientsByMotherQuery";
 import {SearchMotherByDniQuery} from "../../domain/model/queries/SearchMotherByDniQuery";
 import {UserRepository} from "../../../iam/domain/repositories/UserRepository";
+import {Error, Promise} from "mongoose";
+import {GetPatientsAssignedToNurseQuery} from "../../domain/model/queries/GetPatientsAssignedToNurseQuery";
 
 export class PatientQueryServiceImpl
     implements PatientQueryService {
@@ -36,49 +38,47 @@ export class PatientQueryServiceImpl
 
 
     async getHemoglobinControlsHistory(
-        query:
-        GetHemoglobinControlsHistoryQuery
+        query: GetHemoglobinControlsHistoryQuery
     ): Promise<any> {
-
-        const medicalRecord =
-            await this
-                .medicalRecordRepository
-                .findById(
-                    query.medicalRecordId
-                );
+        const medicalRecord = await this.medicalRecordRepository.findById(query.medicalRecordId);
 
         if (!medicalRecord) {
-            throw new Error(
-                "Medical record not found"
-            );
+            throw new Error("Medical record not found");
         }
 
-        const controls =
-            medicalRecord
-                .toPrimitives()
-                .controls;
+        const controls = medicalRecord.toPrimitives().controls;
 
-        const levels =
-            controls.map(
-                (c: any) =>
-                    c.hemoglobinLevel
-            );
+        if (!controls.length) {
+            return {
+                controls: [],
+                averageHemoglobin: 0,
+                totalControls: 0,
+                evolution: null, // ✅ Sin evolución si no hay controles
+                trend: null      // ✅ Tendencia: 'UP', 'DOWN', 'STABLE'
+            };
+        }
 
-        const average =
-            levels.reduce(
-                (a: number, b: number) => a + b,
-                0
-            ) / levels.length;
+        const levels = controls.map((c: any) => c.hemoglobinLevel);
+        const average = levels.reduce((a: number, b: number) => a + b, 0) / levels.length;
+
+        // ✅ Calcular evolución (primer control - último control)
+        const firstControl = levels[0];
+        const lastControl = levels[levels.length - 1];
+        const evolution = lastControl - firstControl; // Positivo = subió, Negativo = bajó
+
+        // ✅ Determinar tendencia
+        let trend: 'UP' | 'DOWN' | 'STABLE' = 'STABLE';
+        if (evolution > 0) trend = 'UP';
+        if (evolution < 0) trend = 'DOWN';
 
         return {
             controls,
-            averageHemoglobin:
-            average,
-            totalControls:
-            controls.length
+            averageHemoglobin: average,
+            totalControls: controls.length,
+            evolution: evolution,           // ✅ Valor numérico (ej: +0.5, -0.3)
+            trend: trend,                   // ✅ Tendencia para el frontend
         };
     }
-
     async getMedicalRecord(
         query: GetMedicalRecordQuery
     ): Promise<any> {
@@ -199,5 +199,42 @@ export class PatientQueryServiceImpl
                 `${data.name} ${data.lastname}`,
             dni: data.dni
         };
+    }
+
+    async getPatientsAssignedToNurse(
+        query: GetPatientsAssignedToNurseQuery
+    ): Promise<any[]> {
+
+        const patients =
+            await this
+                .patientRepository
+                .findByNurseId(
+                    query.nurseId
+                );
+
+        return patients.map(
+            patient => {
+
+                const data =
+                    patient.toPrimitives();
+
+                return {
+                    patientId:
+                    data.id,
+
+                    fullName:
+                        `${data.name} ${data.lastName}`,
+
+                    gender:
+                    data.gender,
+
+                    status:
+                    data.status,
+
+                    facilityId:
+                    data.facilityId
+                };
+            }
+        );
     }
 }

@@ -20,6 +20,7 @@ import {MedicalRecord} from "../../domain/model/entities/MedicalRecord";
 import {HemoglobinLevel} from "../../domain/model/value-objects/HemoglobinLevel";
 import {Control} from "../../domain/model/entities/Control";
 import {NurseAssignmentRepository} from "../../../Healthy-Facility/domain/repositories/NurseAssignmentRepository";
+import {Antecedente} from "../../domain/model/value-objects/Antecedente";
 
 export class PatientCommandServiceImpl
     implements PatientCommandService {
@@ -79,61 +80,44 @@ export class PatientCommandServiceImpl
     }
 
     async createInitialMedicalRecord(
-        command:
-        CreateInitialMedicalRecordCommand
+        command: CreateInitialMedicalRecordCommand
     ): Promise<void> {
-
-        const patient =
-            await this
-                .patientRepository
-                .findById(
-                    command.patientId
-                );
+        const patient = await this.patientRepository.findById(command.patientId);
 
         if (!patient) {
-            throw new Error(
-                "Patient not found"
-            );
+            throw new Error("Patient not found");
         }
 
-        const existingRecord =
-            await this
-                .medicalRecordRepository
-                .findByPatientId(
-                    command.patientId
-                );
+        const existingRecord = await this.medicalRecordRepository.findByPatientId(command.patientId);
 
         if (existingRecord) {
-            throw new Error(
-                "Medical record already exists"
-            );
+            throw new Error("Medical record already exists");
         }
 
-        const medicalRecord =
-            new MedicalRecord(
-                randomUUID(),
-                new Date(),
-                new Date(),
-                new HemoglobinLevel(11),
-                new Weight(command.weight),
-                new Height(command.height),
-                patient.toPrimitives().gender,
-                command.antecedentes || [],
-                new MotivoConsulta(
-                    command.motivoConsulta
-                ),
-                new Observaciones(
-                    command.observaciones
-                ),
-                command.sintomas || [],
-                [],
-                command.patientId,
-                patient.toPrimitives().nurseId
-            );
+        const medicalRecord = new MedicalRecord(
+            randomUUID(),
+            new Date(),
+            new Date(),
+            null,
+            new Weight(command.weight),
+            new Height(command.height),
+            patient.toPrimitives().gender,
+            (command.antecedentes || []).map(
+                (antecedente: any) =>
+                    new Antecedente(
+                        antecedente.type,
+                        antecedente.description
+                    )
+            ),
+            new MotivoConsulta(command.motivoConsulta),
+            new Observaciones(command.observaciones),  // ✅ Ya no es opcional
+            command.sintomas || [],
+            [],
+            command.patientId,
+            patient.toPrimitives().nurseId
+        );
 
-        await this
-            .medicalRecordRepository
-            .save(medicalRecord);
+        await this.medicalRecordRepository.save(medicalRecord);
     }
 
     async dischargePatient(
