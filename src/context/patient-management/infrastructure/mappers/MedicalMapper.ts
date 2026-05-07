@@ -11,61 +11,41 @@ import {Control} from "../../domain/model/entities/Control";
 
 export class MedicalRecordMapper {
 
-    static toDomain(
-        document: any
-    ): MedicalRecord {
+    static toDomain(document: any): MedicalRecord {
+        // Asegurar que controls sea un array y reconstruir cada Control
+        const controls = (document.controls || []).map((control: any) => {
+            // Verificar si ya es una instancia de Control
+            if (control instanceof Control) {
+                return control;
+            }
+            // Reconstruir desde objeto plano
+            return new Control(
+                control.id || control._id,
+                control.date || control.createdAt,
+                new HemoglobinLevel(control.hemoglobinLevel)
+            );
+        });
 
         return new MedicalRecord(
             document.id,
             document.createdAt,
             document.updatedAt,
-
-            new HemoglobinLevel(
-                document.hemoglobinLevel
-            ),
-
-            new Weight(
-                document.weight
-            ),
-
-            new Height(
-                document.height
-            ),
-
+            document.hemoglobinLevel
+                ? new HemoglobinLevel(document.hemoglobinLevel)
+                : null,
+            new Weight(document.weight),
+            new Height(document.height),
             document.gender as Gender,
-
-            document.antecedentes.map(
+            (document.antecedentes || []).map(
                 (antecedente: any) =>
-                    new Antecedente(
-                        antecedente.type,
-                        antecedente.description
-                    )
+                    new Antecedente(antecedente.type, antecedente.description)
             ),
-
-            new MotivoConsulta(
-                document.motivoConsulta
-            ),
-
-            new Observaciones(
-                document.observaciones
-            ),
-
-            document.controls.map(
-                (control: any) =>
-                    new Control(
-                        control.id,
-                        control.date,
-
-                        new HemoglobinLevel(
-                            control.hemoglobinLevel
-                        )
-                    )
-            ),
-
-            document.nusrel,
+            new MotivoConsulta(document.motivoConsulta),
+            new Observaciones(document.observaciones),
+            document.sintomas || [],
+            controls, // ✅ Usar los controles reconstruidos
             document.patientId,
-            document.nurseId,
-            document.sintomas
+            document.nurseId
         );
     }
 
@@ -102,8 +82,6 @@ export class MedicalRecordMapper {
             data.observaciones,
             sintomas:
             data.sintomas,
-            nusrel:
-            data.nusrel,
             controls:
             data.controls
         };

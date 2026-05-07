@@ -7,7 +7,7 @@ export type CreateInitialMedicalRecordCommand =
         weight: number;
         height: number;
         motivoConsulta: string;
-        observaciones?: string;
+        observaciones: string;
         antecedentes?: Antecedente[]; // Optional
         sintomas?: string[]; // Optional
     }>;

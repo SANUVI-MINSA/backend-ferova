@@ -50,7 +50,8 @@ const medicalRecordSchema =
 
             hemoglobinLevel: {
                 type: Number,
-                required: true
+                required: false,  // ✅ Cambiar a false
+                default: null     // ✅ Valor por defecto null
             },
 
             weight: {
@@ -86,11 +87,6 @@ const medicalRecordSchema =
                     type: String
                 }
             ],
-
-            nusrel: {
-                type: String,
-                required: true
-            },
 
             controls:
                 [controlSchema]

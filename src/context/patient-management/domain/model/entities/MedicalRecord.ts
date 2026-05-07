@@ -13,8 +13,7 @@ export class MedicalRecord {
         private id: string,
         private createdAt: Date,
         private updatedAt: Date,
-        private hemoglobinLevel:
-        HemoglobinLevel,
+        private hemoglobinLevel: HemoglobinLevel | null,
         private weight: Weight,
         private height: Height,
         private gender: Gender,
@@ -87,7 +86,8 @@ export class MedicalRecord {
 
             hemoglobinLevel:
                 this.hemoglobinLevel
-                    .getValue(),
+                    ? this.hemoglobinLevel.getValue()
+                    : null,
 
             weight:
                 this.weight
