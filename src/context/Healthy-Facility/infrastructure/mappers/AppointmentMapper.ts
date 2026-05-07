@@ -9,7 +9,7 @@ export class AppointmentMapper {
             document.motherId,
             document.nurseId,
             document.appointmentDate,
-            document.apointmentTime,
+            document.appointmentTime,
             document.status
         )
     }

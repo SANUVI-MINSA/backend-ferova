@@ -5,25 +5,25 @@ import {AppointmentModel} from "../models/AppointmentModel";
 
 export class MongoAppointmentRepository implements AppointmentRepository {
 
+    // MongoAppointmentRepository.ts
     async findByFacilityAndDateTime(
         facilityId: string,
         appointmentDate: string,
         appointmentTime: string
     ): Promise<Appointment | null> {
-
-        const appointment =
-            await AppointmentModel.findOne({
-                facilityId,
-                appointmentDate,
-                appointmentTime
-            });
+        // ✅ Añadir filtro de status: solo buscar CONFIRMADAS
+        const appointment = await AppointmentModel.findOne({
+            facilityId,
+            appointmentDate,
+            appointmentTime,
+            status: "CONFIRMED"  // ← Esta línea es la clave
+        });
 
         if (!appointment) {
-            return null;
+            return null;  // Horario disponible (no hay citas confirmadas)
         }
 
-        return AppointmentMapper
-            .toDomain(appointment);
+        return AppointmentMapper.toDomain(appointment);
     }
 
     async findByPatientId(patientId: string): Promise<Appointment[]> {
