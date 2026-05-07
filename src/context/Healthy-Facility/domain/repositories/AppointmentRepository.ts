@@ -46,4 +46,21 @@ export interface AppointmentRepository{
     update(
         appointment: Appointment
     ): Promise<void>
+
+    /**
+     * Finds appointments confirmed for a nurse by nurse id.
+     * @param nurseId
+     */
+    findConfirmedByNurseId(
+        nurseId: string
+    ): Promise<Appointment[]>;
+
+    findByFacilityAndDate(
+        facilityId: string,
+        appointmentDate: string
+    ) : Promise<Appointment[]>;
+
+    findNextAppointmentByMotherId(
+        motherId: string
+    ): Promise<Appointment | null>;
 }
