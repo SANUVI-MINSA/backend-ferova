@@ -212,7 +212,15 @@ export class PatientQueryServiceImpl
                     query.nurseId
                 );
 
-        return patients.map(
+        const activePatients =
+            patients.filter(
+                patient =>
+                    patient
+                        .toPrimitives()
+                        .status !== "DISCHARGED"
+            );
+
+        return activePatients.map(
             patient => {
 
                 const data =
