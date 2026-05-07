@@ -1,4 +1,5 @@
-import {MedicalRecord} from "../domain/entities/MedicalRecord";
+import {MedicalRecord} from "../model/entities/MedicalRecord";
+
 
 export interface MedicalRecordRepository {
 

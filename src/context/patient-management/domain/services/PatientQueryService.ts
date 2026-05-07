@@ -1,10 +1,10 @@
-import {SearchMotherByDniQuery} from "../domain/queries/SearchMotherByDniQuery";
-import {ListPatientsByMotherQuery} from "../domain/queries/ListPatientsByMotherQuery";
-import {GetMedicalRecordQuery} from "../domain/queries/GetMedicalRecordQuery";
-import {GetHemoglobinControlsHistoryQuery} from "../domain/queries/GetHemoglobinControlsHistoryQuery";
-import {DownloadMedicalRecordPdfQuery} from "../domain/queries/DownloadMedicalRecordPdfQuery";
-import {DownloadHemoglobinReportPdfQuery} from "../domain/queries/DownloadHemoglobinReportPdfQuery";
-import {GetPatientsEligibleForDischargeQuery} from "../domain/queries/GetPatientsEligibleForDischargeQuery";
+import {SearchMotherByDniQuery} from "../model/queries/SearchMotherByDniQuery";
+import {ListPatientsByMotherQuery} from "../model/queries/ListPatientsByMotherQuery";
+import {GetMedicalRecordQuery} from "../model/queries/GetMedicalRecordQuery";
+import {GetHemoglobinControlsHistoryQuery} from "../model/queries/GetHemoglobinControlsHistoryQuery";
+import {DownloadMedicalRecordPdfQuery} from "../model/queries/DownloadMedicalRecordPdfQuery";
+import {DownloadHemoglobinReportPdfQuery} from "../model/queries/DownloadHemoglobinReportPdfQuery";
+import {GetPatientsEligibleForDischargeQuery} from "../model/queries/GetPatientsEligibleForDischargeQuery";
 
 export interface PatientQueryService {
 

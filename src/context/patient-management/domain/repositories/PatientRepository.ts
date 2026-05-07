@@ -1,4 +1,4 @@
-import {Patient} from "../domain/model/Patient";
+import {Patient} from "../model/aggregate/Patient";
 
 export interface PatientRepository {
 

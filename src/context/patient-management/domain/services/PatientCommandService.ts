@@ -1,9 +1,9 @@
-import {RegisterPatientCommand} from "../domain/commands/RegisterPatientCommand";
-import {AssignPatientToNurseCommand} from "../domain/commands/AssignPatientToNurseCommand";
-import {CreateInitialMedicalRecordCommand} from "../domain/commands/CreateInitialMedicalRecordCommand";
-import {RegisterHemoglobinControlCommand} from "../domain/commands/RegisterHemoglobinControlCommand";
-import {DischargePatientCommand} from "../domain/commands/DischargePatientCommand";
-import {UpdateMedicalRecordCommand} from "../domain/commands/UpdateMedicalRecordCommand";
+import {RegisterPatientCommand} from "../model/commands/RegisterPatientCommand";
+import {AssignPatientToNurseCommand} from "../model/commands/AssignPatientToNurseCommand";
+import {CreateInitialMedicalRecordCommand} from "../model/commands/CreateInitialMedicalRecordCommand";
+import {RegisterHemoglobinControlCommand} from "../model/commands/RegisterHemoglobinControlCommand";
+import {DischargePatientCommand} from "../model/commands/DischargePatientCommand";
+import {UpdateMedicalRecordCommand} from "../model/commands/UpdateMedicalRecordCommand";
 
 
 
