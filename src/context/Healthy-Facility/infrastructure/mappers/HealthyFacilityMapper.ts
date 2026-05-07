@@ -39,6 +39,7 @@ export class HealthyFacilityMapper {
             document.status as FacilityStatus,
 
             // Mapeo de asignaciones de enfermería si existen, de lo contrario se asigna un array vacío
+            // se agrego  [] al final para asegurar que si nurseAssignments es undefined, se asigne un array vacío en lugar de undefined
             document.nurseAssignments?.map(
                 (assignment: any) =>
                     new NurseAssignment(
@@ -46,7 +47,7 @@ export class HealthyFacilityMapper {
                         assignment.facilityId,
                         assignment.nurseId
                     )
-            )
+            ) || []
         );
     }
 
