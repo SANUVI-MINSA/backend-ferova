@@ -348,5 +348,31 @@ export class PatientManagementController {
         }
     };
 
+    getPatientsAssignedToNurse =
+        async (
+            req: Request,
+            res: Response
+        ) => {
+            try {
+
+                const patients =
+                    await this.patientFacade
+                        .getPatientsAssignedToNurse({
+                            nurseId:
+                            req.params.nurseId as string
+                        });
+
+                res.status(200).json(
+                    patients
+                );
+
+            } catch (error: any) {
+                res.status(400).json({
+                    error:
+                    error.message
+                });
+            }
+        };
+
 
 }
