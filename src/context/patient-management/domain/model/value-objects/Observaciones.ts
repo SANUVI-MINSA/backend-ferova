@@ -1,7 +1,7 @@
 export class Observaciones {
 
     constructor(
-        private value?: string
+        private value: string
     ) {
         this.ensureValid();
     }
