@@ -10,7 +10,9 @@ HemoglobinHistoryResourceAssembler {
             averageHemoglobin:
             data.averageHemoglobin,
             totalControls:
-            data.totalControls
+            data.totalControls,
+            evolution: data.evolution,
+            trend: data.trend
         };
     }
 }

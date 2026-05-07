@@ -1,30 +1,18 @@
+// HemoglobinLevel.ts
 export class HemoglobinLevel {
-
-    constructor(
-        private value: number
-    ) {
-        this.ensureValidRange();
-    }
-
-    private ensureValidRange(): void {
-
-        if (this.value <= 0) {
-            throw new Error(
-                "Hemoglobin level must be greater than zero"
-            );
-        }
-
-        if (
-            this.value < 5 ||
-            this.value > 20
-        ) {
-            throw new Error(
-                "Hemoglobin level is outside clinical range"
-            );
+    constructor(private value: number | null) {
+        if (value !== null) {
+            this.ensureValid();
         }
     }
 
-    getValue(): number {
+    private ensureValid(): void {
+        if (this.value !== null && (this.value < 0 || this.value > 30)) {
+            throw new Error("Hemoglobin level must be between 0 and 30");
+        }
+    }
+
+    getValue(): number | null {
         return this.value;
     }
 }
