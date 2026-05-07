@@ -120,39 +120,51 @@ router.post(
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - patientId
+ *               - weight
+ *               - height
+ *               - motivoConsulta
+ *               - observaciones    // ✅ Ahora es requerido
  *             properties:
  *               patientId:
  *                 type: string
  *               weight:
  *                 type: number
+ *                 example: 12.5
  *               height:
  *                 type: number
+ *                 example: 85
  *               motivoConsulta:
  *                 type: string
+ *                 example: "Control de rutina"
  *               observaciones:
  *                 type: string
+ *                 example: "Paciente en buen estado general"
+ *               antecedentes:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     type:
+ *                       type: string
+ *                     description:
+ *                       type: string
+ *                 example: [{"type": "alergia", "description": "Penicilina"}]
+ *               sintomas:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["fiebre", "tos"]
  *     responses:
  *       201:
  *         description: Medical record created successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: string
- *                 patientId:
- *                   type: string
- *                 message:
- *                   type: string
  *       400:
  *         description: Invalid input data
  *       404:
  *         description: Patient not found
  *       409:
  *         description: Medical record already exists for this patient
- *       500:
- *         description: Internal server error
  */
 router.post(
     "/medical-record",
@@ -583,5 +595,30 @@ router.get(
     patientManagementController.downloadHemoglobinReportPdf
 );
 
+
+/**
+ * @swagger
+ * /api/patients/nurse/{nurseId}:
+ *   get:
+ *     summary: Get patients assigned to a nurse
+ *     tags:
+ *       - Patients
+ *     parameters:
+ *       - in: path
+ *         name: nurseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of assigned patients retrieved successfully
+ *       404:
+ *         description: No patients found
+ */
+router.get(
+    "/nurse/:nurseId",
+    patientManagementController
+        .getPatientsAssignedToNurse
+);
 
 export default router;

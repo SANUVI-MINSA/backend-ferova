@@ -13,6 +13,7 @@ import {GetHemoglobinControlsHistoryQuery} from "../../domain/model/queries/GetH
 import {GetMedicalRecordQuery} from "../../domain/model/queries/GetMedicalRecordQuery";
 import {ListPatientsByMotherQuery} from "../../domain/model/queries/ListPatientsByMotherQuery";
 import {SearchMotherByDniQuery} from "../../domain/model/queries/SearchMotherByDniQuery";
+import {GetPatientsAssignedToNurseQuery} from "../../domain/model/queries/GetPatientsAssignedToNurseQuery";
 
 export class PatientManagementFacade {
 
@@ -123,14 +124,9 @@ export class PatientManagementFacade {
     }
 
     async getHemoglobinControlsHistory(
-        query:
-        GetHemoglobinControlsHistoryQuery
+        query: GetHemoglobinControlsHistoryQuery
     ): Promise<any> {
-        return await this
-            .queryService
-            .getHemoglobinControlsHistory(
-                query
-            );
+        return await this.queryService.getHemoglobinControlsHistory(query);
     }
 
     async downloadMedicalRecordPdf(
@@ -162,6 +158,18 @@ export class PatientManagementFacade {
         return await this
             .queryService
             .getPatientsEligibleForDischarge(
+                query
+            );
+    }
+
+    async getPatientsAssignedToNurse(
+        query:
+        GetPatientsAssignedToNurseQuery
+    ): Promise<any[]> {
+
+        return await this
+            .queryService
+            .getPatientsAssignedToNurse(
                 query
             );
     }
