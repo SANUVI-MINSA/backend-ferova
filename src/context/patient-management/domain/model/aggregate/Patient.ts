@@ -13,9 +13,9 @@ export class Patient {
         private currentWeight: Weight,
         private currentHeight: Height,
         private motherId: string,
-        private nurseId: string,
+        private nurseId: string | null,
         private gender: Gender,
-        private facilityId: string,
+        private facilityId: string | null,
         private status: PatientStatus,
 ) {}
 
@@ -43,7 +43,8 @@ export class Patient {
     }
 
     assignNurse(
-        nurseId: string
+        nurseId: string,
+        facilityId: string
     ): void {
 
         if (this.nurseId) {
@@ -54,9 +55,11 @@ export class Patient {
 
         this.nurseId =
             nurseId;
+
+        this.facilityId = facilityId;
     }
 
-    toPrimitives() {
+    public toPrimitives() {
         return {
             id: this.id,
             name: this.name,

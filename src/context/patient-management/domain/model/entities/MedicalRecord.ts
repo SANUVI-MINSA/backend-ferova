@@ -21,11 +21,10 @@ export class MedicalRecord {
         private antecedentes: Antecedente[],
         private motivoConsulta: MotivoConsulta,
         private observaciones: Observaciones,
+        private sintomas: string[] | [],
         private controls: Control[],
-        private nusrel: string,
         private patientId: string,
-        private nurseId: string,
-        private sintomas: string[]
+        private nurseId: string | null
     ) {}
 
     addControl(
@@ -49,7 +48,8 @@ export class MedicalRecord {
         height: Height,
         motivoConsulta: MotivoConsulta,
         observaciones: Observaciones,
-        antecedentes: Antecedente[]
+        antecedentes: Antecedente[],
+        sintomas: string[]
     ): void {
 
         this.weight = weight;
@@ -71,6 +71,8 @@ export class MedicalRecord {
 
         this.updatedAt =
             new Date();
+
+        this.sintomas = sintomas;
     }
 
     toPrimitives() {
@@ -115,9 +117,6 @@ export class MedicalRecord {
                         control
                             .toPrimitives()
                 ),
-
-            nusrel:
-            this.nusrel,
 
             patientId:
             this.patientId,

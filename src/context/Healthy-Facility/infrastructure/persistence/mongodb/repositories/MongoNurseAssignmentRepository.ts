@@ -49,4 +49,21 @@ export class MongoNurseAssignmentRepository implements NurseAssignmentRepository
             .toDomain(createAssignment);
     }
 
+    async findActiveByFacilityId(
+        facilityId: string
+    ): Promise<NurseAssignment | null> {
+
+        const assignment =
+            await NurseAssignmentModel.findOne({
+                facilityId
+            });
+
+        if (!assignment) {
+            return null;
+        }
+
+        return NurseAssigmentMapper
+            .toDomain(assignment);
+    }
+
 }

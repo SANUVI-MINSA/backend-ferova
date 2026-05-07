@@ -25,5 +25,11 @@ export interface NurseAssignmentRepository{
         nurseId: string
     ): Promise<NurseAssignment | null>
 
-
+    /**
+     * Finds active nurse assignment by facility id (should return only one)
+     * @param facilityId
+     */
+    findActiveByFacilityId(
+        facilityId: string
+    ): Promise<NurseAssignment | null>
 }

@@ -15,6 +15,8 @@ import {Appointment} from "../../../domain/model/entities/Appointment";
 import {AppointmentStatus} from "../../../domain/model/enum/AppointmentStatus";
 import {CancelAppointmentCommand} from "../../../domain/model/commands/CancelAppointmentCommand";
 import {DistrictRepository} from "../../../../../shared/catalogs/district/DistrictRepository";
+import {UserRepository} from "../../../../iam/domain/repositories/UserRepository";
+import {PatientRepository} from "../../../../patient-management/domain/repositories/PatientRepository";
 
 export class HealthFacilityCommandServiceImpl
     implements HealthyFacilityCommandService {
@@ -30,9 +32,14 @@ export class HealthFacilityCommandServiceImpl
         NurseAssignmentRepository,
 
         private districtRepository:
-        DistrictRepository
+        DistrictRepository,
+
+        private userRepository: UserRepository,
+
+        private patientRepository: PatientRepository,
     ) {}
 
+    // HealthFacilityCommandServiceImpl.ts
     async assignNurseToFacility(
         command: AssignNurseToFacilityCommand
     ): Promise<void> {
@@ -42,21 +49,39 @@ export class HealthFacilityCommandServiceImpl
                 .findById(command.facilityId);
 
         if (!facility) {
+            throw new Error("Facility not found");
+        }
+
+        const userNurse = await this.userRepository
+            .findNurseById(command.nurseId);
+
+        if (!userNurse) {
+            throw new Error("Nurse not found");
+        }
+
+        // ✅ VALIDACIÓN: Verificar si ya existe un enfermero asignado
+        const existingAssignment =
+            await this.nurseAssignmentRepository
+                .findActiveByFacilityId(command.facilityId);
+
+        if (existingAssignment) {
             throw new Error(
-                "Facility not found"
+                `Facility already has an assigned nurse. ` +
+                `Current nurse ID: ${existingAssignment.getNurseId()}`
             );
         }
+
+        const userNurseData =
+            userNurse.toPrimitives();
 
         const assignment =
             new NurseAssignment(
                 randomUUID(),
                 command.facilityId,
-                command.nurseId
+                userNurseData.id
             );
 
-        facility.assignNurse(
-            assignment
-        );
+        facility.assignNurse(assignment);
 
         await this.nurseAssignmentRepository
             .save(assignment);
@@ -65,10 +90,12 @@ export class HealthFacilityCommandServiceImpl
             .update(facility);
     }
 
+    // HealthFacilityCommandServiceImpl.ts
     async bookAppointment(
         command: BookAppointmentCommand
     ): Promise<void> {
 
+        // 1. Verificar si ya existe una cita en ese horario
         const existingAppointment =
             await this.appointmentRepository
                 .findByFacilityAndDateTime(
@@ -83,13 +110,38 @@ export class HealthFacilityCommandServiceImpl
             );
         }
 
+        const patient = await this.patientRepository.findById(command.patientId);
+
+
+        // 2. OBTENER EL ENFERMERO ASIGNADO A LA POSTA
+        const nurseAssignment =
+            await this.nurseAssignmentRepository
+                .findActiveByFacilityId(command.facilityId);
+
+        if (!nurseAssignment) {
+            throw new Error(
+                "This facility has no assigned nurse. Cannot book appointment."
+            );
+        }
+
+        if (!patient) {
+            throw new Error(
+                "Patient Not Registered"
+            )
+        }
+
+
+        const nurseId = nurseAssignment.getNurseId();
+        const patientId = patient.toPrimitives()
+
+        // 3. Crear la cita con el nurseId asignado
         const appointment =
             new Appointment(
                 randomUUID(),
                 command.facilityId,
-                command.patientId,
-                command.motherId,
-                null,
+                patientId.id,
+                patientId.motherId,
+                nurseId, // tienes el enfermero asignado
                 command.appointmentDate,
                 command.appointmentTime,
                 AppointmentStatus.CONFIRMED

@@ -7,6 +7,7 @@ import {Email} from "../../../../domain/model/value-objects/Email";
 import {Dni} from "../../../../domain/model/value-objects/Dni";
 import {Phone} from "../../../../domain/model/value-objects/Phone";
 import {Role} from "../../../../domain/model/enum/Role";
+import {Promise} from "mongoose";
 
 
 export class MongoUserRepository implements UserRepository {
@@ -156,5 +157,36 @@ export class MongoUserRepository implements UserRepository {
         return documents.map(
             UserMapper.toDomain
         );
+    }
+
+    async findMotherByDni(
+        dni: string
+    ): Promise<User | null> {
+
+        const user =
+            await UserModel.findOne({
+                dni,
+                role: "Mother"
+            });
+
+        if (!user) {
+            return null;
+        }
+
+        return UserMapper.toDomain(user);
+    }
+
+    async findNurseById(id: string): Promise<User | null> {
+            const user =
+                await UserModel.findOne({
+                    _id: id,
+                    role: "Nurse"
+                });
+
+            if (!user) {
+                return null;
+            }
+
+            return UserMapper.toDomain(user);
     }
 }
