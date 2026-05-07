@@ -4,6 +4,41 @@ import {NurseAssigmentMapper} from "../../../mappers/NurseAssigmentMapper";
 import {NurseAssignmentModel} from "../models/NurseAssignmentModel";
 
 export class MongoNurseAssignmentRepository implements NurseAssignmentRepository {
+
+    /**
+     * Busca una asignación activa de enfermero por su ID.
+     *
+     * @description
+     * Este método recupera la posta a la que un enfermero está actualmente asignado.
+     * Como un enfermero solo puede estar en una posta a la vez, retorna un único
+     * resultado o null si no tiene asignación.
+     *
+     * @param nurseId - Identificador único del enfermero
+     * @returns La asignación del enfermero si existe, null en caso contrario
+     *
+     * @example
+     * ```typescript
+     * const assignment = await repository.findActiveByNurseId("nurse-123");
+     * if (assignment) {
+     *     console.log(`Enfermero asignado a posta: ${assignment.getFacilityId()}`);
+     * }
+     * ```
+     */
+    async findActiveByNurseId(
+        nurseId: string
+    ): Promise<NurseAssignment | null> {
+
+        const assignment =
+            await NurseAssignmentModel.findOne({
+                nurseId
+            });
+
+        if (!assignment) {
+            return null;
+        }
+
+        return NurseAssigmentMapper.toDomain(assignment);
+    }
     async findByFacilityId(facilityId: string): Promise<NurseAssignment[]> {
 
        const assignment =
