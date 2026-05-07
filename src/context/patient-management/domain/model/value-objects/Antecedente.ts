@@ -1,8 +1,8 @@
 export class Antecedente {
 
     constructor(
-        private type: string,
-        private description: string
+        public type: string,
+        public description: string
     ) {
         this.ensureValid();
     }

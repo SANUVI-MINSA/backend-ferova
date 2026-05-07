@@ -215,47 +215,50 @@ export class PatientCommandServiceImpl
             .save(patient);
     }
 
+    // En PatientCommandServiceImpl.ts
     async updateMedicalRecord(
-        command:
-        UpdateMedicalRecordCommand
+        command: UpdateMedicalRecordCommand
     ): Promise<void> {
 
-        const medicalRecord =
-            await this
-                .medicalRecordRepository
-                .findByPatientId(
-                    command.patientId
-                );
+        const medicalRecord = await this.medicalRecordRepository
+            .findByPatientId(command.patientId);
 
         if (!medicalRecord) {
-            throw new Error(
-                "Medical record not found"
-            );
+            throw new Error("Medical record not found");
         }
 
-        medicalRecord
-            .updateClinicalInformation(
-                new Weight(
-                    command.weight
-                ),
-                new Height(
-                    command.height
-                ),
-                new MotivoConsulta(
-                    command.motivoConsulta
-                ),
-                new Observaciones(
-                    command.observaciones
-                ),
-                command.antecedentes || [],
+        // Preparar valores solo si existen en el comando
+        const weight = command.weight !== undefined
+            ? new Weight(command.weight)
+            : undefined;
 
-                command.sintomas || []
-            );
+        const height = command.height !== undefined
+            ? new Height(command.height)
+            : undefined;
 
-        await this
-            .medicalRecordRepository
-            .update(
-                medicalRecord
-            );
+        const motivoConsulta = command.motivoConsulta !== undefined
+            ? new MotivoConsulta(command.motivoConsulta)
+            : undefined;
+
+        const observaciones = command.observaciones !== undefined
+            ? new Observaciones(command.observaciones)
+            : undefined;
+
+        const antecedentes = command.antecedentes !== undefined
+            ? command.antecedentes.map(ante => new Antecedente(ante.type, ante.description))
+            : undefined;
+
+        const sintomas = command.sintomas;
+
+        medicalRecord.updateClinicalInformation(
+            weight,
+            height,
+            motivoConsulta,
+            observaciones,
+            antecedentes,
+            sintomas
+        );
+
+        await this.medicalRecordRepository.update(medicalRecord);
     }
 }

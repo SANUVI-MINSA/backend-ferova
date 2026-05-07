@@ -42,36 +42,41 @@ export class MedicalRecord {
             new Date();
     }
 
+    // En MedicalRecord.ts
     updateClinicalInformation(
-        weight: Weight,
-        height: Height,
-        motivoConsulta: MotivoConsulta,
-        observaciones: Observaciones,
-        antecedentes: Antecedente[],
-        sintomas: string[]
+        weight?: Weight,
+        height?: Height,
+        motivoConsulta?: MotivoConsulta,
+        observaciones?: Observaciones,
+        antecedentes?: Antecedente[],
+        sintomas?: string[]
     ): void {
 
-        this.weight = weight;
+        if (weight) {
+            this.weight = weight;
+        }
 
-        this.height = height;
+        if (height) {
+            this.height = height;
+        }
 
-        this.motivoConsulta =
-            motivoConsulta;
+        if (motivoConsulta) {
+            this.motivoConsulta = motivoConsulta;
+        }
 
-        this.observaciones =
-            observaciones;
+        if (observaciones) {
+            this.observaciones = observaciones;
+        }
 
-        this.validateDuplicateAntecedentes(
-            antecedentes
-        );
+        if (antecedentes !== undefined) {  // Permitir arrays vacíos para eliminar
+            this.antecedentes = antecedentes;
+        }
 
-        this.antecedentes =
-            antecedentes;
+        if (sintomas !== undefined) {  // Permitir arrays vacíos para eliminar
+            this.sintomas = sintomas;
+        }
 
-        this.updatedAt =
-            new Date();
-
-        this.sintomas = sintomas;
+        this.updatedAt = new Date();
     }
 
     toPrimitives() {

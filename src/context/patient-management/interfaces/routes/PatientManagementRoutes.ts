@@ -218,6 +218,7 @@ router.post(
     patientManagementController.registerHemoglobinControl
 );
 
+// En PatientManagementRoutes.ts
 /**
  * @swagger
  * /api/patients/medical-record/update:
@@ -234,34 +235,43 @@ router.post(
  *             properties:
  *               patientId:
  *                 type: string
+ *                 example: "patient-123"
  *               weight:
  *                 type: number
+ *                 example: 13.2
  *               height:
  *                 type: number
+ *                 example: 88
  *               motivoConsulta:
  *                 type: string
+ *                 example: "Control de crecimiento"
  *               observaciones:
  *                 type: string
+ *                 example: "Paciente con buen apetito"
+ *               antecedentes:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     type:
+ *                       type: string
+ *                     description:
+ *                       type: string
+ *                 example: [{"type": "alergia", "description": "Ninguna"}]
+ *               sintomas:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["ninguno"]
+ *             required:
+ *               - patientId
  *     responses:
  *       200:
  *         description: Medical record updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                 updatedFields:
- *                   type: array
- *                   items:
- *                     type: string
  *       400:
  *         description: Invalid input data
  *       404:
  *         description: Medical record not found
- *       500:
- *         description: Internal server error
  */
 router.put(
     "/medical-record/update",
