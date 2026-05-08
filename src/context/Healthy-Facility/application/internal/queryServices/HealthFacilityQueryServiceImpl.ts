@@ -9,6 +9,7 @@ import {GetNurseAppointmentScheduleQuery} from "../../../domain/model/queries/Ge
 import {Appointment} from "../../../domain/model/entities/Appointment";
 import {GetFacilityAvailableSlotsQuery} from "../../../domain/model/queries/GetFacilityAvailableSlotsQuery";
 import {GetMotherNextAppointmentQuery} from "../../../domain/model/queries/GetMotherNextAppointmentQuery";
+import {PatientRepository} from "../../../../patient-management/domain/repositories/PatientRepository";
 
 export class HealthFacilityQueryServiceImpl
     implements HealthFacilityQueryService {
@@ -19,11 +20,15 @@ export class HealthFacilityQueryServiceImpl
 
         private appointmentRepository:
         AppointmentRepository,
+
+        private patientRepository: PatientRepository
     ) {}
 
     async listHealthFacilities(
         query: ListHealthFacilitiesQuery
     ): Promise<any[]> {
+
+        await this.validateMotherHasPatients(query.motherId)
 
         const facilities =
             await this
@@ -35,26 +40,6 @@ export class HealthFacilityQueryServiceImpl
 
                 const data =
                     facility.toPrimitives();
-
-                console.log(
-                    "User Lat:",
-                    query.userLatitude
-                );
-
-                console.log(
-                    "User Lng:",
-                    query.userLongitude
-                );
-
-                console.log(
-                    "Facility Data:",
-                    data
-                );
-
-                console.log(
-                    "Coordinates:",
-                    data.coordinates
-                );
 
                 const distanceKm =
                     DistanceCalculatorService
@@ -282,5 +267,13 @@ export class HealthFacilityQueryServiceImpl
                     ?.toPrimitives()
                     .name || "Unknown"
         };
+    }
+
+
+    private async validateMotherHasPatients(motherId: string): Promise<void> {
+        const patients = await this.patientRepository.findByMotherId(motherId);
+        if (!patients || patients.length === 0) {
+            throw new Error("Debes registrar al menos un paciente antes de usar esta función");
+        }
     }
 }
