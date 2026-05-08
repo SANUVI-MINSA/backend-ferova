@@ -36,4 +36,8 @@ export interface UserRepository {
     findNurseById(
         id: string
     ): Promise<User | null>;
+
+    findMotherById(
+        id: string
+    ): Promise<User | null>;
 }
