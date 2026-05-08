@@ -130,4 +130,12 @@ export class HealthFacilityFacade {
                 query
             );
     }
+
+    async validatePatientBelongsToMother(patientId: string, motherId: string): Promise<void> {
+        return await this.commandService.validatePatientBelongsToMother(patientId, motherId);
+    }
+
+    async validateAppointmentBelongsToMother(appointmentId: string, motherId: string): Promise<void> {
+        return await this.commandService.validateAppointmentBelongsToMother(appointmentId, motherId);
+    }
 }

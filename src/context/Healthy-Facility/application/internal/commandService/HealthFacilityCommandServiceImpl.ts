@@ -276,4 +276,32 @@ export class HealthFacilityCommandServiceImpl
 
         return `${firstDay} to ${lastDay} from ${firstSlot} to ${lastSlot}`;
     }
+
+    async validatePatientBelongsToMother(patientId: string, motherId: string): Promise<void> {
+        const patient = await this.patientRepository.findById(patientId);
+
+        if (!patient) {
+            throw new Error("Paciente no encontrado");
+        }
+
+        const patientData = patient.toPrimitives();
+
+        if (patientData.motherId !== motherId) {
+            throw new Error("Este paciente no pertenece a esta madre");
+        }
+    }
+
+    async validateAppointmentBelongsToMother(appointmentId: string, motherId: string): Promise<void> {
+        const appointment = await this.appointmentRepository.findById(appointmentId);
+
+        if (!appointment) {
+            throw new Error("Cita no encontrada");
+        }
+
+        const appointmentData = appointment.toPrimitives();
+
+        if (appointmentData.motherId !== motherId) {
+            throw new Error("Esta cita no pertenece a esta madre");
+        }
+    }
 }

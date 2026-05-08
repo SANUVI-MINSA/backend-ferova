@@ -70,45 +70,9 @@ const router = Router();
  */
 router.post(
     "/",
-    authenticate,    // ← Verificar token
-    requireAdmin,    // ← Solo ADMIN puede registrar postas
+    authenticate,
+    requireAdmin,
     healthFacilityController.registerHealthFacility
-);
-
-
-/**
- * @swagger
- * /api/health-facilities/{facilityId}/available-slots:
- *   get:
- *     summary: Get available appointment slots for a health facility
- *     tags:
- *       - Health Facilities
- *     parameters:
- *       - in: path
- *         name: facilityId
- *         required: true
- *         schema:
- *           type: string
- *       - in: query
- *         name: date
- *         required: true
- *         schema:
- *           type: string
- *         example: 2026-06-20
- *     responses:
- *       200:
- *         description: Available slots retrieved successfully
- *       400:
- *         description: Bad request
- *       404:
- *         description: Health facility not found
- *       500:
- *         description: Internal server error
- */
-router.get(
-    "/health-facilities/{facilityId}/available-slots",
-    healthFacilityController
-        .getFacilityAvailableSlots
 );
 
 /**
@@ -145,8 +109,8 @@ router.get(
  */
 router.post(
     "/assign-nurse",
-    authenticate,    // ← Verificar token
-    requireAdmin,    // ← Solo ADMIN puede asignar enfermeros
+    authenticate,
+    requireAdmin,
     healthFacilityController.assignNurseToFacility
 );
 
@@ -157,6 +121,8 @@ router.post(
  *     summary: Book appointment
  *     tags:
  *       - Health Facilities
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -168,8 +134,6 @@ router.post(
  *                 type: string
  *               patientId:
  *                 type: string
- *               motherId:
- *                 type: string
  *               appointmentDate:
  *                 type: string
  *                 example: 2026-06-10
@@ -179,11 +143,16 @@ router.post(
  *     responses:
  *       201:
  *         description: Appointment booked successfully
+ *       401:
+ *         description: Unauthorized - Token required
+ *       403:
+ *         description: Forbidden - Mother role required
  */
 router.post(
     "/appointments",
-    healthFacilityController
-        .bookAppointment
+    authenticate,
+    requireMother,
+    healthFacilityController.bookAppointment
 );
 
 /**
@@ -193,6 +162,8 @@ router.post(
  *     summary: Cancel appointment
  *     tags:
  *       - Health Facilities
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -202,21 +173,26 @@ router.post(
  *             properties:
  *               appointmentId:
  *                 type: string
- *       responses:
+ *     responses:
  *       200:
- *         description: Nearby facilities retrieved successfully
+ *         description: Appointment cancelled successfully
+ *       401:
+ *         description: Unauthorized - Token required
+ *       403:
+ *         description: Forbidden - Mother role required
  */
 router.put(
     "/appointments/cancel",
-    healthFacilityController
-        .cancelAppointment
+    authenticate,
+    requireMother,
+    healthFacilityController.cancelAppointment
 );
 
 /**
  * @swagger
  * /api/health-facilities/nearby:
  *   get:
- *     summary: Get nearby health facilities
+ *     summary: Get nearby health facilities (Solo Madre)
  *     tags:
  *       - Health Facilities
  *     security:
@@ -228,14 +204,12 @@ router.put(
  *         schema:
  *           type: number
  *         example: -12.0464
- *
  *       - in: query
  *         name: lng
  *         required: true
  *         schema:
  *           type: number
  *         example: -77.0428
- *
  *     responses:
  *       200:
  *         description: Nearby facilities retrieved successfully
@@ -244,8 +218,7 @@ router.get(
     "/nearby",
     authenticate,
     requireMother,
-    healthFacilityController
-        .listHealthFacilities
+    healthFacilityController.listHealthFacilities
 );
 
 /**
@@ -267,17 +240,18 @@ router.get(
  */
 router.get(
     "/:id",
-    healthFacilityController
-        .getHealthFacilityDetail
+    healthFacilityController.getHealthFacilityDetail
 );
 
 /**
  * @swagger
  * /api/health-facilities/patient/{patientId}/appointments:
  *   get:
- *     summary: Get patient appointment history
+ *     summary: Get patient appointment history (SOLO MADRE)
  *     tags:
  *       - Health Facilities
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: patientId
@@ -287,11 +261,16 @@ router.get(
  *     responses:
  *       200:
  *         description: Appointment history retrieved
+ *       401:
+ *         description: Unauthorized - Token required
+ *       403:
+ *         description: Forbidden - Patient does not belong to mother
  */
 router.get(
     "/patient/:patientId/appointments",
-    healthFacilityController
-        .getPatientAppointmentHistory
+    authenticate,
+    requireMother,
+    healthFacilityController.getPatientAppointmentHistory
 );
 
 /**
@@ -316,8 +295,7 @@ router.get(
  */
 router.get(
     "/appointments/nurse/:nurseId",
-    healthFacilityController
-        .getNurseAppointmentSchedule
+    healthFacilityController.getNurseAppointmentSchedule
 );
 
 /**
@@ -345,33 +323,31 @@ router.get(
  */
 router.get(
     "/:facilityId/available-slots",
-    healthFacilityController
-        .getFacilityAvailableSlots
+    healthFacilityController.getFacilityAvailableSlots
 );
 
 /**
  * @swagger
- * /api/health-facilities/appointments/mother/{motherId}/next:
+ * /api/health-facilities/appointments/mother/next:
  *   get:
- *     summary: Get mother's next appointment
+ *     summary: Get mother's next appointment (motherId from token)
  *     tags:
  *       - Health Facilities
- *     parameters:
- *       - in: path
- *         name: motherId
- *         required: true
- *         schema:
- *           type: string
- *         example: mother-123
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Next appointment retrieved successfully
+ *       401:
+ *         description: Unauthorized - Token required
  *       404:
  *         description: No upcoming appointments found
  */
 router.get(
-    "/appointments/mother/:motherId/next",
-    healthFacilityController
-        .getMotherNextAppointment
+    "/appointments/mother/next",
+    authenticate,
+    requireMother,
+    healthFacilityController.getMotherNextAppointment
 );
+
 export default router;
