@@ -56,7 +56,8 @@ const healthFacilityCommandService =
 const healthFacilityQueryService =
     new HealthFacilityQueryServiceImpl(
         healthFacilityRepository,
-        appointmentRepository
+        appointmentRepository,
+        patientRepository
     );
 
 
