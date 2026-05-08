@@ -16,21 +16,18 @@ export interface AuthRequest extends Request {
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
     try {
         const authHeader = req.headers.authorization;
-        console.log("Auth Header:", authHeader); // ← AGREGAR LOG
 
         if (!authHeader) {
             return res.status(401).json({ error: "Token no proporcionado" });
         }
 
         const token = authHeader.split(' ')[1];
-        console.log("Token extraído:", token); // ← AGREGAR LOG
 
         if (!token) {
             return res.status(401).json({ error: "Token no proporcionado" });
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
-        console.log("Token decodificado:", decoded); // ← AGREGAR LOG
 
         (req as AuthRequest).user = {
             id: decoded.id,
@@ -40,11 +37,9 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
             email: decoded.email
         };
 
-        console.log("req.user asignado:", (req as AuthRequest).user); // ← AGREGAR LOG
 
         next();
     } catch (error: any) {
-        console.log("Error en authenticate:", error.message); // ← AGREGAR LOG
         return res.status(401).json({ error: "Token inválido" });
     }
 };
