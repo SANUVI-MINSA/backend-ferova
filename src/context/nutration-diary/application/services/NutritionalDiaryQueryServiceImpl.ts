@@ -8,6 +8,7 @@ import {GetFoodItemDetailsQuery} from "../../model/domain/queries/GetFoodItemDet
 import {Error, Promise} from "mongoose";
 import {GetNutritionalHistoryQuery} from "../../model/domain/queries/GetNutritionalHistoryQuery";
 import {GetTodayNutritionalDiaryQuery} from "../../model/domain/queries/GetTodayNutritionalDiaryQuery";
+import {FoodEntry} from "../../model/domain/entities/FoodEntry";
 
 export class NutritionalDiaryQueryServiceImpl
     implements NutritionalDiaryQueryService {
@@ -236,122 +237,75 @@ export class NutritionalDiaryQueryServiceImpl
         return "gramos";
     }
 
+    // NutritionalDiaryQueryServiceImpl.ts
     async getNutritionalHistory(
         query: GetNutritionalHistoryQuery
     ): Promise<any> {
+        const endDate = query.endDate || new Date();
+        const startDate = query.startDate || new Date(
+            endDate.getTime() - (30 * 24 * 60 * 60 * 1000)
+        );
 
-        const endDate =
-            query.endDate ||
-            new Date();
+        const diaries = await this.diaryRepository.findByPatientAndDateRange(
+            query.patientId,
+            startDate,
+            endDate
+        );
 
-        const startDate =
-            query.startDate ||
-            new Date(
-                endDate.getTime() -
-                (30 * 24 * 60 * 60 * 1000)
-            );
+        const sortedDiaries = diaries.sort(
+            (a, b) => b.getDate().getTime() - a.getDate().getTime()
+        );
 
-        const diaries =
-            await this
-                .diaryRepository
-                .findByPatientAndDateRange(
-                    query.patientId,
-                    startDate,
-                    endDate
-                );
+        const days: any[] = [];
 
-        const sortedDiaries =
-            diaries.sort(
-                (a, b) =>
-                    b.getDate().getTime() -
-                    a.getDate().getTime()
-            );
+        for (const diary of sortedDiaries) {
+            const diaryData = diary.toPrimitives();
 
-        const days =
-            await Promise.all(
-                sortedDiaries.map(
-                    async (diary) => {
+            // 🔹 DECLARAR CON TIPO EXPLÍCITO
+            let entries: FoodEntry[] = [];
 
-                        const diaryData =
-                            diary
-                                .toPrimitives();
+            try {
+                entries = await this.foodEntryRepository.findByDiaryId(diaryData.id);
+            } catch (error) {
+                console.error("Error obteniendo entries:", error);
+                entries = [];
+            }
 
-                        const entries =
-                            await this
-                                .foodEntryRepository
-                                .findByDiaryId(
-                                    diaryData.id
-                                );
+            let inhibitorCount = 0;
 
-                        let inhibitorCount = 0;
+            // Procesar cada entry de manera segura
+            for (let i = 0; i < entries.length; i++) {
+                const entry = entries[i];
+                try {
+                    if (entry && typeof entry.getFoodItemId === 'function') {
+                        const foodItemId = entry.getFoodItemId();
+                        const foodItem = await this.foodItemRepository.findById(foodItemId);
 
-                        for (
-                            const entry
-                            of entries
-                            ) {
-                            const entryData =
-                                entry
-                                    .toPrimitives();
-
-                            const foodItem =
-                                await this
-                                    .foodItemRepository
-                                    .findById(
-                                        entryData.foodItemId
-                                    );
-
-                            if (
-                                foodItem
-                                    ?.toPrimitives()
-                                    .isInhibitor
-                            ) {
-                                inhibitorCount++;
-                            }
+                        if (foodItem && foodItem.toPrimitives().isInhibitor) {
+                            inhibitorCount++;
                         }
-
-                        return {
-                            date:
-                            diaryData.date,
-
-                            displayDate:
-                                diaryData.date
-                                    .toLocaleDateString(
-                                        "es-PE",
-                                        {
-                                            day: "numeric",
-                                            month: "long"
-                                        }
-                                    ),
-
-                            totalIronAbsorbed:
-                                Number(
-                                    diaryData
-                                        .totalIronAbsorbed
-                                        .toFixed(1)
-                                ),
-
-                            hasInhibitor:
-                            diaryData
-                                .hasInhibitor,
-
-                            inhibitorCount,
-
-                            totalFoodEntries:
-                            entries.length
-                        };
                     }
-                )
-            );
+                } catch (error) {
+                    console.error(`Error procesando entry ${i}:`, error);
+                }
+            }
+
+            days.push({
+                date: diaryData.date,
+                displayDate: diaryData.date.toLocaleDateString("es-PE", {
+                    day: "numeric",
+                    month: "long"
+                }),
+                totalIronAbsorbed: Number(diaryData.totalIronAbsorbed.toFixed(1)),
+                hasInhibitor: diaryData.hasInhibitor,
+                inhibitorCount,
+                totalFoodEntries: entries.length
+            });
+        }
 
         return {
-            patientId:
-            query.patientId,
-
-            period: {
-                startDate,
-                endDate
-            },
-
+            patientId: query.patientId,
+            period: { startDate, endDate },
             days
         };
     }

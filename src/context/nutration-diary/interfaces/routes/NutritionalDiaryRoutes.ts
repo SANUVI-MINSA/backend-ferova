@@ -149,6 +149,8 @@ router.get(
 );
 
 
+// NutritionalDiaryRoutes.ts
+
 /**
  * @swagger
  * /api/nutritional-diary/history/{patientId}:
@@ -156,6 +158,8 @@ router.get(
  *     summary: Get nutritional history of a patient
  *     tags:
  *       - Nutritional Diary
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: patientId
@@ -165,12 +169,16 @@ router.get(
  *     responses:
  *       200:
  *         description: Nutritional history retrieved successfully
+ *       401:
+ *         description: Unauthorized - Token required
+ *       403:
+ *         description: Forbidden - Patient does not belong to mother
  */
 router.get(
     "/history/:patientId",
-    nutritionalDiaryController
-        .getNutritionalHistory
+    authenticate,    // ← Verificar token
+    requireMother,   // ← Verificar que sea madre
+    nutritionalDiaryController.getNutritionalHistory
 );
-
 
 export default router;
