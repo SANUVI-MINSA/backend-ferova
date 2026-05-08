@@ -189,4 +189,18 @@ export class MongoUserRepository implements UserRepository {
 
             return UserMapper.toDomain(user);
     }
+
+    async findMotherById(id: string): Promise<User | null> {
+        const user =
+            await UserModel.findOne({
+                _id: id,
+                role: "Mother"
+            });
+
+        if (!user) {
+            return null;
+        }
+
+        return UserMapper.toDomain(user);
+    }
 }
