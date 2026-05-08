@@ -115,11 +115,31 @@ export class UserCommandServiceImpl implements UserCommandService {
             throw new Error("Invalid credentials");
         }
 
+        // el userid es motherid o nurseid
+
+        const role = user.getRole();
+        const userId = user.getId().getValue();
+
+        let motherId = null;
+        let nurseId = null;
+
+        if (role === Role.MOTHER) {
+            motherId = userId;
+        }
+
+        if (role === Role.NURSE) {
+            nurseId = userId;
+        }
+
+        // SI ES ADMIN quedan como null
+
         const token =
             this.jwtService.generateToken({
                 id: user.getId().getValue(),
                 email: user.getEmail().getValue(),
-                role: user.getRole()
+                role: user.getRole(),
+                motherId: motherId,
+                nurseId: nurseId
             });
 
         return token;
