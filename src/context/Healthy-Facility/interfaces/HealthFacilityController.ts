@@ -179,14 +179,8 @@ export class HealthFacilityController {
 
     listHealthFacilities = async (req: AuthRequest, res: Response) => {
         try {
-            // Obtener mother del token
-            // 🔍 LOGS PARA DIAGNÓSTICO
-            console.log("Headers:", req.headers);
-            console.log("Authorization header:", req.headers.authorization);
-            console.log("req.user:", req.user);
 
             const motherId = req.user?.motherId;
-            console.log("motherId:", motherId);
 
             if (!motherId) {
                 return res.status(400).json({
@@ -228,44 +222,29 @@ export class HealthFacilityController {
         }
     };
 
-    getNurseAppointmentSchedule =
-        async (
-            req: Request,
-            res: Response
-        ) => {
-            try {
+    getNurseAppointmentSchedule = async (req: AuthRequest, res: Response) => {
+        try {
+            // ✅ CORRECTO: Obtener nurseId del token (similar a como se hace con motherId)
+            const nurseId = req.user?.nurseId;
 
-                const nurseId = this.getStringParam(req.params.nurseId);
-
-                if (!nurseId) {
-                    return res.status(400).json({ error: "Nurse ID is required" });
-                }                const appointments =
-                    await this
-                        .healthFacilityFacade
-                        .getNurseAppointmentSchedule({
-                            nurseId
-                        });
-
-                const response =
-                    appointments.map(
-                        appointment =>
-                            NurseAppointmentScheduleAssembler
-                                .toResource(
-                                    appointment
-                                )
-                    );
-
-                res.status(200).json(
-                    response
-                );
-
-            } catch (error: any) {
-                res.status(400).json({
-                    error:
-                    error.message
-                });
+            if (!nurseId) {
+                return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
             }
-        };
+
+            const appointments = await this.healthFacilityFacade.getNurseAppointmentSchedule({
+                nurseId
+            });
+
+            const response = appointments.map(appointment =>
+                NurseAppointmentScheduleAssembler.toResource(appointment)
+            );
+
+            res.status(200).json(response);
+
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    };
 
     getFacilityAvailableSlots = async (
         req: Request,

@@ -1,7 +1,7 @@
 import {Router} from "express";
 
 import {healthFacilityController} from "../dependency-injection/HealthFacilityDependencyInjection"
-import {authenticate, requireAdmin, requireMother} from "../../../../middlewares/auth.middleware";
+import {authenticate, requireAdmin, requireMother, requireNurse} from "../../../../middlewares/auth.middleware";
 
 const router = Router();
 
@@ -275,18 +275,13 @@ router.get(
 
 /**
  * @swagger
- * /api/health-facilities/appointments/nurse/{nurseId}:
+ * /api/health-facilities/appointments/nurse:
  *   get:
  *     summary: Get confirmed appointment schedule for a nurse
  *     tags:
  *       - Health Facilities
- *     parameters:
- *       - in: path
- *         name: nurseId
- *         required: true
- *         schema:
- *           type: string
- *         example: nurse-123
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Nurse appointment schedule retrieved successfully
@@ -294,8 +289,11 @@ router.get(
  *         description: Error retrieving nurse appointments
  */
 router.get(
-    "/appointments/nurse/:nurseId",
-    healthFacilityController.getNurseAppointmentSchedule
+    "/appointments/nurse",
+    authenticate,
+    requireNurse,
+    healthFacilityController
+        .getNurseAppointmentSchedule
 );
 
 /**
