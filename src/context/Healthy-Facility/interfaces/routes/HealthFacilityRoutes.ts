@@ -1,7 +1,7 @@
 import {Router} from "express";
 
 import {healthFacilityController} from "../dependency-injection/HealthFacilityDependencyInjection"
-import {authenticate, requireMother} from "../../../../middlewares/auth.middleware";
+import {authenticate, requireAdmin, requireMother} from "../../../../middlewares/auth.middleware";
 
 const router = Router();
 
@@ -12,6 +12,8 @@ const router = Router();
  *     summary: Register a new health facility
  *     tags:
  *       - Health Facilities
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -61,11 +63,16 @@ const router = Router();
  *     responses:
  *       201:
  *         description: Health facility registered successfully
+ *       401:
+ *         description: Unauthorized - Token required
+ *       403:
+ *         description: Forbidden - Admin role required
  */
 router.post(
     "/",
-    healthFacilityController
-        .registerHealthFacility
+    authenticate,    // ← Verificar token
+    requireAdmin,    // ← Solo ADMIN puede registrar postas
+    healthFacilityController.registerHealthFacility
 );
 
 
@@ -111,6 +118,8 @@ router.get(
  *     summary: Assign nurse to facility
  *     tags:
  *       - Health Facilities
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -127,15 +136,18 @@ router.get(
  *         description: Nurse assigned successfully
  *       400:
  *         description: Bad request
+ *       401:
+ *         description: Unauthorized - Token required
+ *       403:
+ *         description: Forbidden - Admin role required
  *       404:
  *         description: Facility or nurse not found
- *       500:
- *         description: Internal server error
  */
 router.post(
     "/assign-nurse",
-    healthFacilityController
-        .assignNurseToFacility
+    authenticate,    // ← Verificar token
+    requireAdmin,    // ← Solo ADMIN puede asignar enfermeros
+    healthFacilityController.assignNurseToFacility
 );
 
 /**

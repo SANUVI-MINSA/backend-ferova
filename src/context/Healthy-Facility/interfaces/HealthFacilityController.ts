@@ -13,53 +13,34 @@ export class HealthFacilityController {
         HealthFacilityFacade
     ) {}
 
-    registerHealthFacility = async (
-        req: Request,
-        res: Response
-    ) => {
+    registerHealthFacility = async (req: AuthRequest, res: Response) => {
         try {
 
-            await this
-                .healthFacilityFacade
-                .registerHealthFacility(
-                    req.body
-                );
+            await this.healthFacilityFacade.registerHealthFacility(req.body);
 
             res.status(201).json({
-                message:
-                    "Health facility registered successfully"
+                message: "Health facility registered successfully"
             });
 
         } catch (error: any) {
-            res.status(400).json({
-                error: error.message
-            });
+            res.status(400).json({ error: error.message });
         }
     };
 
-    assignNurseToFacility = async (
-        req: Request,
-        res: Response
-    ) => {
+    assignNurseToFacility = async (req: AuthRequest, res: Response) => {
         try {
 
-            await this
-                .healthFacilityFacade
-                .assignNurseToFacility(
-                    req.body
-                );
+            await this.healthFacilityFacade.assignNurseToFacility(req.body);
 
             res.status(200).json({
-                message:
-                    "Nurse assigned successfully"
+                message: "Nurse assigned successfully"
             });
 
         } catch (error: any) {
-            res.status(400).json({
-                error: error.message
-            });
+            res.status(400).json({ error: error.message });
         }
     };
+
 
     bookAppointment = async (
         req: Request,
