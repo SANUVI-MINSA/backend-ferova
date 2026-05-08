@@ -4,6 +4,7 @@ import {HealthFacilityDetailResourceAssembler} from "./assemblers/HealthFacility
 import {AppointmentHistoryResourceAssembler} from "./assemblers/AppointmentHistoryResourceAssembler";
 import {NurseAppointmentScheduleAssembler} from "./assemblers/NurseAppointmentScheduleAssembler";
 import {MotherNextAppointmentResourceAssembler} from "./assemblers/MotherNextAppointmentResourceAssembler";
+import {AuthRequest} from "../../../middlewares/auth.middleware";
 
 export class HealthFacilityController {
 
@@ -192,8 +193,23 @@ export class HealthFacilityController {
             }
         };
 
-    listHealthFacilities = async (req: Request, res: Response) => {
+    listHealthFacilities = async (req: AuthRequest, res: Response) => {
         try {
+            // Obtener mother del token
+            // 🔍 LOGS PARA DIAGNÓSTICO
+            console.log("Headers:", req.headers);
+            console.log("Authorization header:", req.headers.authorization);
+            console.log("req.user:", req.user);
+
+            const motherId = req.user?.motherId;
+            console.log("motherId:", motherId);
+
+            if (!motherId) {
+                return res.status(400).json({
+                    error: "Mother ID no encontrado en el token"
+                });
+            }
+
             // Cambiar de 'latitude'/'longitude' a 'lat'/'lng'
             const latitude = parseFloat(String(req.query.lat ?? ''));
             const longitude = parseFloat(String(req.query.lng ?? ''));
@@ -208,7 +224,8 @@ export class HealthFacilityController {
             const facilities = await
                 this.healthFacilityFacade.listHealthFacilities({
                     userLatitude: latitude,
-                    userLongitude: longitude
+                    userLongitude: longitude,
+                    motherId: motherId
             });
 
             const response = facilities.map((item: any) => {
