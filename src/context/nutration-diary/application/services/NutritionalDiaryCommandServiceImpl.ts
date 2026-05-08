@@ -1,6 +1,4 @@
 
-
-// BC integrations
 import { PatientRepository } from
         "../../../patient-management/domain/repositories/PatientRepository";
 
@@ -301,5 +299,19 @@ export class NutritionalDiaryCommandServiceImpl
         }
 
         return "gramos";
+    }
+
+    async validatePatientBelongsToMother(patientId: string, motherId: string): Promise<void> {
+        const patient = await this.patientRepository.findById(patientId);
+
+        if (!patient) {
+            throw new Error("Paciente no encontrado");
+        }
+
+        const patientData = patient.toPrimitives();
+
+        if (patientData.motherId !== motherId) {
+            throw new Error("Este paciente no pertenece a esta madre");
+        }
     }
 }

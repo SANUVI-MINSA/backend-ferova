@@ -1,5 +1,6 @@
 import {Router} from "express";
 import {nutritionalDiaryController} from "../dependencies/NutritionDependecies";
+import {authenticate, requireMother} from "../../../../middlewares/auth.middleware";
 
 
 const router = Router();
@@ -11,6 +12,8 @@ const router = Router();
  *     summary: Register food consumed by a mother
  *     tags:
  *       - Nutritional Diary
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -19,13 +22,10 @@ const router = Router();
  *             type: object
  *             required:
  *               - patientId
- *               - motherId
  *               - foodItemId
  *               - quantity
  *             properties:
  *               patientId:
- *                 type: string
- *               motherId:
  *                 type: string
  *               foodItemId:
  *                 type: string
@@ -36,9 +36,13 @@ const router = Router();
  *         description: Food registered successfully
  *       400:
  *         description: Validation error
+ *       401:
+ *         description: Unauthorized
  */
 router.post(
     "/food-entry",
+    authenticate,
+    requireMother,
     nutritionalDiaryController
         .registerFoodEntry
 );
@@ -50,6 +54,8 @@ router.post(
  *     summary: Get today's nutritional diary
  *     tags:
  *       - Nutritional Diary
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: patientId
@@ -59,15 +65,18 @@ router.post(
  *     responses:
  *       200:
  *         description: Today's diary retrieved successfully
- *       404:
- *         description: Diary not found
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Patient does not belong to mother
  */
 router.get(
     "/today/:patientId",
+    authenticate,    // ← Verificar token
+    requireMother,   // ← Verificar que sea madre
     nutritionalDiaryController
         .getTodayDiary
 );
-
 /**
  * @swagger
  * /api/nutritional-diary/foods/category/{category}:

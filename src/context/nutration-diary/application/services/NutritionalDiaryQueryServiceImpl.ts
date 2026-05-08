@@ -357,12 +357,7 @@ export class NutritionalDiaryQueryServiceImpl
     }
 
     async getTodayNutritionalDiary(query: GetTodayNutritionalDiaryQuery): Promise<any> {
-        const diary =
-            await this
-                .diaryRepository
-                .findTodayByPatientId(
-                    query.patientId
-                );
+        const diary = await this.diaryRepository.findTodayByPatientId(query.patientId);
 
         if (!diary) {
             return {
@@ -374,7 +369,8 @@ export class NutritionalDiaryQueryServiceImpl
         }
 
         const diaryData =
-            diary.toPrimitives();
+            diary.
+            toPrimitives();
 
         const entries =
             await this
@@ -383,69 +379,50 @@ export class NutritionalDiaryQueryServiceImpl
                     diaryData.id
                 );
 
-        const enrichedEntries =
-            await Promise.all(
-                entries.map(
-                    async (entry) => {
+        if (!entries || entries.length === 0) {
+            return {
+                diaryId: diaryData.id,
+                date: diaryData.date,
+                totalIronAbsorbed: Number(diaryData.totalIronAbsorbed.toFixed(2)),
+                foodEntries: []
+            };
+        }
 
-                        const entryData =
-                            entry
-                                .toPrimitives();
+        const enrichedEntries = [];
 
-                        const foodItem =
-                            await this
-                                .foodItemRepository
-                                .findById(
-                                    entryData.foodItemId
-                                );
+        for (const entry of entries) {
+            try {
 
-                        const foodData =
-                            foodItem
-                                ?.toPrimitives();
+                const foodItem = await this.foodItemRepository.findById(entry.getFoodItemId());
+                const foodData = foodItem?.toPrimitives();
 
-                        return {
-                            entryId:
-                            entryData.id,
+                enrichedEntries.push({
+                    entryId: entry.getId(),
+                    foodName: foodData?.name || "Desconocido",
+                    quantity: entry.getQuantity(),
+                    unit: entry.getUnit(),
+                    ironAbsorbed: entry.getIronContributed(),
+                    isInhibitor: foodData?.isInhibitor || false
+                });
 
-                            foodName:
-                            foodData?.name,
-
-                            quantity:
-                            entryData.quantity,
-
-                            unit:
-                            entryData.unit,
-
-                            ironAbsorbed:
-                            entryData
-                                .ironContributed,
-
-                            isInhibitor:
-                            foodData
-                                ?.isInhibitor
-                        };
-                    }
-                )
-            );
+            } catch (error) {
+                enrichedEntries.push({
+                    entryId: "error",
+                    foodName: "Error al procesar",
+                    quantity: 0,
+                    unit: "",
+                    ironAbsorbed: 0,
+                    isInhibitor: false
+                });
+            }
+        }
 
         return {
-            diaryId:
-            diaryData.id,
-
-            date:
-            diaryData.date,
-
-            totalIronAbsorbed:
-                Number(
-                    diaryData
-                        .totalIronAbsorbed
-                        .toFixed(2)
-                ),
-
-            foodEntries:
-            enrichedEntries
+            diaryId: diaryData.id,
+            date: diaryData.date,
+            totalIronAbsorbed: Number(diaryData.totalIronAbsorbed.toFixed(2)),
+            foodEntries: enrichedEntries
         };
     }
-
 
 }
