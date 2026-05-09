@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import {PatientManagementFacade} from "./facade/PatientManagementFacade";
 import {HemoglobinHistoryResourceAssembler} from "./assemblers/HemoglobinHistoryResourceAssembler";
 import {EligibleDischargePatientResourceAssembler} from "./assemblers/EligibleDischargePatientResourceAssembler";
+import {AuthRequest} from "../../../middlewares/auth.middleware";
 
 export class PatientManagementController {
 
@@ -10,27 +11,28 @@ export class PatientManagementController {
         PatientManagementFacade
     ) {}
 
-    registerPatient = async (
-        req: Request,
-        res: Response
-    ) => {
+    registerPatient = async (req: AuthRequest, res: Response) => {
         try {
+            const motherId = req.user?.motherId;
 
-            await this.patientFacade
-                .registerPatient(
-                    req.body
-                );
+            if (!motherId) {
+                return res.status(400).json({ error: "Mother ID no encontrado en el token" });
+            }
+
+            // ✅ Sobrescribir motherId del body con la del token
+            const command = {
+                ...req.body,
+                motherId  // ← Forzar motherId del token
+            };
+
+            await this.patientFacade.registerPatient(command);
 
             res.status(201).json({
-                message:
-                    "Patient registered successfully"
+                message: "Patient registered successfully"
             });
 
         } catch (error: any) {
-            res.status(400).json({
-                error:
-                error.message
-            });
+            res.status(400).json({ error: error.message });
         }
     };
 
@@ -375,31 +377,26 @@ export class PatientManagementController {
         };
 
 
-    getHemoglobinEvolutionChart =
-        async (
-            req: Request,
-            res: Response
-        ) => {
-            try {
+    getHemoglobinEvolutionChart = async (req: AuthRequest, res: Response) => {
+        try {
+            const motherId = req.user?.motherId;
+            const patientId = req.params.patientId as string;
 
-                const result =
-                    await this.patientFacade
-                        .getHemoglobinEvolutionChart({
-                            patientId:
-                            req.params.patientId as string
-                        });
-
-                res.status(200).json(
-                    result
-                );
-
-            } catch (error: any) {
-                res.status(400).json({
-                    error:
-                    error.message
-                });
+            if (!motherId) {
+                return res.status(400).json({ error: "Mother ID no encontrado" });
             }
-        };
+
+            // ✅ Usar el nuevo método de validación
+            await this.patientFacade.validatePatientBelongsToMother(patientId, motherId);
+
+            const result = await this.patientFacade.getHemoglobinEvolutionChart({ patientId });
+
+            res.status(200).json(result);
+
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    };
 
 
 }

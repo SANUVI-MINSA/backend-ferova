@@ -12,7 +12,8 @@ import {GetPatientsAssignedToNurseQuery} from "../../domain/model/queries/GetPat
 import {PdfService} from "../../infrastructure/services/PdfService";
 import {DownloadMedicalRecordPdfQuery} from "../../domain/model/queries/DownloadMedicalRecordPdfQuery";
 import {DownloadHemoglobinReportPdfQuery} from "../../domain/model/queries/DownloadHemoglobinReportPdfQuery";
-import {GetHemoglobinEvolutionChartQuery} from "../../domain/model/commands/getHemoglobinEvolutionChart";
+import {GetHemoglobinEvolutionChartQuery} from "../../domain/model/queries/getHemoglobinEvolutionChart";
+import {GetPatientQuery} from "../../domain/model/queries/GetPatientQuery";
 
 export class PatientQueryServiceImpl
     implements PatientQueryService {
@@ -350,5 +351,15 @@ export class PatientQueryServiceImpl
             chart:
             chartData
         };
+    }
+
+    async getPatient(query: GetPatientQuery): Promise<any> {
+        const patient = await this.patientRepository.findById(query.patientId);
+
+        if (!patient) {
+            return null;
+        }
+
+        return patient.toPrimitives();
     }
 }

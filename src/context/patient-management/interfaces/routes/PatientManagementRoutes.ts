@@ -1,6 +1,7 @@
 import express from "express";
 
 import { patientManagementController } from "../dependencies/PatientManagementDependencyInjection";
+import { authenticate, requireMother } from "../../../../middlewares/auth.middleware";
 
 const router = express.Router();
 
@@ -11,6 +12,8 @@ const router = express.Router();
  *     summary: Register a new patient
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -36,9 +39,6 @@ const router = express.Router();
  *               height:
  *                 type: number
  *                 example: 85
- *               motherId:
- *                 type: string
- *                 example: mother-123
  *     responses:
  *       201:
  *         description: Patient registered successfully
@@ -60,6 +60,8 @@ const router = express.Router();
  */
 router.post(
     "/register",
+    authenticate,
+    requireMother,  // ✅ Solo madres autenticadas
     patientManagementController.registerPatient
 );
 
@@ -638,6 +640,8 @@ router.get(
  *     summary: Get hemoglobin evolution chart
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: patientId
@@ -650,8 +654,9 @@ router.get(
  */
 router.get(
     "/:patientId/hemoglobin-evolution",
-    patientManagementController
-        .getHemoglobinEvolutionChart
+    authenticate,
+    requireMother,  // ✅ Solo madres, con validación de pertenencia
+    patientManagementController.getHemoglobinEvolutionChart
 );
 
 export default router;
