@@ -1,6 +1,7 @@
 import express from "express";
 
 import { patientManagementController } from "../dependencies/PatientManagementDependencyInjection";
+import {authenticate, requireMother, requireNurse} from "../../../../middlewares/auth.middleware";
 
 const router = express.Router();
 
@@ -11,6 +12,8 @@ const router = express.Router();
  *     summary: Register a new patient
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -36,9 +39,6 @@ const router = express.Router();
  *               height:
  *                 type: number
  *                 example: 85
- *               motherId:
- *                 type: string
- *                 example: mother-123
  *     responses:
  *       201:
  *         description: Patient registered successfully
@@ -60,6 +60,8 @@ const router = express.Router();
  */
 router.post(
     "/register",
+    authenticate,
+    requireMother,  // ✅ Solo madres autenticadas
     patientManagementController.registerPatient
 );
 
@@ -70,6 +72,8 @@ router.post(
  *     summary: Assign patient to nurse
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -78,8 +82,6 @@ router.post(
  *             type: object
  *             properties:
  *               patientId:
- *                 type: string
- *               nurseId:
  *                 type: string
  *     responses:
  *       200:
@@ -104,6 +106,8 @@ router.post(
  */
 router.post(
     "/assign-nurse",
+    authenticate,
+    requireNurse,
     patientManagementController.assignPatientToNurse
 );
 
@@ -114,6 +118,8 @@ router.post(
  *     summary: Create initial medical record
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -168,6 +174,8 @@ router.post(
  */
 router.post(
     "/medical-record",
+    authenticate,
+    requireNurse,
     patientManagementController.createMedicalRecord
 );
 
@@ -178,6 +186,8 @@ router.post(
  *     summary: Register hemoglobin control
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -215,6 +225,8 @@ router.post(
  */
 router.post(
     "/hemoglobin-control",
+    authenticate,
+    requireNurse,
     patientManagementController.registerHemoglobinControl
 );
 
@@ -226,6 +238,8 @@ router.post(
  *     summary: Update medical record
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -275,6 +289,8 @@ router.post(
  */
 router.put(
     "/medical-record/update",
+    authenticate,
+    requireNurse,
     patientManagementController.updateMedicalRecord
 );
 
@@ -285,6 +301,8 @@ router.put(
  *     summary: Discharge patient
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -293,8 +311,6 @@ router.put(
  *             type: object
  *             properties:
  *               patientId:
- *                 type: string
- *               nurseId:
  *                 type: string
  *     responses:
  *       200:
@@ -320,6 +336,8 @@ router.put(
  */
 router.put(
     "/discharge",
+    authenticate,
+    requireNurse,
     patientManagementController.dischargePatient
 );
 
@@ -330,6 +348,8 @@ router.put(
  *     summary: Search mother by DNI
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: dni
@@ -345,6 +365,8 @@ router.put(
  */
 router.get(
     "/mother/search/:dni",
+    authenticate,
+    requireNurse,
     patientManagementController
         .searchMotherByDni
 );
@@ -356,6 +378,8 @@ router.get(
  *     summary: List patients by mother
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: motherId
@@ -397,6 +421,8 @@ router.get(
  */
 router.get(
     "/mother/:motherId",
+    authenticate,
+    requireNurse,
     patientManagementController.listPatientsByMother
 );
 
@@ -407,6 +433,8 @@ router.get(
  *     summary: Get medical record
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: patientId
@@ -446,6 +474,8 @@ router.get(
  */
 router.get(
     "/:patientId/medical-record",
+    authenticate,
+    requireNurse,
     patientManagementController.getMedicalRecord
 );
 
@@ -456,6 +486,8 @@ router.get(
  *     summary: Get hemoglobin controls history
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: medicalRecordId
@@ -491,22 +523,21 @@ router.get(
  */
 router.get(
     "/medical-record/:medicalRecordId/controls",
+    authenticate,
+    requireNurse,
     patientManagementController.getHemoglobinHistory
+
 );
 
 /**
  * @swagger
- * /api/patients/discharge/nurse/{nurseId}:
+ * /api/patients/discharge/nurse:
  *   get:
  *     summary: Get patients eligible for discharge
  *     tags:
  *       - Patients
- *     parameters:
- *       - in: path
- *         name: nurseId
- *         required: true
- *         schema:
- *           type: string
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Eligible patients retrieved successfully
@@ -539,7 +570,9 @@ router.get(
  *         description: Internal server error
  */
 router.get(
-    "/discharge/nurse/:nurseId",
+    "/discharge/nurse",
+    authenticate,
+    requireNurse,
     patientManagementController.getEligiblePatientsForDischarge
 );
 
@@ -550,6 +583,8 @@ router.get(
  *     summary: Download medical record PDF
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: medicalRecordId
@@ -571,6 +606,8 @@ router.get(
  */
 router.get(
     "/medical-record/:medicalRecordId/pdf",
+    authenticate,
+    requireNurse,
     patientManagementController.downloadMedicalRecordPdf
 );
 
@@ -581,6 +618,8 @@ router.get(
  *     summary: Download hemoglobin report PDF
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: medicalRecordId
@@ -602,23 +641,21 @@ router.get(
  */
 router.get(
     "/medical-record/:medicalRecordId/hemoglobin-report",
+    authenticate,
+    requireNurse,
     patientManagementController.downloadHemoglobinReportPdf
 );
 
 
 /**
  * @swagger
- * /api/patients/nurse/{nurseId}:
+ * /api/patients/nurse:
  *   get:
  *     summary: Get patients assigned to a nurse
  *     tags:
  *       - Patients
- *     parameters:
- *       - in: path
- *         name: nurseId
- *         required: true
- *         schema:
- *           type: string
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of assigned patients retrieved successfully
@@ -626,7 +663,9 @@ router.get(
  *         description: No patients found
  */
 router.get(
-    "/nurse/:nurseId",
+    "/nurse",
+    authenticate,
+    requireNurse,
     patientManagementController
         .getPatientsAssignedToNurse
 );
@@ -638,6 +677,8 @@ router.get(
  *     summary: Get hemoglobin evolution chart
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: patientId
@@ -650,8 +691,9 @@ router.get(
  */
 router.get(
     "/:patientId/hemoglobin-evolution",
-    patientManagementController
-        .getHemoglobinEvolutionChart
+    authenticate,
+    requireMother,  // ✅ Solo madres, con validación de pertenencia
+    patientManagementController.getHemoglobinEvolutionChart
 );
 
 export default router;

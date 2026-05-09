@@ -6,9 +6,13 @@ import {DownloadMedicalRecordPdfQuery} from "../model/queries/DownloadMedicalRec
 import {DownloadHemoglobinReportPdfQuery} from "../model/queries/DownloadHemoglobinReportPdfQuery";
 import {GetPatientsEligibleForDischargeQuery} from "../model/queries/GetPatientsEligibleForDischargeQuery";
 import {GetPatientsAssignedToNurseQuery} from "../model/queries/GetPatientsAssignedToNurseQuery";
-import {GetHemoglobinEvolutionChartQuery} from "../model/commands/getHemoglobinEvolutionChart";
+import {GetHemoglobinEvolutionChartQuery} from "../model/queries/getHemoglobinEvolutionChart";
+import {GetPatientQuery} from "../model/queries/GetPatientQuery";
 
 export interface PatientQueryService {
+
+    getPatient(query: { patientId: string }): Promise<any>;
+
 
     searchMotherByDni(
         query:
@@ -52,4 +56,7 @@ export interface PatientQueryService {
     getHemoglobinEvolutionChart(
         query: GetHemoglobinEvolutionChartQuery
     ): Promise<any>;
+
+    getMedicalRecordById(query: { medicalRecordId: string }): Promise<any>;
+
 }

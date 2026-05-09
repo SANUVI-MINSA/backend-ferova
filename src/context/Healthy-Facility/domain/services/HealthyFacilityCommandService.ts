@@ -8,4 +8,6 @@ export interface HealthyFacilityCommandService {
     assignNurseToFacility(command: AssignNurseToFacilityCommand): Promise<void>;
     cancelAppointment(command: CancelAppointmentCommand): Promise<void>;
     registerFacility(command: RegisterHealthFacilityCommand): Promise<void>;
+    validateAppointmentBelongsToMother(appointmentId: string, motherId: string): Promise<void>
+    validatePatientBelongsToMother(patientId: string, motherId: string): Promise<void>
 }

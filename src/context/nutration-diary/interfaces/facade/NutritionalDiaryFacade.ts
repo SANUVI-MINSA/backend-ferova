@@ -106,4 +106,20 @@ export class NutritionalDiaryFacade {
                 query
             );
     }
+
+
+    async getNutritionalHistoryWithValidation(
+        query: GetNutritionalHistoryQuery,
+        motherId: string
+    ): Promise<any> {
+        // Validar que el paciente pertenece a la madre
+        await this.commandService.validatePatientBelongsToMother(query.patientId, motherId);
+
+        return await this.queryService.getNutritionalHistory(query);
+    }
+
+    async validatePatientBelongsToMother(patientId: string, motherId: string): Promise<void> {
+        return await this.commandService.validatePatientBelongsToMother(patientId, motherId);
+    }
+
 }

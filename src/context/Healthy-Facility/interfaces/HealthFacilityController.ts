@@ -13,101 +13,98 @@ export class HealthFacilityController {
         HealthFacilityFacade
     ) {}
 
-    registerHealthFacility = async (
-        req: Request,
-        res: Response
-    ) => {
+    registerHealthFacility = async (req: AuthRequest, res: Response) => {
         try {
 
-            await this
-                .healthFacilityFacade
-                .registerHealthFacility(
-                    req.body
-                );
+            await this.healthFacilityFacade.registerHealthFacility(req.body);
 
             res.status(201).json({
-                message:
-                    "Health facility registered successfully"
+                message: "Health facility registered successfully"
             });
 
         } catch (error: any) {
-            res.status(400).json({
-                error: error.message
-            });
+            res.status(400).json({ error: error.message });
         }
     };
 
-    assignNurseToFacility = async (
-        req: Request,
-        res: Response
-    ) => {
+    assignNurseToFacility = async (req: AuthRequest, res: Response) => {
         try {
 
-            await this
-                .healthFacilityFacade
-                .assignNurseToFacility(
-                    req.body
-                );
+            await this.healthFacilityFacade.assignNurseToFacility(req.body);
 
             res.status(200).json({
-                message:
-                    "Nurse assigned successfully"
+                message: "Nurse assigned successfully"
             });
 
         } catch (error: any) {
-            res.status(400).json({
-                error: error.message
-            });
+            res.status(400).json({ error: error.message });
         }
     };
 
-    bookAppointment = async (
-        req: Request,
-        res: Response
-    ) => {
+
+    bookAppointment = async (req: AuthRequest, res: Response) => {
         try {
+            const motherId = req.user?.motherId;
 
-            await this
-                .healthFacilityFacade
-                .bookAppointment(
-                    req.body
-                );
+            if (!motherId) {
+                return res.status(400).json({ error: "Mother ID no encontrado en el token" });
+            }
 
-            res.status(201).json({
-                message:
-                    "Appointment booked successfully"
-            });
+            const { facilityId, patientId, appointmentDate, appointmentTime } = req.body;
+
+            if (!facilityId || !patientId || !appointmentDate || !appointmentTime) {
+                return res.status(400).json({
+                    error: "Faltan campos requeridos: facilityId, patientId, appointmentDate, appointmentTime"
+                });
+            }
+
+            // Validar que el paciente pertenece a esta madre
+            await this.healthFacilityFacade.validatePatientBelongsToMother(patientId, motherId);
+
+            const command = {
+                facilityId,
+                patientId,
+                motherId,  // ← Del token
+                appointmentDate,
+                appointmentTime
+            };
+
+            await this.healthFacilityFacade.bookAppointment(command);
+
+            res.status(201).json({ message: "Appointment booked successfully" });
 
         } catch (error: any) {
-            res.status(400).json({
-                error: error.message
-            });
+            res.status(400).json({ error: error.message });
         }
     };
 
-    cancelAppointment = async (
-        req: Request,
-        res: Response
-    ) => {
+    cancelAppointment = async (req: AuthRequest, res: Response) => {
         try {
+            const motherId = req.user?.motherId;
 
-            await this
-                .healthFacilityFacade
-                .cancelAppointment(
-                    req.body
-                );
+            if (!motherId) {
+                return res.status(400).json({ error: "Mother ID no encontrado en el token" });
+            }
 
-            res.status(200).json({
-                message:
-                    "Appointment cancelled successfully"
-            });
+            const { appointmentId } = req.body;
+
+            if (!appointmentId) {
+                return res.status(400).json({ error: "Appointment ID es requerido" });
+            }
+
+            // Validar que la cita pertenece a esta madre
+            await this.healthFacilityFacade.validateAppointmentBelongsToMother(appointmentId, motherId);
+
+            const command = { appointmentId };
+            await this.healthFacilityFacade.cancelAppointment(command);
+
+            res.status(200).json({ message: "Appointment cancelled successfully" });
 
         } catch (error: any) {
-            res.status(400).json({
-                error: error.message
-            });
+            res.status(400).json({ error: error.message });
         }
     };
+
 
     getHealthFacilityDetail = async (
         req: Request,
@@ -152,57 +149,38 @@ export class HealthFacilityController {
         }
     };
 
-    getPatientAppointmentHistory =
-        async (
-            req: Request,
-            res: Response
-        ) => {
-            try {
+    getPatientAppointmentHistory = async (req: AuthRequest, res: Response) => {
+        try {
+            const motherId = req.user?.motherId as string;
 
-                const patientId = this.getStringParam(req.params.patientId);
-
-                if (!patientId) {
-                    return res.status(400).json({ error: "Patient ID is required" });
-                }
-
-                const appointments =
-                    await this
-                        .healthFacilityFacade
-                        .getPatientAppointmentHistory({
-                            patientId
-                        });
-
-                const response =
-                    appointments.map(
-                        item =>
-                            AppointmentHistoryResourceAssembler
-                                .toResource(
-                                    item
-                                )
-                    );
-
-                res.status(200).json(
-                    response
-                );
-
-            } catch (error: any) {
-                res.status(400).json({
-                    error:
-                    error.message
-                });
+            if (!motherId) {
+                return res.status(400).json({ error: "Mother ID no encontrado en el token" });
             }
-        };
+
+            const patientId = req.params.patientId as string;
+
+            if (!patientId) {
+                return res.status(400).json({ error: "Patient ID es requerido" });
+            }
+
+            // Validar que el paciente pertenece a esta madre
+            await this.healthFacilityFacade.validatePatientBelongsToMother(patientId, motherId);
+
+            const appointments = await this.healthFacilityFacade.getPatientAppointmentHistory({ patientId });
+
+            const response = appointments.map(item => AppointmentHistoryResourceAssembler.toResource(item));
+
+            res.status(200).json(response);
+
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    };
 
     listHealthFacilities = async (req: AuthRequest, res: Response) => {
         try {
-            // Obtener mother del token
-            // 🔍 LOGS PARA DIAGNÓSTICO
-            console.log("Headers:", req.headers);
-            console.log("Authorization header:", req.headers.authorization);
-            console.log("req.user:", req.user);
 
             const motherId = req.user?.motherId;
-            console.log("motherId:", motherId);
 
             if (!motherId) {
                 return res.status(400).json({
@@ -244,44 +222,29 @@ export class HealthFacilityController {
         }
     };
 
-    getNurseAppointmentSchedule =
-        async (
-            req: Request,
-            res: Response
-        ) => {
-            try {
+    getNurseAppointmentSchedule = async (req: AuthRequest, res: Response) => {
+        try {
+            // ✅ CORRECTO: Obtener nurseId del token (similar a como se hace con motherId)
+            const nurseId = req.user?.nurseId;
 
-                const nurseId = this.getStringParam(req.params.nurseId);
-
-                if (!nurseId) {
-                    return res.status(400).json({ error: "Nurse ID is required" });
-                }                const appointments =
-                    await this
-                        .healthFacilityFacade
-                        .getNurseAppointmentSchedule({
-                            nurseId
-                        });
-
-                const response =
-                    appointments.map(
-                        appointment =>
-                            NurseAppointmentScheduleAssembler
-                                .toResource(
-                                    appointment
-                                )
-                    );
-
-                res.status(200).json(
-                    response
-                );
-
-            } catch (error: any) {
-                res.status(400).json({
-                    error:
-                    error.message
-                });
+            if (!nurseId) {
+                return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
             }
-        };
+
+            const appointments = await this.healthFacilityFacade.getNurseAppointmentSchedule({
+                nurseId
+            });
+
+            const response = appointments.map(appointment =>
+                NurseAppointmentScheduleAssembler.toResource(appointment)
+            );
+
+            res.status(200).json(response);
+
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    };
 
     getFacilityAvailableSlots = async (
         req: Request,
@@ -322,47 +285,26 @@ export class HealthFacilityController {
         }
     };
 
-    getMotherNextAppointment = async (
-        req: Request,
-        res: Response
-    ) => {
+    getMotherNextAppointment = async (req: AuthRequest, res: Response) => {
         try {
-
-            const motherId = this.getStringParam(req.params.motherId);
+            const motherId = req.user?.motherId;
 
             if (!motherId) {
-                return res.status(400).json({ error: "Mother ID is required" });
+                return res.status(400).json({ error: "Mother ID no encontrado en el token" });
             }
 
-            const appointment =
-                await this
-                    .healthFacilityFacade
-                    .getMotherNextAppointment({
-                        motherId
-                    });
+            const appointment = await this.healthFacilityFacade.getMotherNextAppointment({ motherId });
 
             if (!appointment) {
-                return res.status(404).json({
-                    message:
-                        "No upcoming appointments found"
-                });
+                return res.status(404).json({ message: "No upcoming appointments found" });
             }
 
-            const response =
-                MotherNextAppointmentResourceAssembler
-                    .toResource(
-                        appointment
-                    );
+            const response = MotherNextAppointmentResourceAssembler.toResource(appointment);
 
-            res.status(200).json(
-                response
-            );
+            res.status(200).json(response);
 
         } catch (error: any) {
-            res.status(400).json({
-                error:
-                error.message
-            });
+            res.status(400).json({ error: error.message });
         }
     };
 

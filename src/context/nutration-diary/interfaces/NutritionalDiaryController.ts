@@ -8,6 +8,7 @@ import {GetFoodItemsByCategoryQueryAssembler} from "./assemblers/GetFoodItemsByC
 import {SearchFoodItemsQueryAssembler} from "./assemblers/SearchFoodItemsQueryAssembler";
 import {GetFoodItemDetailsQueryAssembler} from "./assemblers/GetFoodItemDetailsQueryAssembler";
 import {GetNutritionalHistoryQueryAssembler} from "./assemblers/GetNutritionalHistoryQueryAssembler";
+import {AuthRequest} from "../../../middlewares/auth.middleware";
 
 export class NutritionalDiaryController {
 
@@ -17,62 +18,72 @@ export class NutritionalDiaryController {
     ) {
     }
 
-    registerFoodEntry = async (
-        req: Request,
-        res: Response
-    ) => {
+    registerFoodEntry = async (req: AuthRequest, res: Response) => {
         try {
+            const motherIdFromToken = req.user?.motherId;
 
-            const command =
-                RegisterFoodEntryCommandFromResourceAssembler
-                    .toCommand(
-                        req.body
-                    );
+            if (!motherIdFromToken) {
+                return res.status(400).json({
+                    error: "Mother ID no encontrado en el token"
+                });
+            }
 
-            const result =
-                await this
-                    .facade
-                    .registerFoodEntry(
-                        command
-                    );
+            // Tomar los datos del body sin motherId
+            const { patientId, foodItemId, quantity } = req.body;
 
-            res.status(201)
-                .json(result);
+            // Validar que todos los campos necesarios estén presentes
+            if (!patientId || !foodItemId || !quantity) {
+                return res.status(400).json({
+                    error: "Faltan campos requeridos: patientId, foodItemId, quantity"
+                });
+            }
+
+            // Construir el command con el motherId del token
+            const command = {
+                patientId,
+                motherId: motherIdFromToken,
+                foodItemId,
+                quantity
+            };
+
+            const result = await this.facade.registerFoodEntry(command);
+            res.status(201).json(result);
 
         } catch (error: any) {
-            res.status(400).json({
-                error:
-                error.message
-            });
+            res.status(400).json({ error: error.message });
         }
     };
 
-    getTodayDiary = async (
-        req: Request,
-        res: Response
-    ) => {
+
+    getTodayDiary = async (req: AuthRequest, res: Response) => {
         try {
+            const motherId = req.user?.motherId;
 
-            const query =
-                GetTodayNutritionalDiaryQueryAssembler
-                    .toQuery(
-                        req.params.patientId as string
-                    );
 
-            const result =
-                await this.facade
-                    .getTodayNutritionalDiary(
-                        query
-                    );
+            if (!motherId) {
+                return res.status(400).json({
+                    error: "Mother ID no encontrado en el token"
+                });
+            }
 
-            res.status(200)
-                .json(result);
+            const patientId = req.params.patientId as string;
+
+            if (!patientId) {
+                return res.status(400).json({
+                    error: "Patient ID es requerido"
+                });
+            }
+
+            await this.facade.validatePatientBelongsToMother(patientId, motherId);
+
+            const query = GetTodayNutritionalDiaryQueryAssembler.toQuery(patientId);
+
+            const result = await this.facade.getTodayNutritionalDiary(query);
+
+            res.status(200).json(result);
 
         } catch (error: any) {
-            res.status(400).json({
-                error:
-                error.message
-            });
+            res.status(400).json({ error: error.message });
         }
     };
 
@@ -164,10 +175,19 @@ export class NutritionalDiaryController {
     };
 
     getNutritionalHistory = async (
-        req: Request,
+        req: AuthRequest,
         res: Response
     ) => {
         try {
+
+            const motherId = req.user?.motherId;
+
+            if (!motherId) {
+                return res.status(400).json({
+                    error: "Mother ID no encontrado en el token"
+                });
+            }
+
 
             const query =
                 GetNutritionalHistoryQueryAssembler
@@ -175,11 +195,7 @@ export class NutritionalDiaryController {
                         req.params.patientId as string
                     );
 
-            const result =
-                await this.facade
-                    .getNutritionalHistory(
-                        query
-                    );
+            const result = await this.facade.getNutritionalHistoryWithValidation(query, motherId);
 
             res.status(200)
                 .json(result);

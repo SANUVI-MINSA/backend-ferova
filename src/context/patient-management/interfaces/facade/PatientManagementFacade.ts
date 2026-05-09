@@ -14,7 +14,7 @@ import {GetMedicalRecordQuery} from "../../domain/model/queries/GetMedicalRecord
 import {ListPatientsByMotherQuery} from "../../domain/model/queries/ListPatientsByMotherQuery";
 import {SearchMotherByDniQuery} from "../../domain/model/queries/SearchMotherByDniQuery";
 import {GetPatientsAssignedToNurseQuery} from "../../domain/model/queries/GetPatientsAssignedToNurseQuery";
-import {GetHemoglobinEvolutionChartQuery} from "../../domain/model/commands/getHemoglobinEvolutionChart";
+import {GetHemoglobinEvolutionChartQuery} from "../../domain/model/queries/getHemoglobinEvolutionChart";
 
 export class PatientManagementFacade {
 
@@ -185,6 +185,59 @@ export class PatientManagementFacade {
             .getHemoglobinEvolutionChart(
                 query
             );
+    }
+
+    async validatePatientBelongsToMother(patientId: string, motherId: string): Promise<void> {
+        // Obtener el paciente
+        const patient = await this.queryService.getPatient({ patientId });
+
+        if (!patient) {
+            throw new Error("Patient not found");
+        }
+
+        // Verificar que el motherId coincida
+        if (patient.motherId !== motherId) {
+            throw new Error("Access denied: This patient does not belong to you");
+        }
+    }
+
+    // ✅ NUEVO MÉTODO: Obtener un paciente por ID (para validaciones)
+    async getPatient(patientId: string): Promise<any> {
+        return await this.queryService.getPatient({ patientId });
+    }
+
+    // PatientManagementFacade.ts - Añadir este método
+
+    async validateNurseHasPatient(nurseId: string, patientId: string): Promise<void> {
+        const patient = await this.queryService.getPatient({ patientId });
+
+        if (!patient) {
+            throw new Error("Patient not found");
+        }
+
+        if (patient.nurseId !== nurseId) {
+            throw new Error("Access denied: This patient is not assigned to you");
+        }
+    }
+
+    async validateNurseHasAccessToMedicalRecord(nurseId: string, medicalRecordId: string): Promise<void> {
+        // Obtener el medical record
+        const medicalRecord = await this.queryService.getMedicalRecordById({ medicalRecordId });
+
+        if (!medicalRecord) {
+            throw new Error("Medical record not found");
+        }
+
+        // Verificar que el paciente asociado esté asignado a esta enfermera
+        const patient = await this.queryService.getPatient({ patientId: medicalRecord.patientId });
+
+        if (!patient) {
+            throw new Error("Patient not found");
+        }
+
+        if (patient.nurseId !== nurseId) {
+            throw new Error("Access denied: This medical record does not belong to a patient assigned to you");
+        }
     }
 
 }
