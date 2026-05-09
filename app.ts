@@ -4,6 +4,7 @@ import healthFacilityRoutes from "./src/context/Healthy-Facility/interfaces/rout
 import userRoutes from "./src/context/iam/interfaces/routes/UserRoutes";
 import patientRoutes from "./src/context/patient-management/interfaces/routes/PatientManagementRoutes";
 import nutritionalDiaryRoutes from "./src/context/nutration-diary/interfaces/routes/NutritionalDiaryRoutes";
+import communicationRoutes from "./src/context/comunication-management/interfaces/routes/CommunicationRoutes"
 
 const app = express();
 
@@ -26,4 +27,10 @@ app.use(
     "/api/nutritional-diary",
     nutritionalDiaryRoutes
 );
+
+app.use(
+    "/api/communication",
+    communicationRoutes
+);
+
 export default app;
