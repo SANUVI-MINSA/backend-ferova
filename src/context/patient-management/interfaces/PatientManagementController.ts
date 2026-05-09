@@ -36,123 +36,145 @@ export class PatientManagementController {
         }
     };
 
-    assignPatientToNurse = async (
-        req: Request,
-        res: Response
-    ) => {
+    assignPatientToNurse = async (req: AuthRequest, res: Response) => {
         try {
+            // ✅ Obtener nurseId del token
+            const nurseId = req.user?.nurseId;
 
-            await this.patientFacade
-                .assignPatientToNurse(
-                    req.body
-                );
+            if (!nurseId) {
+                return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
+            }
 
-            res.status(200).json({
-                message:
-                    "Patient assigned successfully"
-            });
+            const { patientId } = req.body;
+
+            if (!patientId) {
+                return res.status(400).json({ error: "Patient ID es requerido" });
+            }
+
+            // ✅ Usar nurseId del token, no del body
+            const command = { patientId, nurseId };
+
+            await this.patientFacade.assignPatientToNurse(command);
+
+            res.status(200).json({ message: "Patient assigned successfully" });
 
         } catch (error: any) {
-            res.status(400).json({
-                error:
-                error.message
-            });
+            res.status(400).json({ error: error.message });
         }
     };
 
-    createMedicalRecord = async (
-        req: Request,
-        res: Response
-    ) => {
+    createMedicalRecord = async (req: AuthRequest, res: Response) => {
         try {
+            const nurseId = req.user?.nurseId;
 
-            await this.patientFacade
-                .createInitialMedicalRecord(
-                    req.body
-                );
+            if (!nurseId) {
+                return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
+            }
 
-            res.status(201).json({
-                message:
-                    "Medical record created successfully"
-            });
+            const { patientId, weight, height, motivoConsulta, observaciones, antecedentes, sintomas } = req.body;
+
+            if (!patientId || !weight || !height || !motivoConsulta || !observaciones) {
+                return res.status(400).json({
+                    error: "Faltan campos requeridos: patientId, weight, height, motivoConsulta, observaciones"
+                });
+            }
+
+            // ✅ Verificar que el paciente esté asignado a esta enfermera
+            await this.patientFacade.validateNurseHasPatient(nurseId, patientId);
+
+            const command = { patientId, weight, height, motivoConsulta, observaciones, antecedentes, sintomas };
+
+            await this.patientFacade.createInitialMedicalRecord(command);
+
+            res.status(201).json({ message: "Medical record created successfully" });
 
         } catch (error: any) {
-            res.status(400).json({
-                error:
-                error.message
-            });
+            res.status(400).json({ error: error.message });
         }
     };
 
-    registerHemoglobinControl = async (
-        req: Request,
-        res: Response
-    ) => {
+
+    registerHemoglobinControl = async (req: AuthRequest, res: Response) => {
         try {
+            const nurseId = req.user?.nurseId;
 
-            await this.patientFacade
-                .registerHemoglobinControl(
-                    req.body
-                );
+            if (!nurseId) {
+                return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
+            }
 
-            res.status(200).json({
-                message:
-                    "Hemoglobin control registered successfully"
-            });
+            const { patientId, hemoglobinLevel } = req.body;
+
+            if (!patientId || hemoglobinLevel === undefined) {
+                return res.status(400).json({ error: "Faltan campos: patientId, hemoglobinLevel" });
+            }
+
+            // ✅ Verificar que el paciente esté asignado a esta enfermera
+            await this.patientFacade.validateNurseHasPatient(nurseId, patientId);
+
+            const command = { patientId, hemoglobinLevel };
+
+            await this.patientFacade.registerHemoglobinControl(command);
+
+            res.status(200).json({ message: "Hemoglobin control registered successfully" });
 
         } catch (error: any) {
-            res.status(400).json({
-                error:
-                error.message
-            });
+            res.status(400).json({ error: error.message });
         }
     };
 
-    updateMedicalRecord = async (
-        req: Request,
-        res: Response
-    ) => {
+    updateMedicalRecord = async (req: AuthRequest, res: Response) => {
         try {
+            const nurseId = req.user?.nurseId;
 
-            await this.patientFacade
-                .updateMedicalRecord(
-                    req.body
-                );
+            if (!nurseId) {
+                return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
+            }
 
-            res.status(200).json({
-                message:
-                    "Medical record updated successfully"
-            });
+            const { patientId, weight, height, motivoConsulta, observaciones, antecedentes, sintomas } = req.body;
+
+            if (!patientId) {
+                return res.status(400).json({ error: "Patient ID es requerido" });
+            }
+
+            // ✅ Verificar que el paciente esté asignado a esta enfermera
+            await this.patientFacade.validateNurseHasPatient(nurseId, patientId);
+
+            const command = { patientId, weight, height, motivoConsulta, observaciones, antecedentes, sintomas };
+
+            await this.patientFacade.updateMedicalRecord(command);
+
+            res.status(200).json({ message: "Medical record updated successfully" });
 
         } catch (error: any) {
-            res.status(400).json({
-                error:
-                error.message
-            });
+            res.status(400).json({ error: error.message });
         }
     };
 
-    dischargePatient = async (
-        req: Request,
-        res: Response
-    ) => {
+    dischargePatient = async (req: AuthRequest, res: Response) => {
         try {
+            const nurseId = req.user?.nurseId;
 
-            await this.patientFacade
-                .dischargePatient(
-                    req.body
-                );
+            if (!nurseId) {
+                return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
+            }
 
-            res.status(200).json({
-                message:
-                    "Patient discharged successfully"
-            });
+            const { patientId } = req.body;
+
+            if (!patientId) {
+                return res.status(400).json({ error: "Patient ID es requerido" });
+            }
+
+            // ✅ Verificar que el paciente esté asignado a esta enfermera
+            await this.patientFacade.validateNurseHasPatient(nurseId, patientId);
+
+            const command = { patientId, nurseId };
+
+            await this.patientFacade.dischargePatient(command);
+
+            res.status(200).json({ message: "Patient discharged successfully" });
 
         } catch (error: any) {
-            res.status(400).json({
-                error:
-                error.message
-            });
+            res.status(400).json({ error: error.message });
         }
     };
 

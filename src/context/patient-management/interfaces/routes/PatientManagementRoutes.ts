@@ -1,7 +1,7 @@
 import express from "express";
 
 import { patientManagementController } from "../dependencies/PatientManagementDependencyInjection";
-import { authenticate, requireMother } from "../../../../middlewares/auth.middleware";
+import {authenticate, requireMother, requireNurse} from "../../../../middlewares/auth.middleware";
 
 const router = express.Router();
 
@@ -72,6 +72,8 @@ router.post(
  *     summary: Assign patient to nurse
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -80,8 +82,6 @@ router.post(
  *             type: object
  *             properties:
  *               patientId:
- *                 type: string
- *               nurseId:
  *                 type: string
  *     responses:
  *       200:
@@ -106,6 +106,8 @@ router.post(
  */
 router.post(
     "/assign-nurse",
+    authenticate,
+    requireNurse,
     patientManagementController.assignPatientToNurse
 );
 
@@ -116,6 +118,8 @@ router.post(
  *     summary: Create initial medical record
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -170,6 +174,8 @@ router.post(
  */
 router.post(
     "/medical-record",
+    authenticate,
+    requireNurse,
     patientManagementController.createMedicalRecord
 );
 
@@ -180,6 +186,8 @@ router.post(
  *     summary: Register hemoglobin control
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -217,6 +225,8 @@ router.post(
  */
 router.post(
     "/hemoglobin-control",
+    authenticate,
+    requireNurse,
     patientManagementController.registerHemoglobinControl
 );
 
@@ -228,6 +238,8 @@ router.post(
  *     summary: Update medical record
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -277,6 +289,8 @@ router.post(
  */
 router.put(
     "/medical-record/update",
+    authenticate,
+    requireNurse,
     patientManagementController.updateMedicalRecord
 );
 
@@ -287,6 +301,8 @@ router.put(
  *     summary: Discharge patient
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -295,8 +311,6 @@ router.put(
  *             type: object
  *             properties:
  *               patientId:
- *                 type: string
- *               nurseId:
  *                 type: string
  *     responses:
  *       200:
@@ -322,6 +336,8 @@ router.put(
  */
 router.put(
     "/discharge",
+    authenticate,
+    requireNurse,
     patientManagementController.dischargePatient
 );
 

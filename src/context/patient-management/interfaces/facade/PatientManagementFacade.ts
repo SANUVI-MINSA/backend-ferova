@@ -206,4 +206,18 @@ export class PatientManagementFacade {
         return await this.queryService.getPatient({ patientId });
     }
 
+    // PatientManagementFacade.ts - Añadir este método
+
+    async validateNurseHasPatient(nurseId: string, patientId: string): Promise<void> {
+        const patient = await this.queryService.getPatient({ patientId });
+
+        if (!patient) {
+            throw new Error("Patient not found");
+        }
+
+        if (patient.nurseId !== nurseId) {
+            throw new Error("Access denied: This patient is not assigned to you");
+        }
+    }
+
 }
