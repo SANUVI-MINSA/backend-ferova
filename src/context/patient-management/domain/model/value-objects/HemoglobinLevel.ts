@@ -15,4 +15,9 @@ export class HemoglobinLevel {
     getValue(): number | null {
         return this.value;
     }
+
+    // ✅ Añadir este método para validar si existe
+    hasValue(): boolean {
+        return this.value !== null;
+    }
 }

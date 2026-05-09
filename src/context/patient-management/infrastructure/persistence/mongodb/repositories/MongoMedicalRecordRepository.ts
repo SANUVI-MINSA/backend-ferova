@@ -18,8 +18,12 @@ MongoMedicalRecordRepository
                     medicalRecord
                 );
 
-        const created =
-            await MedicalRecordModel
+        if (data.nurseId === null) {
+            throw new Error("Nurse ID is required");
+        }
+
+        const created = await
+            MedicalRecordModel
                 .create(data);
 
         return MedicalRecordMapper

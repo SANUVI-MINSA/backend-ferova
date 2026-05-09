@@ -61,7 +61,7 @@ export class MedicalRecordMapper {
             patientId:
             data.patientId,
             nurseId:
-            data.nurseId,
+            data.nurseId ?? undefined,
             createdAt:
             data.createdAt,
             updatedAt:

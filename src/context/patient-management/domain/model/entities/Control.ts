@@ -3,8 +3,7 @@ import {HemoglobinLevel} from "../value-objects/HemoglobinLevel";
 
 export class Control {
 
-    private anemiaStatus:
-        AnemiaStatus;
+    private anemiaStatus: AnemiaStatus;
 
     constructor(
         private id: string,
@@ -13,55 +12,40 @@ export class Control {
         HemoglobinLevel
     ) {
         this.ensureDateIsValid();
-
-        this.anemiaStatus =
-            this.calculateAnemiaStatus();
+        this.anemiaStatus = this.calculateAnemiaStatus();
     }
 
     private ensureDateIsValid(): void {
-
-        const today =
-            new Date();
-
-        if (
-            this.date > today
-        ) {
-            throw new Error(
-                "Control date cannot be in the future"
-            );
+        const today = new Date();
+        if (this.date > today) {
+            throw new Error("Control date cannot be in the future");
         }
     }
 
-    private calculateAnemiaStatus():
-        AnemiaStatus {
+    private calculateAnemiaStatus(): AnemiaStatus {
+        const value = this.hemoglobinLevel.getValue();
 
-        const value =
-            this.hemoglobinLevel
-                .getValue();
+        // ✅ Solución: Verificar si value es null
+        if (value === null) {
+            return AnemiaStatus.CONTROLLED; // o el valor por defecto que prefieras
+        }
 
         if (value < 7) {
             return AnemiaStatus.SEVERE;
         }
 
-        if (
-            value >= 7 &&
-            value < 9
-        ) {
+        if (value >= 7 && value < 9) {
             return AnemiaStatus.MODERATE;
         }
 
-        if (
-            value >= 9 &&
-            value < 11
-        ) {
+        if (value >= 9 && value < 11) {
             return AnemiaStatus.MILD;
         }
 
         return AnemiaStatus.CONTROLLED;
     }
 
-    getHemoglobinLevel():
-        HemoglobinLevel {
+    getHemoglobinLevel(): HemoglobinLevel {
         return this.hemoglobinLevel;
     }
 
@@ -69,11 +53,8 @@ export class Control {
         return {
             id: this.id,
             date: this.date,
-            hemoglobinLevel:
-                this.hemoglobinLevel
-                    .getValue(),
-            anemiaStatus:
-            this.anemiaStatus
+            hemoglobinLevel: this.hemoglobinLevel.getValue(),
+            anemiaStatus: this.anemiaStatus
         };
     }
 }

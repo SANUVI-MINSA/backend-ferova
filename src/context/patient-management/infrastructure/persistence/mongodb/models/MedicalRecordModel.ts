@@ -35,7 +35,8 @@ const medicalRecordSchema =
 
             nurseId: {
                 type: String,
-                required: true
+                required: true,
+                default: null
             },
 
             createdAt: {
