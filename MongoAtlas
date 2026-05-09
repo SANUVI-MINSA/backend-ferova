@@ -1,1 +1,8 @@
+Este lleva a la base de datos test
 mongodb+srv://ferova:<db_password>@cluster0.eks3jqe.mongodb.net/?appName=Cluster0
+
+Este es con el database ferova en si
+mongodb+srv://ferova:tu_contraseña@cluster0.eks3jqe.mongodb.net/ferova?appName=Cluster0
+
+
+Estamos para desplegar la base de datos mongo con MongoAtlas

@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import {FoodItemModel} from "../context/nutration-diary/infrastructure/persistence/mongodb/models/FoodItemSchema";
+import {env} from "../shared/infrastructure/config/env";
 
 
 
@@ -429,7 +430,7 @@ const foodItems = [
 async function seedFoodItems() {
     try {
         // No puede ponerlo con el envirotment no lo reconocia pero ya esta aca en si
-        await mongoose.connect("mongodb://localhost:27017/ferova");
+        await mongoose.connect(env.mongoUri);
         console.log("Connected to MongoDB");
 
         const existingCount = await FoodItemModel.countDocuments();
