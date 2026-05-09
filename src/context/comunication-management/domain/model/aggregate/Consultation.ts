@@ -1,4 +1,3 @@
-import {ConsultationStatus} from "../enum/ConsultationStatus";
 import {Message} from "../entities/Message";
 
 export class Consultation {
@@ -8,7 +7,6 @@ export class Consultation {
         private patientId: string,
         private motherId: string,
         private nurseId: string,
-        private status: ConsultationStatus,
         private messages: Message[],
         private createdAt: Date,
         private closedAt: Date | null
@@ -53,15 +51,6 @@ export class Consultation {
         message: Message
     ): void {
 
-        if (
-            this.status ===
-            ConsultationStatus.CLOSED
-        ) {
-            throw new Error(
-                "Cannot send messages to a closed consultation"
-            );
-        }
-
         const senderId =
             message.getSenderId();
 
@@ -79,30 +68,6 @@ export class Consultation {
         );
     }
 
-    close(): void {
-
-        if (
-            this.status ===
-            ConsultationStatus.CLOSED
-        ) {
-            throw new Error(
-                "Consultation is already closed"
-            );
-        }
-
-        this.status =
-            ConsultationStatus.CLOSED;
-
-        this.closedAt =
-            new Date();
-    }
-
-    isOpen(): boolean {
-        return (
-            this.status ===
-            ConsultationStatus.OPEN
-        );
-    }
 
     getId(): string {
         return this.id;
@@ -130,7 +95,6 @@ export class Consultation {
             patientId: this.patientId,
             motherId: this.motherId,
             nurseId: this.nurseId,
-            status: this.status,
             messages: this.messages.map(
                 message =>
                     message.toPrimitives()
