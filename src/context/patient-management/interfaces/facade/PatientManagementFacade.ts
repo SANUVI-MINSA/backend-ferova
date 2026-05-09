@@ -220,4 +220,24 @@ export class PatientManagementFacade {
         }
     }
 
+    async validateNurseHasAccessToMedicalRecord(nurseId: string, medicalRecordId: string): Promise<void> {
+        // Obtener el medical record
+        const medicalRecord = await this.queryService.getMedicalRecordById({ medicalRecordId });
+
+        if (!medicalRecord) {
+            throw new Error("Medical record not found");
+        }
+
+        // Verificar que el paciente asociado esté asignado a esta enfermera
+        const patient = await this.queryService.getPatient({ patientId: medicalRecord.patientId });
+
+        if (!patient) {
+            throw new Error("Patient not found");
+        }
+
+        if (patient.nurseId !== nurseId) {
+            throw new Error("Access denied: This medical record does not belong to a patient assigned to you");
+        }
+    }
+
 }

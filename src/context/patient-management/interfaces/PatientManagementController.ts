@@ -178,226 +178,196 @@ export class PatientManagementController {
         }
     };
 
-    listPatientsByMother = async (
-        req: Request,
-        res: Response
-    ) => {
+    listPatientsByMother = async (req: AuthRequest, res: Response) => {
         try {
+            const nurseId = req.user?.nurseId;
 
-            const patients =
-                await this.patientFacade
-                    .listPatientsByMother({
-                        motherId:
-                        req.params.motherId as string
-                    });
-
-            res.status(200).json(
-                patients
-            );
-
-        } catch (error: any) {
-            res.status(400).json({
-                error:
-                error.message
-            });
-        }
-    };
-
-    getMedicalRecord = async (
-        req: Request,
-        res: Response
-    ) => {
-        try {
-
-            const data =
-                await this.patientFacade
-                    .getMedicalRecord({
-                        patientId:
-                        req.params.patientId as string
-                    });
-
-            res.status(200).json(
-                data
-            );
-
-        } catch (error: any) {
-            res.status(400).json({
-                error:
-                error.message
-            });
-        }
-    };
-
-    getHemoglobinHistory = async (
-        req: Request,
-        res: Response
-    ) => {
-        try {
-
-            const history =
-                await this.patientFacade
-                    .getHemoglobinControlsHistory({
-                        medicalRecordId:
-                        req.params
-                            .medicalRecordId as string
-                    });
-
-            res.status(200).json(
-                HemoglobinHistoryResourceAssembler
-                    .toResource(
-                        history
-                    )
-            );
-
-        } catch (error: any) {
-            res.status(400).json({
-                error:
-                error.message
-            });
-        }
-    };
-
-    getEligiblePatientsForDischarge =
-        async (
-            req: Request,
-            res: Response
-        ) => {
-            try {
-
-                const patients =
-                    await this.patientFacade
-                        .getPatientsEligibleForDischarge({
-                            nurseId:
-                            req.params.nurseId as string
-                        });
-
-                res.status(200).json(
-                    patients.map(
-                        patient =>
-                            EligibleDischargePatientResourceAssembler
-                                .toResource(
-                                    patient
-                                )
-                    )
-                );
-
-            } catch (error: any) {
-                res.status(400).json({
-                    error:
-                    error.message
-                });
+            if (!nurseId) {
+                return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
             }
-        };
 
-    downloadMedicalRecordPdf = async (
-        req: Request,
-        res: Response
-    ) => {
+            const motherId = req.params.motherId as string;
+
+            if (!motherId) {
+                return res.status(400).json({ error: "Mother ID es requerido" });
+            }
+
+            // ✅ Verificar que la enfermera tiene pacientes asociados a esta madre
+            // (opcional: agregar validación si es necesario)
+
+            const patients = await this.patientFacade.listPatientsByMother({ motherId });
+
+            res.status(200).json(patients);
+
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    };
+
+    getMedicalRecord = async (req: AuthRequest, res: Response) => {
         try {
+            const nurseId = req.user?.nurseId;
 
-            const pdf =
-                await this.patientFacade
-                    .downloadMedicalRecordPdf({
-                        medicalRecordId:
-                        req.params
-                            .medicalRecordId as string
-                    });
+            if (!nurseId) {
+                return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
+            }
 
-            res.setHeader(
-                "Content-Disposition",
-                "attachment; filename=medical-record.pdf"
-            );
+            const patientId = req.params.patientId as string;
 
+            if (!patientId) {
+                return res.status(400).json({ error: "Patient ID es requerido" });
+            }
+
+            // ✅ Validar que el paciente está asignado a esta enfermera
+            await this.patientFacade.validateNurseHasPatient(nurseId, patientId);
+
+            const data = await this.patientFacade.getMedicalRecord({ patientId });
+
+            res.status(200).json(data);
+
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    };
+
+    getHemoglobinHistory = async (req: AuthRequest, res: Response) => {
+        try {
+            const nurseId = req.user?.nurseId;
+
+            if (!nurseId) {
+                return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
+            }
+
+            const medicalRecordId = req.params.medicalRecordId as string;
+
+            if (!medicalRecordId) {
+                return res.status(400).json({ error: "Medical Record ID es requerido" });
+            }
+
+            // ✅ Validar que la enfermera tiene acceso a esta historia clínica
+            await this.patientFacade.validateNurseHasAccessToMedicalRecord(nurseId, medicalRecordId);
+
+            const history = await this.patientFacade.getHemoglobinControlsHistory({ medicalRecordId });
+
+            res.status(200).json(HemoglobinHistoryResourceAssembler.toResource(history));
+
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    };
+
+    getEligiblePatientsForDischarge = async (req: AuthRequest, res: Response) => {
+        try {
+            // ✅ Obtener nurseId del token, no de params
+            const nurseId = req.user?.nurseId;
+
+            if (!nurseId) {
+                return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
+            }
+
+            const patients = await this.patientFacade.getPatientsEligibleForDischarge({ nurseId });
+
+            res.status(200).json(patients);
+
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    };
+
+    downloadMedicalRecordPdf = async (req: AuthRequest, res: Response) => {
+        try {
+            const nurseId = req.user?.nurseId;
+
+            if (!nurseId) {
+                return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
+            }
+
+            const medicalRecordId = req.params.medicalRecordId as string;
+
+            if (!medicalRecordId) {
+                return res.status(400).json({ error: "Medical Record ID es requerido" });
+            }
+
+            // ✅ Validar que la enfermera tiene acceso a esta historia clínica
+            await this.patientFacade.validateNurseHasAccessToMedicalRecord(nurseId, medicalRecordId);
+
+            const pdf = await this.patientFacade.downloadMedicalRecordPdf({ medicalRecordId });
+
+            res.setHeader("Content-Disposition", "attachment; filename=medical-record.pdf");
             res.send(pdf);
 
         } catch (error: any) {
-            res.status(400).json({
-                error:
-                error.message
-            });
+            res.status(400).json({ error: error.message });
         }
     };
 
-    downloadHemoglobinReportPdf =
-        async (
-            req: Request,
-            res: Response
-        ) => {
-            try {
-
-                const pdf =
-                    await this.patientFacade
-                        .downloadHemoglobinReportPdf({
-                            medicalRecordId:
-                            req.params
-                                .medicalRecordId as string
-                        });
-
-                res.setHeader(
-                    "Content-Disposition",
-                    "attachment; filename=hemoglobin-report.pdf"
-                );
-
-                res.send(pdf);
-
-            } catch (error: any) {
-                res.status(400).json({
-                    error:
-                    error.message
-                });
-            }
-        };
-
-    searchMotherByDni = async (
-        req: Request,
-        res: Response
-    ) => {
+    downloadHemoglobinReportPdf = async (req: AuthRequest, res: Response) => {
         try {
+            const nurseId = req.user?.nurseId;
 
-            const mother =
-                await this.patientFacade
-                    .searchMotherByDni({
-                        dni: req.params.dni as string
-                    });
+            if (!nurseId) {
+                return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
+            }
 
-            res.status(200).json(
-                mother
-            );
+            const medicalRecordId = req.params.medicalRecordId as string;
+
+            if (!medicalRecordId) {
+                return res.status(400).json({ error: "Medical Record ID es requerido" });
+            }
+
+            // ✅ Validar que la enfermera tiene acceso a esta historia clínica
+            await this.patientFacade.validateNurseHasAccessToMedicalRecord(nurseId, medicalRecordId);
+
+            const pdf = await this.patientFacade.downloadHemoglobinReportPdf({ medicalRecordId });
+
+            res.setHeader("Content-Disposition", "attachment; filename=hemoglobin-report.pdf");
+            res.send(pdf);
 
         } catch (error: any) {
-            res.status(400).json({
-                error:
-                error.message
-            });
+            res.status(400).json({ error: error.message });
         }
     };
 
-    getPatientsAssignedToNurse =
-        async (
-            req: Request,
-            res: Response
-        ) => {
-            try {
+    searchMotherByDni = async (req: AuthRequest, res: Response) => {
+        try {
+            const nurseId = req.user?.nurseId;
 
-                const patients =
-                    await this.patientFacade
-                        .getPatientsAssignedToNurse({
-                            nurseId:
-                            req.params.nurseId as string
-                        });
-
-                res.status(200).json(
-                    patients
-                );
-
-            } catch (error: any) {
-                res.status(400).json({
-                    error:
-                    error.message
-                });
+            if (!nurseId) {
+                return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
             }
-        };
 
+            const dni = req.params.dni as string;
+
+            if (!dni) {
+                return res.status(400).json({ error: "DNI es requerido" });
+            }
+
+            const mother = await this.patientFacade.searchMotherByDni({ dni });
+
+            res.status(200).json(mother);
+
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    };
+
+    getPatientsAssignedToNurse = async (req: AuthRequest, res: Response) => {
+        try {
+            // ✅ Obtener nurseId del token, no de params
+            const nurseId = req.user?.nurseId;
+
+            if (!nurseId) {
+                return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
+            }
+
+            const patients = await this.patientFacade.getPatientsAssignedToNurse({ nurseId });
+
+            res.status(200).json(patients);
+
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    };
 
     getHemoglobinEvolutionChart = async (req: AuthRequest, res: Response) => {
         try {

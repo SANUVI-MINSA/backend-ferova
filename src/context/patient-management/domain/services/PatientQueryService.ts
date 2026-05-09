@@ -11,7 +11,7 @@ import {GetPatientQuery} from "../model/queries/GetPatientQuery";
 
 export interface PatientQueryService {
 
-    getPatient(query: GetPatientQuery): Promise<any>;
+    getPatient(query: { patientId: string }): Promise<any>;
 
 
     searchMotherByDni(
@@ -56,4 +56,7 @@ export interface PatientQueryService {
     getHemoglobinEvolutionChart(
         query: GetHemoglobinEvolutionChartQuery
     ): Promise<any>;
+
+    getMedicalRecordById(query: { medicalRecordId: string }): Promise<any>;
+
 }

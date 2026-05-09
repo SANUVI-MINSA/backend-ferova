@@ -348,6 +348,8 @@ router.put(
  *     summary: Search mother by DNI
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: dni
@@ -363,6 +365,8 @@ router.put(
  */
 router.get(
     "/mother/search/:dni",
+    authenticate,
+    requireNurse,
     patientManagementController
         .searchMotherByDni
 );
@@ -374,6 +378,8 @@ router.get(
  *     summary: List patients by mother
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: motherId
@@ -415,6 +421,8 @@ router.get(
  */
 router.get(
     "/mother/:motherId",
+    authenticate,
+    requireNurse,
     patientManagementController.listPatientsByMother
 );
 
@@ -425,6 +433,8 @@ router.get(
  *     summary: Get medical record
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: patientId
@@ -464,6 +474,8 @@ router.get(
  */
 router.get(
     "/:patientId/medical-record",
+    authenticate,
+    requireNurse,
     patientManagementController.getMedicalRecord
 );
 
@@ -474,6 +486,8 @@ router.get(
  *     summary: Get hemoglobin controls history
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: medicalRecordId
@@ -509,22 +523,21 @@ router.get(
  */
 router.get(
     "/medical-record/:medicalRecordId/controls",
+    authenticate,
+    requireNurse,
     patientManagementController.getHemoglobinHistory
+
 );
 
 /**
  * @swagger
- * /api/patients/discharge/nurse/{nurseId}:
+ * /api/patients/discharge/nurse:
  *   get:
  *     summary: Get patients eligible for discharge
  *     tags:
  *       - Patients
- *     parameters:
- *       - in: path
- *         name: nurseId
- *         required: true
- *         schema:
- *           type: string
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Eligible patients retrieved successfully
@@ -557,7 +570,9 @@ router.get(
  *         description: Internal server error
  */
 router.get(
-    "/discharge/nurse/:nurseId",
+    "/discharge/nurse",
+    authenticate,
+    requireNurse,
     patientManagementController.getEligiblePatientsForDischarge
 );
 
@@ -568,6 +583,8 @@ router.get(
  *     summary: Download medical record PDF
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: medicalRecordId
@@ -589,6 +606,8 @@ router.get(
  */
 router.get(
     "/medical-record/:medicalRecordId/pdf",
+    authenticate,
+    requireNurse,
     patientManagementController.downloadMedicalRecordPdf
 );
 
@@ -599,6 +618,8 @@ router.get(
  *     summary: Download hemoglobin report PDF
  *     tags:
  *       - Patients
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: medicalRecordId
@@ -620,23 +641,21 @@ router.get(
  */
 router.get(
     "/medical-record/:medicalRecordId/hemoglobin-report",
+    authenticate,
+    requireNurse,
     patientManagementController.downloadHemoglobinReportPdf
 );
 
 
 /**
  * @swagger
- * /api/patients/nurse/{nurseId}:
+ * /api/patients/nurse:
  *   get:
  *     summary: Get patients assigned to a nurse
  *     tags:
  *       - Patients
- *     parameters:
- *       - in: path
- *         name: nurseId
- *         required: true
- *         schema:
- *           type: string
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of assigned patients retrieved successfully
@@ -644,7 +663,9 @@ router.get(
  *         description: No patients found
  */
 router.get(
-    "/nurse/:nurseId",
+    "/nurse",
+    authenticate,
+    requireNurse,
     patientManagementController
         .getPatientsAssignedToNurse
 );

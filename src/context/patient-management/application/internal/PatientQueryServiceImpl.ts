@@ -362,4 +362,14 @@ export class PatientQueryServiceImpl
 
         return patient.toPrimitives();
     }
+
+    async getMedicalRecordById(query: { medicalRecordId: string }): Promise<any> {
+        const medicalRecord = await this.medicalRecordRepository.findById(query.medicalRecordId);
+
+        if (!medicalRecord) {
+            return null;
+        }
+
+        return medicalRecord.toPrimitives();
+    }
 }
