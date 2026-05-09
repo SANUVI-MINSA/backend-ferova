@@ -169,21 +169,56 @@ export class CommunicationQueryServiceImpl
         };
     }
 
+
+    // CommunicationQueryServiceImpl.ts
+
     async getOpenConsultationsByMother(
         query: GetOpenConsultationsByMotherQuery
     ): Promise<any> {
 
-        const consultations =
-            await this
-                .consultationRepository
-                .findOpenByMotherId(
-                    query.motherId
-                );
+        const consultations = await this
+            .consultationRepository
+            .findOpenByMotherId(query.motherId);
 
-        return consultations.map(
-            consultation =>
-                consultation.toPrimitives()
+        // Enriquecer cada consulta con datos del paciente, enfermera y último mensaje
+        const enrichedConsultations = await Promise.all(
+            consultations.map(async (consultation) => {
+                const consultationData = consultation.toPrimitives();
+
+                // Obtener datos del paciente
+                const patient = await this.patientRepository.findById(consultationData.patientId);
+                const patientData = patient?.toPrimitives();
+
+                // Obtener datos de la madre
+                const mother = await this.userRepository.findMotherById(consultationData.motherId);
+                const motherData = mother?.toPrimitives();
+
+                // Obtener datos de la enfermera
+                const nurse = await this.userRepository.findNurseById(consultationData.nurseId);
+                const nurseData = nurse?.toPrimitives();
+
+                // Obtener último mensaje
+                const messages = consultationData.messages;
+                const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
+
+                return {
+                    consultationId: consultationData.id,
+                    patientId: consultationData.patientId,
+                    patientName: patientData ? `${patientData.name} ${patientData.lastName || ''}`.trim() : 'Unknown',
+                    motherId: consultationData.motherId,
+                    motherName: motherData?.name || 'Unknown',
+                    nurseId: consultationData.nurseId,
+                    nurseName: nurseData?.name || 'Unknown',
+                    lastMessage: lastMessage?.content || null,
+                    lastMessageDate: lastMessage?.sentAt || null,
+                    lastMessageSenderRole: lastMessage?.senderRole || null,
+                    createdAt: consultationData.createdAt,
+                    messageCount: messages.length
+                };
+            })
         );
+
+        return enrichedConsultations;
     }
 
     // CommunicationQueryServiceImpl.ts
