@@ -44,7 +44,7 @@ export class CommunicationCommandServiceImpl
 
         const message =
             new Message(
-                randomUUID,
+                randomUUID(),
                 command.senderId,
                 command.senderRole,
                 command.content,
@@ -124,7 +124,7 @@ export class CommunicationCommandServiceImpl
 
         const firstMessage =
             new Message(
-                randomUUID,
+                randomUUID(),
                 command.motherId,
                 MessageSender.MOTHER,
                 command.firstMessageContent,
@@ -134,7 +134,7 @@ export class CommunicationCommandServiceImpl
 
         const consultation =
             new Consultation(
-                randomUUID,
+                randomUUID(),
                 command.patientId,
                 command.motherId,
                 patientData.nurseId,
