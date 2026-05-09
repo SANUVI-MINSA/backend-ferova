@@ -186,36 +186,58 @@ export class CommunicationQueryServiceImpl
         );
     }
 
+    // CommunicationQueryServiceImpl.ts
+
     async getOpenConsultationsByNurse(
         query: GetOpenConsultationsByNurseQuery
     ): Promise<any> {
 
-        let consultations =
-            await this
-                .consultationRepository
-                .findOpenByNurseId(
-                    query.nurseId
-                );
+        let consultations = await this
+            .consultationRepository
+            .findOpenByNurseId(query.nurseId);
 
-        const mapped =
-            consultations.map(
-                consultation =>
-                    consultation.toPrimitives()
-            );
+        // Enriquecer cada consulta con datos del paciente y la madre
+        const enrichedConsultations = await Promise.all(
+            consultations.map(async (consultation) => {
+                const consultationData = consultation.toPrimitives();
 
-        if (
-            query.searchTerm
-        ) {
-            return mapped.filter(
-                c =>
-                    c.patientId
-                        .includes(
-                            query.searchTerm as string
-                        )
+                // Obtener datos del paciente
+                const patient = await this.patientRepository.findById(consultationData.patientId);
+                const patientData = patient?.toPrimitives();
+
+                // Obtener datos de la madre (asumiendo que UserRepository tiene findById o similar)
+                const mother = await this.userRepository.findMotherById(consultationData.motherId);
+                const motherData = mother?.toPrimitives();
+
+                return {
+                    consultationId: consultationData.id,
+                    patientId: consultationData.patientId,
+                    patientName: patientData ? `${patientData.name} ${patientData.lastName || ''}` : 'Unknown',
+                    motherId: consultationData.motherId,
+                    motherName: motherData?.name || 'Unknown',
+                    nurseId: consultationData.nurseId,
+                    lastMessage: consultationData.messages.length > 0
+                        ? consultationData.messages[consultationData.messages.length - 1].content
+                        : null,
+                    lastMessageDate: consultationData.messages.length > 0
+                        ? consultationData.messages[consultationData.messages.length - 1].sentAt
+                        : null,
+                    createdAt: consultationData.createdAt,
+                    messageCount: consultationData.messages.length
+                };
+            })
+        );
+
+        // Filtrar por searchTerm (ahora busca en patientName o motherName)
+        if (query.searchTerm) {
+            const searchLower = query.searchTerm.toLowerCase();
+            return enrichedConsultations.filter(
+                c => c.patientName.toLowerCase().includes(searchLower) ||
+                    c.motherName.toLowerCase().includes(searchLower)
             );
         }
 
-        return mapped;
+        return enrichedConsultations;
     }
 
     async getMessagesAfter(
