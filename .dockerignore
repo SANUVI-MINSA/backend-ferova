@@ -1,0 +1,54 @@
+# Dependencias
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Archivos de compilación
+dist/
+build/
+.next/
+
+# Variables de entorno
+.env
+.env.local
+.env.production
+.env.development
+
+# Archivos de Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE y editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Tests y coverage
+coverage/
+.nyc_output/
+*.test.js
+*.spec.js
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentación
+README.md
+CHANGELOG.md
+LICENSE
+
+# Archivos temporales
+*.tmp
+*.temp
+.cache/
