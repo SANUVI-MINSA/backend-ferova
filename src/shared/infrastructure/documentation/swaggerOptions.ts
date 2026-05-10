@@ -25,7 +25,10 @@ const swaggerOptions: Options = {
         }
     },
     apis: [
-        "src/context/**/interfaces/routes/**.ts",
+        // Para desarrollo (TypeScript)
+        "src/context/**/interfaces/routes/*.ts",
+        // Para producción (JavaScript compilado)
+        "dist/src/context/**/interfaces/routes/*.js"
     ]
 };
 
