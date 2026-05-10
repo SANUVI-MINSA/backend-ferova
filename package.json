@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only server.ts",
     "build": "tsc",
-    "start": "node dist/server.ts",
-    "seed:foods": "ts-node --transpile-only src/scripts/seed-food-items.ts"
+    "start": "node dist/server.js",
+    "seed:foods": "node dist/scripts/seed-food-items.js"
   },
   "keywords": [],
   "author": "",
