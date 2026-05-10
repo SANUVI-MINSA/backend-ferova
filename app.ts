@@ -12,25 +12,18 @@ app.use(express.json());
 
 setupSwagger(app);
 
-app.use(
-    "/api/health-facilities",
-    healthFacilityRoutes
-);
-app.use("/api/users", userRoutes)
-
-app.use(
-    "/api/patients",
-    patientRoutes
-);
-
-app.use(
-    "/api/nutritional-diary",
-    nutritionalDiaryRoutes
-);
-
-app.use(
-    "/api/communication",
-    communicationRoutes
-);
-
+app.get('/', (req, res) => {
+    res.json({
+        message: 'Ferova API - Healthcare Management System',
+        version: '1.0.0',
+        documentation: '/api-docs',
+        endpoints: {
+            users: '/api/users',
+            patients: '/api/patients',
+            healthFacilities: '/api/health-facilities',
+            nutritionalDiary: '/api/nutritional-diary',
+            communication: '/api/communication'
+        }
+    });
+});
 export default app;
