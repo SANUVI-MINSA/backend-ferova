@@ -7,7 +7,7 @@
     "dev": "ts-node-dev --respawn --transpile-only server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "seed:foods": "node dist/scripts/seed-food-items.js"
+    "seed:foods": "node dist/src/scripts/seed-food-items.js"
   },
   "keywords": [],
   "author": "",
