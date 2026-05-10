@@ -14,10 +14,6 @@ COPY . .
 # Compilar TypeScript
 RUN npm run build
 
-# ============================================
-# EJECUTAR EL SEED DE ALIMENTOS DURANTE EL BUILD
-# ============================================
-RUN npm run seed:foods
 
 # ============================================
 
