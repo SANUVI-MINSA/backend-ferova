@@ -10,8 +10,8 @@ const swaggerOptions: Options = {
         },
         servers: [
             {
-                url: "http://localhost:3000",
-                description: "Local server"
+                url: "https://backend-ferova-production.up.railway.app",
+                description: "Production server"
             }
         ],
         components: {
