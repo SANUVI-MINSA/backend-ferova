@@ -390,5 +390,43 @@ export class PatientManagementController {
         }
     };
 
+    getActivePatientsCount = async (req: AuthRequest, res: Response) => {
+        try {
+            const nurseId = req.user?.nurseId;
 
+            if (!nurseId) {
+                return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
+            }
+
+            const count = await this.patientFacade.getActivePatientsCount({ nurseId });
+
+            res.status(200).json({
+                nurseId,
+                activePatientsCount: count
+            });
+
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    };
+
+    getMyPatients = async (req: AuthRequest, res: Response) => {
+        try {
+            const motherId = req.user?.motherId;
+
+            if (!motherId) {
+                return res.status(400).json({ error: "Mother ID no encontrado en el token" });
+            }
+
+            const patients = await this.patientFacade.getMotherPatientsSummary({ motherId });
+
+            res.status(200).json({
+                motherId,
+                patients
+            });
+
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    };
 }

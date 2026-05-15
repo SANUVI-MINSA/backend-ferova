@@ -15,6 +15,8 @@ import {ListPatientsByMotherQuery} from "../../domain/model/queries/ListPatients
 import {SearchMotherByDniQuery} from "../../domain/model/queries/SearchMotherByDniQuery";
 import {GetPatientsAssignedToNurseQuery} from "../../domain/model/queries/GetPatientsAssignedToNurseQuery";
 import {GetHemoglobinEvolutionChartQuery} from "../../domain/model/queries/getHemoglobinEvolutionChart";
+import {GetMotherPatientsSummaryQuery} from "../../domain/model/queries/GetMotherPatientsSummaryQuery";
+import {GetActivePatientsCountQuery} from "../../domain/model/queries/GetActivePatientsCountQuery";
 
 export class PatientManagementFacade {
 
@@ -238,6 +240,14 @@ export class PatientManagementFacade {
         if (patient.nurseId !== nurseId) {
             throw new Error("Access denied: This medical record does not belong to a patient assigned to you");
         }
+    }
+
+    async getActivePatientsCount(query: GetActivePatientsCountQuery): Promise<number> {
+        return await this.queryService.GetActivePatientsCountQuery(query);
+    }
+
+    async getMotherPatientsSummary(query: GetMotherPatientsSummaryQuery): Promise<Array<any>> {
+        return await this.queryService.getMotherPatientsSummary(query);
     }
 
 }
