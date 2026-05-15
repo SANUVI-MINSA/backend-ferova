@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {communicationController} from "../dependencies/ComunicationDependecies";
+import {authenticate, requireMother, requireMotherOrNurse, requireNurse} from "../../../../middlewares/auth.middleware";
 
 const router = Router();
 
@@ -7,9 +8,11 @@ const router = Router();
  * @swagger
  * /api/communication/consultations:
  *   post:
- *     summary: Start a new consultation
+ *     summary: Start a new consultation only mother
  *     tags:
  *       - Communication
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -17,12 +20,9 @@ const router = Router();
  *           schema:
  *             type: object
  *             required:
- *               - motherId
  *               - patientId
  *               - firstMessageContent
  *             properties:
- *               motherId:
- *                 type: string
  *               patientId:
  *                 type: string
  *               firstMessageContent:
@@ -33,16 +33,21 @@ const router = Router();
  */
 router.post(
     "/consultations",
+    authenticate,
+    requireMother,  // ✅ Solo madres
     communicationController.startConsultation
 );
+
 
 /**
  * @swagger
  * /api/communication/messages:
  *   post:
- *     summary: Add new message to consultation
+ *     summary: Add new message to consultation only mother - nurse
  *     tags:
  *       - Communication
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -51,27 +56,20 @@ router.post(
  *             type: object
  *             required:
  *               - consultationId
- *               - senderId
- *               - senderRole
  *               - content
  *             properties:
  *               consultationId:
  *                 type: string
- *               senderId:
- *                 type: string
- *               senderRole:
- *                 type: string
- *                 example: MOTHER
  *               content:
  *                 type: string
  *     responses:
  *       200:
  *         description: Message sent successfully
- *       400:
- *         description: Validation error
  */
 router.post(
     "/messages",
+    authenticate,
+    requireMotherOrNurse,  // ✅ Madres y enfermeros
     communicationController.addMessage
 );
 
@@ -79,9 +77,11 @@ router.post(
  * @swagger
  * /api/communication/consultations/close:
  *   delete:
- *     summary: Close consultation
+ *     summary: Close consultation only nurse
  *     tags:
  *       - Communication
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -90,53 +90,49 @@ router.post(
  *             type: object
  *             required:
  *               - consultationId
- *               - nurseId
  *             properties:
  *               consultationId:
- *                 type: string
- *               nurseId:
  *                 type: string
  *     responses:
  *       200:
  *         description: Consultation closed successfully
- *       400:
- *         description: Validation error
  */
 router.delete(
     "/consultations/close",
+    authenticate,
+    requireNurse,  // ✅ Solo enfermeros
     communicationController.closeConsultation
 );
 
 /**
  * @swagger
- * /api/communication/patients/{motherId}:
+ * /api/communication/patients:
  *   get:
- *     summary: Get patients with nurse assignment
+ *     summary: Get patients with nurse assignment (for mother)
  *     tags:
  *       - Communication
- *     parameters:
- *       - in: path
- *         name: motherId
- *         required: true
- *         schema:
- *           type: string
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Patients retrieved successfully
  */
 router.get(
-    "/patients/:motherId",
-    communicationController
-        .getPatientsWithNurseAssignment
+    "/patients",
+    authenticate,
+    requireMother,  // ✅ Solo madres
+    communicationController.getPatientsWithNurseAssignment
 );
 
 /**
  * @swagger
  * /api/communication/nurse-info/{patientId}:
  *   get:
- *     summary: Get nurse info for consultation
+ *     summary: Get nurse info for consultation only mother
  *     tags:
  *       - Communication
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: patientId
@@ -146,82 +142,71 @@ router.get(
  *     responses:
  *       200:
  *         description: Nurse info retrieved successfully
- *       404:
- *         description: Patient not found
  */
 router.get(
     "/nurse-info/:patientId",
-    communicationController
-        .getNurseInfoForConsultation
+    authenticate,
+    requireMother,  // ✅ Solo madres
+    communicationController.getNurseInfoForConsultation
 );
 
 /**
  * @swagger
  * /api/communication/chat/{consultationId}:
  *   get:
- *     summary: Get consultation chat
+ *     summary: Get consultation chat only mother and nurse
  *     tags:
  *       - Communication
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: consultationId
  *         required: true
  *         schema:
  *           type: string
- *       - in: query
- *         name: requesterId
- *         required: true
- *         schema:
- *           type: string
  *     responses:
  *       200:
  *         description: Chat retrieved successfully
- *       403:
- *         description: Not authorized
  */
 router.get(
     "/chat/:consultationId",
-    communicationController
-        .getConsultationChat
+    authenticate,
+    requireMotherOrNurse,  // ✅ Madres y enfermeros
+    communicationController.getConsultationChat
 );
+
 
 /**
  * @swagger
- * /api/communication/mother/{motherId}/consultations:
+ * /api/communication/consultations/mother:
  *   get:
- *     summary: Get mother consultations
+ *     summary: Get mother consultations only mother
  *     tags:
  *       - Communication
- *     parameters:
- *       - in: path
- *         name: motherId
- *         required: true
- *         schema:
- *           type: string
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Mother consultations retrieved successfully
  */
 router.get(
-    "/mother/:motherId/consultations",
-    communicationController
-        .getOpenConsultationsByMother
+    "/consultations/mother",
+    authenticate,
+    requireMother,  // ✅ Solo madres
+    communicationController.getOpenConsultationsByMother
 );
-
 
 /**
  * @swagger
- * /api/communication/nurse/{nurseId}/consultations:
+ * /api/communication/consultations/nurse:
  *   get:
- *     summary: Get nurse consultations
+ *     summary: Get nurse consultations only nurse
  *     tags:
  *       - Communication
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
- *       - in: path
- *         name: nurseId
- *         required: true
- *         schema:
- *           type: string
  *       - in: query
  *         name: searchTerm
  *         required: false
@@ -232,26 +217,24 @@ router.get(
  *         description: Nurse consultations retrieved successfully
  */
 router.get(
-    "/nurse/:nurseId/consultations",
-    communicationController
-        .getOpenConsultationsByNurse
+    "/consultations/nurse",
+    authenticate,
+    requireNurse,  // ✅ Solo enfermeros
+    communicationController.getOpenConsultationsByNurse
 );
 
 /**
  * @swagger
  * /api/communication/chat/{consultationId}/messages/after:
  *   get:
- *     summary: Get messages after timestamp
+ *     summary: Get messages after timestamp only mother and nurses
  *     tags:
  *       - Communication
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: consultationId
- *         required: true
- *         schema:
- *           type: string
- *       - in: query
- *         name: requesterId
  *         required: true
  *         schema:
  *           type: string
@@ -268,13 +251,12 @@ router.get(
  *     responses:
  *       200:
  *         description: Messages retrieved successfully
- *       403:
- *         description: Not authorized
  */
 router.get(
     "/chat/:consultationId/messages/after",
-    communicationController
-        .getMessagesAfter
+    authenticate,
+    requireMotherOrNurse,  // ✅ Madres y enfermeros
+    communicationController.getMessagesAfter
 );
 
 export default router;
