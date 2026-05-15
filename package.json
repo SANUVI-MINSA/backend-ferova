@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only server.ts",
     "build": "tsc",
-    "start": "node dist/server.ts",
+    "_comentario": "El start se ejecuta el backend de manera local se cambio por un error que no corria por la dirrecion incorrecta  y por que no era la ejeucion de typescript",
+    "start": "ts-node --transpile-only server.ts",
     "seed:foods": "ts-node --transpile-only src/scripts/seed-food-items.ts"
   },
   "keywords": [],
