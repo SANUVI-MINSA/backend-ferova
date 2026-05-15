@@ -696,4 +696,80 @@ router.get(
     patientManagementController.getHemoglobinEvolutionChart
 );
 
+/**
+ * @swagger
+ * /api/patients/nurse/active-count:
+ *   get:
+ *     summary: Get active patients count for the nurse
+ *     tags:
+ *       - Patients
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Active patients count retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 nurseId:
+ *                   type: string
+ *                 activePatientsCount:
+ *                   type: integer
+ *                   example: 5
+ *       400:
+ *         description: Invalid request
+ *       500:
+ *         description: Internal server error
+ */
+router.get(
+    "/nurse/active-count",
+    authenticate,
+    requireNurse,
+    patientManagementController.getActivePatientsCount
+);
+
+/**
+ * @swagger
+ * /api/patients/my-patients:
+ *   get:
+ *     summary: Get mother's patients (only basic info)
+ *     tags:
+ *       - Patients
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Patients retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 motherId:
+ *                   type: string
+ *                 patients:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *       400:
+ *         description: Invalid request
+ *       404:
+ *         description: No patients found
+ *       500:
+ *         description: Internal server error
+ */
+router.get(
+    "/my-patients",
+    authenticate,
+    requireMother,
+    patientManagementController.getMyPatients
+);
+
 export default router;
