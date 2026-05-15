@@ -14,6 +14,8 @@ import {DownloadMedicalRecordPdfQuery} from "../../domain/model/queries/Download
 import {DownloadHemoglobinReportPdfQuery} from "../../domain/model/queries/DownloadHemoglobinReportPdfQuery";
 import {GetHemoglobinEvolutionChartQuery} from "../../domain/model/queries/getHemoglobinEvolutionChart";
 import {GetPatientQuery} from "../../domain/model/queries/GetPatientQuery";
+import { GetActivePatientsCountQuery } from "../../domain/model/queries/GetActivePatientsCountQuery";
+import { GetMotherPatientsSummaryQuery } from "../../domain/model/queries/GetMotherPatientsSummaryQuery";
 
 export class PatientQueryServiceImpl
     implements PatientQueryService {
@@ -21,13 +23,33 @@ export class PatientQueryServiceImpl
     constructor(
         private patientRepository:
         PatientRepository,
-
         private medicalRecordRepository:
         MedicalRecordRepository,
-
         // Inyectar UserRepository si es necesario para obtener información adicional sobre los usuarios madres
         private userRepository: UserRepository
     ) {}
+
+    async getMotherPatientsSummary(query: GetMotherPatientsSummaryQuery): Promise<Array<any>> {
+        const patients = await this.patientRepository.findByMotherId(query.motherId);
+
+        return patients.map(patient => {
+            const data = patient.toPrimitives();
+            return {
+                id: data.id,
+                name: data.name
+            };
+        });
+    }
+
+    async GetActivePatientsCountQuery(query: GetActivePatientsCountQuery): Promise<any> {
+        const patients = await this.patientRepository.findByNurseId(query.nurseId);
+
+        const activePatients = patients.filter(
+            patient => patient.toPrimitives().status !== "DISCHARGED"
+        );
+
+        return activePatients.length;
+    }
 
     async downloadHemoglobinReportPdf(
         query: DownloadHemoglobinReportPdfQuery

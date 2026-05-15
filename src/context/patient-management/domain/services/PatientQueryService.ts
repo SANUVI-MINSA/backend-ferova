@@ -8,6 +8,8 @@ import {GetPatientsEligibleForDischargeQuery} from "../model/queries/GetPatients
 import {GetPatientsAssignedToNurseQuery} from "../model/queries/GetPatientsAssignedToNurseQuery";
 import {GetHemoglobinEvolutionChartQuery} from "../model/queries/getHemoglobinEvolutionChart";
 import {GetPatientQuery} from "../model/queries/GetPatientQuery";
+import {GetActivePatientsCountQuery} from "../model/queries/GetActivePatientsCountQuery";
+import {GetMotherPatientsSummaryQuery} from "../model/queries/GetMotherPatientsSummaryQuery";
 
 export interface PatientQueryService {
 
@@ -59,4 +61,10 @@ export interface PatientQueryService {
 
     getMedicalRecordById(query: { medicalRecordId: string }): Promise<any>;
 
+    GetActivePatientsCountQuery(
+        query: GetActivePatientsCountQuery
+    ): Promise<number>;
+
+    // Agregar esta firma
+    getMotherPatientsSummary(query: GetMotherPatientsSummaryQuery): Promise<Array<any>>;
 }
