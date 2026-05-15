@@ -67,3 +67,4 @@ export const requireRole = (roles: ('Mother' | 'Nurse' | 'Admin')[]) => {
 export const requireMother = requireRole(['Mother']);
 export const requireNurse = requireRole(['Nurse']);
 export const requireAdmin = requireRole(['Admin']);
+export const requireMotherOrNurse = requireRole(['Mother', 'Nurse']);
