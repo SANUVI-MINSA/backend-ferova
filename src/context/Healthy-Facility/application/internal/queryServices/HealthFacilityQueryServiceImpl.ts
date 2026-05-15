@@ -173,12 +173,38 @@ export class HealthFacilityQueryServiceImpl
         query: GetNurseAppointmentScheduleQuery
     ): Promise<Appointment[]> {
 
-        return await this
-            .appointmentRepository
-            .findConfirmedByNurseId(
-                query.nurseId
+        // Obtener todas las citas confirmadas del enfermero
+        const allAppointments = await this.appointmentRepository
+            .findConfirmedByNurseId(query.nurseId);
+
+        const now = new Date();
+
+        // Filtrar solo citas futuras
+        const futureAppointments = allAppointments.filter(appointment => {
+            const appointmentData = appointment.toPrimitives();
+            const appointmentDateTime = this.toDateTime(
+                appointmentData.appointmentDate,
+                appointmentData.appointmentTime
             );
+            return appointmentDateTime > now; // Solo futuras
+        });
+
+        // Opcional: Ordenar por fecha y hora (más cercana primero)
+        const sortedAppointments = futureAppointments.sort((a, b) => {
+            const dateA = this.toDateTime(
+                a.toPrimitives().appointmentDate,
+                a.toPrimitives().appointmentTime
+            );
+            const dateB = this.toDateTime(
+                b.toPrimitives().appointmentDate,
+                b.toPrimitives().appointmentTime
+            );
+            return dateA.getTime() - dateB.getTime(); // Más cercana primero
+        });
+
+        return sortedAppointments;
     }
+
 
     async getFacilityAvailableSlots(
         query: GetFacilityAvailableSlotsQuery
