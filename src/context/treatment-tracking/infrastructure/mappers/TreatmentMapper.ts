@@ -12,8 +12,8 @@ export class TreatmentMapper {
             new RiskScore(
                 document.riskScore.id,
                 document.riskScore.score,
-                document.riskScore.riskLevel,
-                document.riskScore.calculatedAt
+                document.riskScore.riskLevel || "LOW",
+                document.riskScore.calculatedAt || new Date()
             );
 
         return new Treatment(
@@ -37,10 +37,32 @@ export class TreatmentMapper {
         );
     }
 
-    static toPersistence(
-        treatment: Treatment
-    ) {
-        return treatment
-            .toPrimitives();
+    static toPersistence(treatment: Treatment) {
+        const data = treatment.toPrimitives();
+
+        return {
+            id: data.id,
+            patientId: data.patientId,
+            nurseId: data.nurseId,
+            supplement: data.supplement,
+            quantity: data.quantity,
+            dosingHours: data.dosingHours,
+            durationDays: data.durationDays,
+            startDate: data.startDate,
+            endDate: data.endDate,
+            status: data.status,
+            adherenceScore: data.adherenceScore,
+            currentStreak: data.currentStreak,
+            totalConfirmed: data.totalConfirmed,
+            totalOmitted: data.totalOmitted,
+            completionObservation: data.completionObservation,
+            abandonmentObservation: data.abandonmentObservation,
+            riskScore: {
+                id: data.riskScore.id,
+                score: data.riskScore.score,
+                riskLevel: data.riskScore.riskLevel,
+                calculatedAt: data.riskScore.calculatedAt
+            }
+        };
     }
 }
