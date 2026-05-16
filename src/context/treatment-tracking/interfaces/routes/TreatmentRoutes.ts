@@ -1,0 +1,409 @@
+import { Router } from "express";
+import { treatmentController } from "../dependencies/TreatmentDependencies";
+
+const router = Router();
+
+/**
+ * @swagger
+ * /api/treatment-tracking/treatments:
+ *   post:
+ *     summary: Start a new treatment
+ *     tags:
+ *       - Treatment Tracking
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - patientId
+ *               - nurseId
+ *               - supplementName
+ *               - quantity
+ *               - dosingHours
+ *               - durationDays
+ *             properties:
+ *               patientId:
+ *                 type: string
+ *               nurseId:
+ *                 type: string
+ *               supplementName:
+ *                 type: string
+ *               quantity:
+ *                 type: string
+ *               dosingHours:
+ *                 type: string
+ *               durationDays:
+ *                 type: number
+ *     responses:
+ *       201:
+ *         description: Treatment created successfully
+ *       400:
+ *         description: Validation error
+ */
+router.post(
+    "/treatments",
+    treatmentController.startTreatment
+);
+
+/**
+ * @swagger
+ * /api/treatment-tracking/doses/confirm:
+ *   post:
+ *     summary: Confirm today's dose
+ *     tags:
+ *       - Treatment Tracking
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - treatmentId
+ *               - patientId
+ *               - motherId
+ *               - dailyDoseId
+ *             properties:
+ *               treatmentId:
+ *                 type: string
+ *               patientId:
+ *                 type: string
+ *               motherId:
+ *                 type: string
+ *               dailyDoseId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Dose confirmed successfully
+ */
+router.post(
+    "/doses/confirm",
+    treatmentController.confirmDose
+);
+
+/**
+ * @swagger
+ * /api/treatment-tracking/treatments/complete:
+ *   put:
+ *     summary: Complete treatment
+ *     tags:
+ *       - Treatment Tracking
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - treatmentId
+ *               - nurseId
+ *             properties:
+ *               treatmentId:
+ *                 type: string
+ *               nurseId:
+ *                 type: string
+ *               observation:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Treatment completed
+ */
+router.put(
+    "/treatments/complete",
+    treatmentController.completeTreatment
+);
+
+/**
+ * @swagger
+ * /api/treatment-tracking/treatments/abandon:
+ *   put:
+ *     summary: Mark treatment as abandoned
+ *     tags:
+ *       - Treatment Tracking
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - treatmentId
+ *               - nurseId
+ *             properties:
+ *               treatmentId:
+ *                 type: string
+ *               nurseId:
+ *                 type: string
+ *               observation:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Treatment abandoned
+ */
+router.put(
+    "/treatments/abandon",
+    treatmentController.abandonTreatment
+);
+
+
+/**
+ * @swagger
+ * /api/treatment-tracking/doses/evaluate-missed:
+ *   post:
+ *     summary: Evaluate missed dose
+ *     tags:
+ *       - Treatment Tracking
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - dailyDoseId
+ *             properties:
+ *               dailyDoseId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Missed dose evaluated
+ */
+router.post(
+    "/doses/evaluate-missed",
+    treatmentController.evaluateMissedDose
+);
+
+
+/**
+ * @swagger
+ * /api/treatment-tracking/patients/{patientId}/today-dose:
+ *   get:
+ *     summary: Get today's dose
+ *     tags:
+ *       - Treatment Tracking
+ *     parameters:
+ *       - in: path
+ *         name: patientId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: motherId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Today's dose retrieved
+ */
+router.get(
+    "/patients/:patientId/today-dose",
+    treatmentController.getTodayDose
+);
+
+/**
+ * @swagger
+ * /api/treatment-tracking/patients/{patientId}/dose-history:
+ *   get:
+ *     summary: Get patient dose history
+ *     tags:
+ *       - Treatment Tracking
+ *     parameters:
+ *       - in: path
+ *         name: patientId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Dose history retrieved successfully
+ *       404:
+ *         description: Patient not found
+ */
+router.get(
+    "/patients/:patientId/dose-history",
+    treatmentController.getPatientDoseHistory
+);
+
+/**
+ * @swagger
+ * /api/treatment-tracking/nurses/{nurseId}/pending-patients:
+ *   get:
+ *     summary: Get pending patients by nurse
+ *     tags:
+ *       - Treatment Tracking
+ *     parameters:
+ *       - in: path
+ *         name: nurseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Pending patients retrieved successfully
+ *       404:
+ *         description: Nurse not found
+ */
+router.get(
+    "/nurses/:nurseId/pending-patients",
+    treatmentController.getPendingPatientsByNurse
+);
+
+/**
+ * @swagger
+ * /api/treatment-tracking/risk-overview:
+ *   get:
+ *     summary: Get risk level overview
+ *     tags:
+ *       - Treatment Tracking
+ *     parameters:
+ *       - in: query
+ *         name: nurseId
+ *         required: false
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Risk overview retrieved successfully
+ */
+router.get(
+    "/risk-overview",
+    treatmentController.getRiskLevelOverview
+);
+
+
+/**
+ * @swagger
+ * /api/treatment-tracking/nurses/{nurseId}/treatments:
+ *   get:
+ *     summary: Get treatments by nurse
+ *     tags:
+ *       - Treatment Tracking
+ *     parameters:
+ *       - in: path
+ *         name: nurseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: status
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum:
+ *             - ACTIVE
+ *             - COMPLETED
+ *             - ABANDONED
+ *     responses:
+ *       200:
+ *         description: Treatments retrieved successfully
+ */
+router.get(
+    "/nurses/:nurseId/treatments",
+    treatmentController.getTreatmentsByNurse
+);
+
+/**
+ * @swagger
+ * /api/treatment-tracking/treatments/{treatmentId}:
+ *   get:
+ *     summary: Get treatment details
+ *     tags:
+ *       - Treatment Tracking
+ *     parameters:
+ *       - in: path
+ *         name: treatmentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Treatment details retrieved successfully
+ *       404:
+ *         description: Treatment not found
+ */
+router.get(
+    "/treatments/:treatmentId",
+    treatmentController.getTreatmentDetails
+);
+
+/**
+ * @swagger
+ * /api/treatment-tracking/risk/{riskLevel}/patients:
+ *   get:
+ *     summary: Get patients by risk level
+ *     tags:
+ *       - Treatment Tracking
+ *     parameters:
+ *       - in: path
+ *         name: riskLevel
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum:
+ *             - HIGH
+ *             - MEDIUM
+ *             - LOW
+ *       - in: query
+ *         name: nurseId
+ *         required: false
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Patients by risk level retrieved successfully
+ */
+router.get(
+    "/risk/:riskLevel/patients",
+    treatmentController.getPatientsByRiskLevel
+);
+
+/**
+ * @swagger
+ * /api/treatment-tracking/patients/{patientId}/treatment-detail:
+ *   get:
+ *     summary: Get patient treatment detail
+ *     tags:
+ *       - Treatment Tracking
+ *     parameters:
+ *       - in: path
+ *         name: patientId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Patient treatment detail retrieved successfully
+ *       404:
+ *         description: Patient not found
+ */
+router.get(
+    "/patients/:patientId/treatment-detail",
+    treatmentController.getPatientTreatmentDetail
+);
+
+/**
+ * @swagger
+ * /api/treatment-tracking/nurses/{nurseId}/critical-alerts:
+ *   get:
+ *     summary: Get critical alerts by nurse
+ *     tags:
+ *       - Treatment Tracking
+ *     parameters:
+ *       - in: path
+ *         name: nurseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Critical alerts retrieved successfully
+ */
+router.get(
+    "/nurses/:nurseId/critical-alerts",
+    treatmentController.getCriticalAlertsByNurse
+);
+
+export default router;
