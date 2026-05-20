@@ -55,27 +55,25 @@ export class TreatmentController {
         }
     };
 
-    confirmDose = async (
-        req: Request,
-        res: Response
-    ) => {
+    // TreatmentController.ts
+    confirmDose = async (req: AuthRequest, res: Response) => {
         try {
+            const motherId = req.user?.motherId; // o como se llame en tu token
 
-            const command = ConfirmDoseCommandFromResourceAssembler.toCommand(req.body)
+            if (!motherId) {
+                return res.status(401).json({ error: "Mother ID no encontrado en token" });
+            }
 
-            const result =
-                await this.facade
-                    .confirmDose(command);
+            const command = {
+                patientId: req.body.patientId,
+                motherId: motherId  // Se toma del token
+            };
 
-            res.status(200).json(
-                result
-            );
+            const result = await this.facade.confirmDose(command);
+            res.status(200).json(result);
 
-        } catch (error:any) {
-            res.status(400).json({
-                error:
-                error.message
-            });
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
         }
     };
 
