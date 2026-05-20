@@ -155,7 +155,6 @@ export class TreatmentQueryServiceImpl
         }
 
         // Buscar tratamiento
-
         const treatment =
             await this
                 .treatmentRepository
@@ -170,7 +169,6 @@ export class TreatmentQueryServiceImpl
         }
 
         // Obtener dosis
-
         const doses =
             await this
                 .dailyDoseRepository
@@ -178,25 +176,30 @@ export class TreatmentQueryServiceImpl
                     treatment.getId()
                 );
 
-        // Ordenar por fecha descendente
+        // Filtrar solo dosis CONFIRMED y OMITTED (excluir PENDING)
+        const confirmedAndOmittedDoses =
+            doses.filter(
+                dose =>
+                    dose.getStatus() === "CONFIRMED" ||
+                    dose.getStatus() === "OMITTED"
+            );
 
+        // Ordenar por fecha descendente
         const sortedDoses =
-            doses.sort(
+            confirmedAndOmittedDoses.sort(
                 (a, b) =>
                     b.getScheduledDate().getTime() -
                     a.getScheduledDate().getTime()
             );
 
         // Obtener info paciente
-
         const patientData =
             patient.toPrimitives();
 
         const treatmentData =
             treatment.toPrimitives();
 
-        // Responses
-
+        // Response
         return {
             patientId:
             patientData.id,
@@ -213,6 +216,7 @@ export class TreatmentQueryServiceImpl
             dosingHours:
             treatmentData.dosingHours,
 
+            // Mostrar solo dosis confirmadas y omitidas
             doses:
                 sortedDoses.map(
                     dose => ({
@@ -220,7 +224,7 @@ export class TreatmentQueryServiceImpl
                         hoursWithoutConfirmation:
                             dose.calculateHoursWithoutConfirmation()
                     })
-                )
+                ),
         };
     }
 
