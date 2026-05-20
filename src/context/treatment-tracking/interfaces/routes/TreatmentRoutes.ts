@@ -259,18 +259,16 @@ router.get(
  *     summary: Get risk level overview
  *     tags:
  *       - Treatment Tracking
- *     parameters:
- *       - in: query
- *         name: nurseId
- *         required: false
- *         schema:
- *           type: string
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Risk overview retrieved successfully
  */
 router.get(
     "/risk-overview",
+    authenticate,
+    requireNurse,
     treatmentController.getRiskLevelOverview
 );
 
@@ -337,6 +335,8 @@ router.get(
  *     summary: Get patients by risk level
  *     tags:
  *       - Treatment Tracking
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: riskLevel
@@ -347,17 +347,14 @@ router.get(
  *             - HIGH
  *             - MEDIUM
  *             - LOW
- *       - in: query
- *         name: nurseId
- *         required: false
- *         schema:
- *           type: string
  *     responses:
  *       200:
  *         description: Patients by risk level retrieved successfully
  */
 router.get(
     "/risk/:riskLevel/patients",
+    authenticate,
+    requireNurse,
     treatmentController.getPatientsByRiskLevel
 );
 
@@ -368,6 +365,8 @@ router.get(
  *     summary: Get patient treatment detail
  *     tags:
  *       - Treatment Tracking
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: patientId
@@ -382,6 +381,8 @@ router.get(
  */
 router.get(
     "/patients/:patientId/treatment-detail",
+    authenticate,
+    requireNurse,
     treatmentController.getPatientTreatmentDetail
 );
 
