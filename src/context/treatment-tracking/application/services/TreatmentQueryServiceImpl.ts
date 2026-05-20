@@ -3,7 +3,6 @@ import {TreatmentRepository} from "../../model/repositories/TreatmentRepository"
 import {DailyDoseRepository} from "../../model/repositories/DailyDoseRepository";
 import {PatientRepository} from "../../../patient-management/domain/repositories/PatientRepository";
 import {GetCriticalAlertsByNurseQuery} from "../../model/domain/queries/GetCriticalAlertsByNurseQuery";
-import {Promise} from "mongoose";
 import {GetPatientDoseHistoryQuery} from "../../model/domain/queries/GetPatientDoseHistoryQuery";
 import {GetPatientTreatmentDetailQuery} from "../../model/domain/queries/GetPatientTreatmentDetailQuery";
 import {GetPatientsByRiskLevelQuery} from "../../model/domain/queries/GetPatientsByRiskLevelQuery";
