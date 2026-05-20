@@ -207,6 +207,8 @@ router.get(
  *     summary: Get patient dose history
  *     tags:
  *       - Treatment Tracking
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: patientId
@@ -221,6 +223,8 @@ router.get(
  */
 router.get(
     "/patients/:patientId/dose-history",
+    authenticate,
+    requireMother,
     treatmentController.getPatientDoseHistory
 );
 
