@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { treatmentController } from "../dependencies/TreatmentDependencies";
-import {authenticate, requireNurse} from "../../../../middlewares/auth.middleware";
+import {authenticate, requireMother, requireNurse} from "../../../../middlewares/auth.middleware";
 
 const router = Router();
 
@@ -56,6 +56,8 @@ router.post(
  *     summary: Confirm today's dose
  *     tags:
  *       - Treatment Tracking
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -63,18 +65,9 @@ router.post(
  *           schema:
  *             type: object
  *             required:
- *               - treatmentId
  *               - patientId
- *               - motherId
- *               - dailyDoseId
  *             properties:
- *               treatmentId:
- *                 type: string
  *               patientId:
- *                 type: string
- *               motherId:
- *                 type: string
- *               dailyDoseId:
  *                 type: string
  *     responses:
  *       200:
@@ -82,6 +75,8 @@ router.post(
  */
 router.post(
     "/doses/confirm",
+    authenticate,
+    requireMother,
     treatmentController.confirmDose
 );
 
