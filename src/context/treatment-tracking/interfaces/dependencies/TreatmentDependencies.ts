@@ -34,7 +34,8 @@ const treatmentQueryService =
 const treatmentFacade =
     new TreatmentFacade(
         treatmentCommandService,
-        treatmentQueryService
+        treatmentQueryService,
+        patientRepository
     );
 
 export const treatmentController =
