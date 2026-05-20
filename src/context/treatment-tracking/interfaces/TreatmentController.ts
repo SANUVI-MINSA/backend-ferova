@@ -9,6 +9,7 @@ import {AbandonTreatmentCommandFromResourceAssembler} from "./assemblers/Abandon
 import {
     EvaluateMissedDoseCommandFromResourceAssembler
 } from "./assemblers/EvaluateMissedDoseCommandFromResourceAssembler";
+import {AuthRequest} from "../../../middlewares/auth.middleware";
 
 export class TreatmentController {
 
@@ -18,14 +19,27 @@ export class TreatmentController {
     ) {}
 
     startTreatment = async (
-        req: Request,
+        req: AuthRequest,
         res: Response
     ) => {
         try {
 
+            const nurseId = req.user?.nurseId;
+
+            if (!nurseId) {
+                return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
+            }
+
+            await this.facade.validateNurseHasPatient(nurseId, req.body.patientId);
+
+            const commandData = {
+                ...req.body,
+                nurseId: nurseId,
+            }
+
             const command =
                 StartTreatmentCommandFromResourceAssembler
-                    .toCommand(req.body)
+                    .toCommand(commandData)
 
             const result = await this.facade.startTreatment(command)
 
