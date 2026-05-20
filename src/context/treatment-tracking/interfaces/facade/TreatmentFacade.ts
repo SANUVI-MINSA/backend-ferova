@@ -1,5 +1,6 @@
 import {TreatmentCommandService} from "../../model/services/TreatmentCommandService";
 import {TreatmentQueryService} from "../../model/services/TreatmentQueryService";
+import {PatientRepository} from "../../../patient-management/domain/repositories/PatientRepository";
 
 export class TreatmentFacade {
 
@@ -7,12 +8,15 @@ export class TreatmentFacade {
         private commandService:
         TreatmentCommandService,
         private queryService:
-        TreatmentQueryService
+        TreatmentQueryService,
+        private patientRepository:
+            PatientRepository
     ) {}
 
     async startTreatment(
         command: any
     ) {
+
         return this
             .commandService
             .startTreatment(
@@ -149,7 +153,21 @@ export class TreatmentFacade {
                 query
             );
     
-}
+    }
+
+    async validateNurseHasPatient(nurseId: string, patientId: string): Promise<void> {
+        const patient = await this.patientRepository.findById(patientId);
+
+        if (!patient) {
+            throw new Error("Patient not found");
+        }
+
+        const patientData = patient.toPrimitives();
+
+        if (patientData.nurseId !== nurseId) {
+            throw new Error("Access denied: This patient is not assigned to you");
+        }
+    }
 
 
 }

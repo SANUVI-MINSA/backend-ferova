@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { treatmentController } from "../dependencies/TreatmentDependencies";
+import {authenticate, requireNurse} from "../../../../middlewares/auth.middleware";
 
 const router = Router();
 
@@ -10,6 +11,8 @@ const router = Router();
  *     summary: Start a new treatment
  *     tags:
  *       - Treatment Tracking
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -18,15 +21,12 @@ const router = Router();
  *             type: object
  *             required:
  *               - patientId
- *               - nurseId
  *               - supplementName
  *               - quantity
  *               - dosingHours
  *               - durationDays
  *             properties:
  *               patientId:
- *                 type: string
- *               nurseId:
  *                 type: string
  *               supplementName:
  *                 type: string
@@ -44,6 +44,8 @@ const router = Router();
  */
 router.post(
     "/treatments",
+    authenticate,
+    requireNurse,
     treatmentController.startTreatment
 );
 
