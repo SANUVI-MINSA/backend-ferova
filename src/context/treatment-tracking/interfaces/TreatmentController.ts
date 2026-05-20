@@ -241,16 +241,23 @@ export class TreatmentController {
     };
 
     getRiskLevelOverview = async (
-        req: Request,
+        req: AuthRequest,
         res: Response
     ) => {
         try {
 
+            const nurseId = req.user?.nurseId;
+
+            if(!nurseId) {
+                return res.status(400).json({
+                    error: "Nurse ID not found in token"
+                })
+            }
+
             const result =
                 await this.facade
                     .getRiskLevelOverview({
-                        nurseId:
-                        req.query.nurseId
+                        nurseId: nurseId
                     });
 
             res.status(200).json(
@@ -315,18 +322,26 @@ export class TreatmentController {
     };
 
     getPatientsByRiskLevel = async (
-        req: Request,
+        req: AuthRequest,
         res: Response
     ) => {
         try {
+
+            const nurseId = req.user?.nurseId;
+
+            if(!nurseId) {
+                return res.status(400).json({
+                    error: "Nurse ID not found in token"
+                })
+            }
+
 
             const result =
                 await this.facade
                     .getPatientsByRiskLevel({
                         riskLevel:
                         req.params.riskLevel,
-                        nurseId:
-                        req.query.nurseId
+                        nurseId: nurseId
                     });
 
             res.status(200).json(
@@ -341,25 +356,35 @@ export class TreatmentController {
     };
 
     getPatientTreatmentDetail = async (
-        req: Request,
+        req: AuthRequest,
         res: Response
     ) => {
         try {
+            // guardar token del nurse
+            const nurseId = req.user?.nurseId;
 
-            const result =
-                await this.facade
-                    .getPatientTreatmentDetail({
-                        patientId:
-                        req.params.patientId
-                    });
+            // Validar token de nurse
+            if (!nurseId) {
+                return res.status(401).json({
+                    error: "Nurse ID not found in token"
+                });
+            }
 
-            res.status(200).json(
-                result
+            // Validar que la enfermera tiene acceso a este paciente
+            await this.facade.validateNurseHasPatient(
+                nurseId,
+                req.params.patientId as string
             );
 
-        } catch (error:any) {
+            const result = await this.facade.getPatientTreatmentDetail({
+                patientId: req.params.patientId
+            });
+
+            res.status(200).json(result);
+
+        } catch (error: any) {
             res.status(400).json({
-                error:error.message
+                error: error.message
             });
         }
     };
