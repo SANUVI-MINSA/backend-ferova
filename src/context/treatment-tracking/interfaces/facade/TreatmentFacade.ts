@@ -77,6 +77,11 @@ export class TreatmentFacade {
     async getPatientDoseHistory(
         query: any
     ) {
+        // Validar que la madre tiene acceso al paciente
+        if (query.motherId) {
+            await this.validateMotherHasPatient(query.motherId, query.patientId);
+        }
+
         return this
             .queryService
             .getPatientDoseHistory(
@@ -169,5 +174,18 @@ export class TreatmentFacade {
         }
     }
 
+    // Nuevo método para validar madre-paciente
+    async validateMotherHasPatient(motherId: string, patientId: string): Promise<void> {
+        const patient = await this.patientRepository.findById(patientId);
 
+        if (!patient) {
+            throw new Error("Patient not found");
+        }
+
+        const patientData = patient.toPrimitives();
+
+        if (patientData.motherId !== motherId) {
+            throw new Error("Access denied: This patient is not assigned to you");
+        }
+    }
 }
