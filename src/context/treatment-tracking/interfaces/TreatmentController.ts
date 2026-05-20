@@ -182,16 +182,27 @@ export class TreatmentController {
     };
 
     getPatientDoseHistory = async (
-        req: Request,
+        req: AuthRequest,
         res: Response
     ) => {
         try {
+
+            // variable para valida la autenticacion de la madre
+            const motherId = req.user?.motherId;
+
+            // validar token de la madre
+            if(!motherId) {
+                return res.status(400).json({
+                    error: "Mother ID not found in token"
+                })
+            }
 
             const result =
                 await this.facade
                     .getPatientDoseHistory({
                         patientId:
-                        req.params.patientId
+                        req.params.patientId,
+                        motherId: motherId
                     });
 
             res.status(200).json(
