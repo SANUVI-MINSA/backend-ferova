@@ -111,158 +111,64 @@ export class TreatmentCommandServiceImpl
         };
     }
 
+    // TreatmentCommandServiceImpl.ts - confirmDose()
     async confirmDose(command: ConfirmDoseCommand): Promise<any> {
 
-        // Validar si paciente existe
-        const patient =
-            await this.patientRepository.findById(command.patientId);
-
-        if(!patient) {
-            throw new Error(
-                "Patient not found"
-            )
+        // 1. Validar paciente existe
+        const patient = await this.patientRepository.findById(command.patientId);
+        if (!patient) {
+            throw new Error("Patient not found");
         }
 
-        // Validar madre dueña del paciente
-        const patientData =
-            patient.toPrimitives();
-
-        if(
-            patientData.motherId !==
-            command.motherId
-        ) {
-            throw new Error(
-                "Mother is not assigned to this patient"
-            )
+        // 2. Validar madre (vs token)
+        const patientData = patient.toPrimitives();
+        if (patientData.motherId !== command.motherId) {
+            throw new Error("Mother is not assigned to this patient");
         }
 
-        // Validar tratamiento activo
-
-        const treatment =
-            await this.treatmentRepository
-                .findById(command.treatmentId);
-
-        if(!treatment) {
-            throw new Error(
-                "Treatment not found"
-            )
+        // 3. Buscar tratamiento activo
+        const treatment = await this.treatmentRepository.findActiveByPatientId(command.patientId);
+        if (!treatment) {
+            throw new Error("Patient does not have an active treatment");
         }
 
-        if (
-            treatment.getStatus() !==
-            TreatmentStatus.ACTIVE
-        ) {
-            throw new Error(
-                "Treatment is not active"
-            );
+        if (treatment.getStatus() !== TreatmentStatus.ACTIVE) {
+            throw new Error("Treatment is not active");
         }
 
-        // Validar que tratamiento pertenezca al paciente
-
-        if (
-            treatment.getPatientId() !==
-            command.patientId
-        ) {
-            throw new Error(
-                "Treatment does not belong to this patient"
-            );
+        // 4. Buscar dosis PENDIENTE de hoy
+        const todayDose = await this.dailyDoseRepository.findTodayDose(treatment.getId());
+        if (!todayDose) {
+            throw new Error("No pending dose found for today");
         }
 
-        // Buscar DailyDose
-
-        const dose =
-            await this
-                .dailyDoseRepository
-                .findById(
-                    command.dailyDoseId
-                );
-
-        if (!dose) {
-            throw new Error(
-                "Daily dose not found"
-            );
+        if (todayDose.getStatus() !== DoseStatus.PENDING) {
+            throw new Error("Today's dose is already confirmed or omitted");
         }
 
-        // Validar que pertenezca al tratamiento
+        // 5. Confirmar dosis
+        todayDose.confirm();
 
-        if (
-            dose.getTreatmentId() !==
-            command.treatmentId
-        ) {
-            throw new Error(
-                "Dose does not belong to this treatment"
-            );
-        }
+        // 6. Actualizar adherencia
+        treatment.updateAdherenceMetrics(true);
 
-        // Validar que sea dosis de hoy
+        // 7. Recalcular riesgo (baja 10 puntos)
+        const risk = treatment.getRiskScore();
+        const currentScore = Math.max(0, risk.getScore() - 10);
+        risk.updateScore(currentScore);
+        treatment.updateRiskScore(risk);
 
-        const today =
-            new Date();
+        // 8. Persistir
+        await this.dailyDoseRepository.update(todayDose);
+        await this.treatmentRepository.update(treatment);
 
-        const doseDate =
-            dose.getScheduledDate();
-
-        const isToday =
-            today.toDateString() ===
-            doseDate.toDateString();
-
-        if (!isToday) {
-            throw new Error(
-                "You can only confirm today's dose"
-            );
-        }
-
-        // Confirmar dosis
-
-        dose.confirm();
-
-        // Actualizar adherencia
-
-        treatment.updateAdherenceMetrics(
-            true
-        );
-
-        // Recalcular riesgo
-
-        const risk =
-            treatment.getRiskScore();
-
-        const currentScore =
-            Math.max(
-                0,
-                risk.getScore() - 10
-            );
-
-        risk.updateScore(
-            currentScore
-        );
-
-        treatment.updateRiskScore(
-            risk
-        );
-
-        // Persistir
-
-        await this
-            .dailyDoseRepository
-            .update(dose);
-
-        await this
-            .treatmentRepository
-            .update(treatment);
-
-        // Responses
-
+        // 9. Response
         return {
-            message:
-                "Dose confirmed successfully",
-            dose:
-                dose.toPrimitives(),
-            treatment:
-                treatment.toPrimitives()
+            message: "Dose confirmed successfully",
+            dose: todayDose.toPrimitives(),
+            treatment: treatment.toPrimitives()
         };
     }
-
 
     async evaluateMissedDose(command: EvaluateMissedDoseCommand): Promise<any> {
         // Buscar dosis
