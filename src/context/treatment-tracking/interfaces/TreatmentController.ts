@@ -78,53 +78,65 @@ export class TreatmentController {
     };
 
     completeTreatment = async (
-        req: Request,
+        req: AuthRequest,  // Cambiar de Request a AuthRequest
         res: Response
     ) => {
         try {
+            const nurseId = req.user?.nurseId;
 
-            const command = CompleteTreatmentCommandFromResourceAssembler.toCommand(req.body);
+            if (!nurseId) {
+                return res.status(401).json({
+                    error: "Nurse ID no encontrado en el token"
+                });
+            }
 
-            const result =
-                await this.facade
-                    .completeTreatment(
-                        command
-                    );
+            const commandData = {
+                treatmentId: req.body.treatmentId,
+                nurseId: nurseId,
+                observation: req.body.observation
+            };
 
-            res.status(200).json(
-                result
-            );
+            const command = CompleteTreatmentCommandFromResourceAssembler.toCommand(commandData);
 
-        } catch (error:any) {
+            const result = await this.facade.completeTreatment(command);
+
+            res.status(200).json(result);
+
+        } catch (error: any) {
             res.status(400).json({
-                error:
-                error.message
+                error: error.message
             });
         }
     };
 
     abandonTreatment = async (
-        req: Request,
+        req: AuthRequest,  // Cambiar de Request a AuthRequest
         res: Response
     ) => {
         try {
+            const nurseId = req.user?.nurseId;
 
-            const command = AbandonTreatmentCommandFromResourceAssembler.toCommand(req.body);
+            if (!nurseId) {
+                return res.status(401).json({
+                    error: "Nurse ID no encontrado en el token"
+                });
+            }
 
-            const result =
-                await this.facade
-                    .abandonTreatment(
-                        command
-                    );
+            const commandData = {
+                treatmentId: req.body.treatmentId,
+                nurseId: nurseId,
+                observation: req.body.observation
+            };
 
-            res.status(200).json(
-                result
-            );
+            const command = AbandonTreatmentCommandFromResourceAssembler.toCommand(commandData);
 
-        } catch (error:any) {
+            const result = await this.facade.abandonTreatment(command);
+
+            res.status(200).json(result);
+
+        } catch (error: any) {
             res.status(400).json({
-                error:
-                error.message
+                error: error.message
             });
         }
     };
@@ -222,10 +234,10 @@ export class TreatmentController {
     ) => {
         try {
 
-            // variable para valida la autenticacion de la madre
+            // variable para valida la autenticacion del nurse
             const nurseId = req.user?.nurseId;
 
-            // validar token de la madre
+            // validar token del nurse
             if(!nurseId) {
                 return res.status(400).json({
                     error: "Nurse ID not found in token"
@@ -282,16 +294,23 @@ export class TreatmentController {
     };
 
     getTreatmentsByNurse = async (
-        req: Request,
+        req: AuthRequest,
         res: Response
     ) => {
         try {
 
+            const nurseId = req.user?.nurseId;
+
+            if(!nurseId) {
+                return res.status(400).json({
+                    error: "Nurse ID not found in token"
+                })
+            }
+
             const result =
                 await this.facade
                     .getTreatmentsByNurse({
-                        nurseId:
-                        req.params.nurseId,
+                        nurseId: nurseId,
                         status:
                         req.query.status
                     });
