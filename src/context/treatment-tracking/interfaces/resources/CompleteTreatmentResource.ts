@@ -1,5 +1,5 @@
 export interface CompleteTreatmentResource {
     treatmentId: string;
-    nurseId: string;
+    nurseId?: string;
     observation?: string;
 }

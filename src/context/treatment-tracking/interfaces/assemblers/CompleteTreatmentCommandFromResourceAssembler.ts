@@ -6,6 +6,11 @@ export class CompleteTreatmentCommandFromResourceAssembler {
     static toCommand(
         resource: CompleteTreatmentResource
     ): CompleteTreatmentCommand {
+
+        if (!resource.nurseId) {
+            throw new Error("nurseId es requerido");
+        }
+
         return {
             treatmentId: resource.treatmentId,
             nurseId: resource.nurseId,
