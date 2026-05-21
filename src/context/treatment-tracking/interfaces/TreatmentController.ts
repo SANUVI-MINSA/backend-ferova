@@ -399,30 +399,6 @@ export class TreatmentController {
         }
     };
 
-    getCriticalAlertsByNurse = async (
-        req: Request,
-        res: Response
-    ) => {
-        try {
-
-            const result =
-                await this.facade
-                    .getCriticalAlertsByNurse({
-                        nurseId:
-                        req.params.nurseId
-                    });
-
-            res.status(200).json(
-                result
-            );
-
-        } catch (error:any) {
-            res.status(400).json({
-                error:error.message
-            });
-        }
-    };
-
     forceOmitDoseForTesting = async (req: Request, res: Response) => {
         try {
             const { dailyDoseId } = req.body;

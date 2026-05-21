@@ -149,17 +149,6 @@ export class TreatmentFacade {
             );
     }
 
-    async getCriticalAlertsByNurse(
-        query: any
-    ) {
-        return this
-            .queryService
-            .getCriticalAlertsByNurse(
-                query
-            );
-    
-    }
-
     async validateNurseHasPatient(nurseId: string, patientId: string): Promise<void> {
         const patient = await this.patientRepository.findById(patientId);
 

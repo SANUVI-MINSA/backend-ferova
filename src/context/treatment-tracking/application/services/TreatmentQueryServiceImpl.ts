@@ -2,7 +2,6 @@ import {TreatmentQueryService} from "../../model/services/TreatmentQueryService"
 import {TreatmentRepository} from "../../model/repositories/TreatmentRepository";
 import {DailyDoseRepository} from "../../model/repositories/DailyDoseRepository";
 import {PatientRepository} from "../../../patient-management/domain/repositories/PatientRepository";
-import {GetCriticalAlertsByNurseQuery} from "../../model/domain/queries/GetCriticalAlertsByNurseQuery";
 import {GetPatientDoseHistoryQuery} from "../../model/domain/queries/GetPatientDoseHistoryQuery";
 import {GetPatientTreatmentDetailQuery} from "../../model/domain/queries/GetPatientTreatmentDetailQuery";
 import {GetPatientsByRiskLevelQuery} from "../../model/domain/queries/GetPatientsByRiskLevelQuery";
@@ -25,117 +24,6 @@ export class TreatmentQueryServiceImpl
         private patientRepository:
         PatientRepository
     ) {
-    }
-
-    async getCriticalAlertsByNurse(query: GetCriticalAlertsByNurseQuery): Promise<any> {
-
-        // Buscar tratamientos activos de la enfermera
-        const treatments =
-            await this
-                .treatmentRepository
-                .findByNurseId(
-                    query.nurseId,
-                    TreatmentStatus.ACTIVE
-                );
-
-        // Si no hay pacientes
-
-        if (
-            treatments.length === 0
-        ) {
-            return {
-                nurseId:
-                query.nurseId,
-
-                totalAlerts: 0,
-
-                alerts: []
-            };
-        }
-
-        // Buscar alertas reales
-
-        const alerts = [];
-
-        for (const treatment of treatments) {
-
-            const treatmentData =
-                treatment.toPrimitives();
-
-            const doses =
-                await this
-                    .dailyDoseRepository
-                    .findByTreatmentId(
-                        treatmentData.id
-                    );
-            // Buscar pendientes críticas
-            const criticalPending =
-                doses.filter(
-                    dose =>
-                        dose.getStatus() ===
-                        "PENDING" &&
-                        dose
-                            .calculateHoursWithoutConfirmation() >= 72
-                );
-
-            if (criticalPending.length > 0) {
-                const oldestPending =
-                    criticalPending.sort(
-                        (a, b) =>
-                            a.getScheduledDate().getTime() -
-                            b.getScheduledDate().getTime()
-                    )[0];
-
-                const patient =
-                    await this
-                        .patientRepository
-                        .findById(
-                            treatmentData.patientId
-                        );
-
-                if (!patient) {
-                    continue;
-                }
-
-                const patientData =
-                    patient.toPrimitives();
-
-                alerts.push({
-                    patientId:
-                    patientData.id,
-
-                    patientName:
-                        `${patientData.name} ${patientData.lastName}`,
-
-                    dailyDoseId:
-                        oldestPending.getId(),
-
-                    hoursWithoutConfirmation:
-                        oldestPending
-                            .calculateHoursWithoutConfirmation(),
-
-                    riskLevel:
-                        treatment
-                            .getRiskScore()
-                            .getRiskLevel(),
-
-                    score:
-                        treatment
-                            .getRiskScore()
-                            .getScore()
-                });
-            }
-        }
-
-        return {
-            nurseId:
-            query.nurseId,
-
-            totalAlerts:
-            alerts.length,
-
-            alerts
-        };
     }
 
     async getPatientDoseHistory(query: GetPatientDoseHistoryQuery): Promise<any> {

@@ -384,26 +384,4 @@ router.get(
     treatmentController.getPatientTreatmentDetail
 );
 
-/**
- * @swagger
- * /api/treatment-tracking/nurses/{nurseId}/critical-alerts:
- *   get:
- *     summary: Get critical alerts by nurse
- *     tags:
- *       - Treatment Tracking
- *     parameters:
- *       - in: path
- *         name: nurseId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Critical alerts retrieved successfully
- */
-router.get(
-    "/nurses/:nurseId/critical-alerts",
-    treatmentController.getCriticalAlertsByNurse
-);
-
 export default router;

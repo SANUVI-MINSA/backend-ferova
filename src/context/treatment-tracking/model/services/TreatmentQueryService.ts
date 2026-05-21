@@ -3,7 +3,6 @@ import {GetPatientDoseHistoryQuery} from "../domain/queries/GetPatientDoseHistor
 import {GetPendingPatientsByNurseQuery} from "../domain/queries/GetPendingPatientsByNurseQuery";
 import {GetRiskLevelOverviewQuery} from "../domain/queries/GetRiskLevelOverviewQuery";
 import {GetTreatmentsByNurseQuery} from "../domain/queries/GetTreatmentsByNurseQuery";
-import {GetCriticalAlertsByNurseQuery} from "../domain/queries/GetCriticalAlertsByNurseQuery";
 import {GetPatientTreatmentDetailQuery} from "../domain/queries/GetPatientTreatmentDetailQuery";
 import {GetTreatmentDetailsQuery} from "../domain/queries/GetTreatmentDetailsQuery";
 import {GetPatientsByRiskLevelQuery} from "../domain/queries/GetPatientsByRiskLevelQuery";
@@ -40,9 +39,4 @@ export interface TreatmentQueryService {
     getPatientTreatmentDetail(
         query: GetPatientTreatmentDetailQuery
     ): Promise<any>;
-
-    getCriticalAlertsByNurse(
-        query: GetCriticalAlertsByNurseQuery
-    ): Promise<any>;
-
 }
