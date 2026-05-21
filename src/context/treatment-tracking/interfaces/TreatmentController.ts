@@ -327,25 +327,32 @@ export class TreatmentController {
     };
 
     getTreatmentDetails = async (
-        req: Request,
+        req: AuthRequest,
         res: Response
     ) => {
         try {
+            const nurseId = req.user?.nurseId;
 
-            const result =
-                await this.facade
-                    .getTreatmentDetails({
-                        treatmentId:
-                        req.params.treatmentId
-                    });
+            if (!nurseId) {
+                return res.status(401).json({
+                    error: "Nurse ID not found in token"
+                });
+            }
 
-            res.status(200).json(
-                result
+            const treatment = await this.facade.getTreatmentDetails({
+                treatmentId: req.params.treatmentId
+            });
+
+            await this.facade.validateNurseHasPatient(
+                nurseId,
+                treatment.patientId  // El tratamiento debe incluir el patientId
             );
 
-        } catch (error:any) {
+            res.status(200).json(treatment);
+
+        } catch (error: any) {
             res.status(400).json({
-                error:error.message
+                error: error.message
             });
         }
     };

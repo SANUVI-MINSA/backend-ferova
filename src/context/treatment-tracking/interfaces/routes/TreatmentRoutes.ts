@@ -307,9 +307,11 @@ router.get(
  * @swagger
  * /api/treatment-tracking/treatments/{treatmentId}:
  *   get:
- *     summary: Get treatment details
+ *     summary: Get treatment details (Nurse only)
  *     tags:
  *       - Treatment Tracking
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: treatmentId
@@ -319,11 +321,17 @@ router.get(
  *     responses:
  *       200:
  *         description: Treatment details retrieved successfully
+ *       401:
+ *         description: Unauthorized - No token provided
+ *       403:
+ *         description: Forbidden - Nurse access required
  *       404:
  *         description: Treatment not found
  */
 router.get(
     "/treatments/:treatmentId",
+    authenticate,
+    requireNurse,
     treatmentController.getTreatmentDetails
 );
 
