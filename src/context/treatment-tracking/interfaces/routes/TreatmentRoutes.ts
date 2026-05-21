@@ -87,6 +87,8 @@ router.post(
  *     summary: Complete treatment
  *     tags:
  *       - Treatment Tracking
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -95,11 +97,8 @@ router.post(
  *             type: object
  *             required:
  *               - treatmentId
- *               - nurseId
  *             properties:
  *               treatmentId:
- *                 type: string
- *               nurseId:
  *                 type: string
  *               observation:
  *                 type: string
@@ -109,6 +108,8 @@ router.post(
  */
 router.put(
     "/treatments/complete",
+    authenticate,
+    requireNurse,
     treatmentController.completeTreatment
 );
 
@@ -119,6 +120,8 @@ router.put(
  *     summary: Mark treatment as abandoned
  *     tags:
  *       - Treatment Tracking
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -127,11 +130,8 @@ router.put(
  *             type: object
  *             required:
  *               - treatmentId
- *               - nurseId
  *             properties:
  *               treatmentId:
- *                 type: string
- *               nurseId:
  *                 type: string
  *               observation:
  *                 type: string
@@ -141,6 +141,8 @@ router.put(
  */
 router.put(
     "/treatments/abandon",
+    authenticate,
+    requireNurse,
     treatmentController.abandonTreatment
 );
 
@@ -273,17 +275,14 @@ router.get(
 
 /**
  * @swagger
- * /api/treatment-tracking/nurses/{nurseId}/treatments:
+ * /api/treatment-tracking/nurses/treatments:
  *   get:
  *     summary: Get treatments by nurse
  *     tags:
  *       - Treatment Tracking
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
- *       - in: path
- *         name: nurseId
- *         required: true
- *         schema:
- *           type: string
  *       - in: query
  *         name: status
  *         required: false
@@ -298,7 +297,9 @@ router.get(
  *         description: Treatments retrieved successfully
  */
 router.get(
-    "/nurses/:nurseId/treatments",
+    "/nurses/treatments",
+    authenticate,
+    requireNurse,
     treatmentController.getTreatmentsByNurse
 );
 

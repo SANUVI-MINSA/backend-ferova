@@ -710,13 +710,7 @@ export class TreatmentQueryServiceImpl
 
             abandonmentObservation:
             treatmentData
-                .abandonmentObservation,
-
-            doses:
-                sortedDoses.map(
-                    dose =>
-                        dose.toPrimitives()
-                )
+                .abandonmentObservation
         };
 
     }
