@@ -188,4 +188,9 @@ export class TreatmentFacade {
             throw new Error("Access denied: This patient is not assigned to you");
         }
     }
+
+    async forceOmitDoseForTesting(dailyDoseId: string) {
+        return this.commandService.forceOmitDoseForTesting(dailyDoseId);
+    }
+
 }

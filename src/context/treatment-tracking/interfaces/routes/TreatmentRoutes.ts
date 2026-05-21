@@ -230,17 +230,13 @@ router.get(
 
 /**
  * @swagger
- * /api/treatment-tracking/nurses/{nurseId}/pending-patients:
+ * /api/treatment-tracking/nurses/pending-patients:
  *   get:
  *     summary: Get pending patients by nurse
  *     tags:
  *       - Treatment Tracking
- *     parameters:
- *       - in: path
- *         name: nurseId
- *         required: true
- *         schema:
- *           type: string
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Pending patients retrieved successfully
@@ -248,7 +244,9 @@ router.get(
  *         description: Nurse not found
  */
 router.get(
-    "/nurses/:nurseId/pending-patients",
+    "/nurses/pending-patients",
+    authenticate,
+    requireNurse,
     treatmentController.getPendingPatientsByNurse
 );
 

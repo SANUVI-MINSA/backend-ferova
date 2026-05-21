@@ -217,16 +217,26 @@ export class TreatmentController {
     };
 
     getPendingPatientsByNurse = async (
-        req: Request,
+        req: AuthRequest,
         res: Response
     ) => {
         try {
 
+            // variable para valida la autenticacion de la madre
+            const nurseId = req.user?.nurseId;
+
+            // validar token de la madre
+            if(!nurseId) {
+                return res.status(400).json({
+                    error: "Nurse ID not found in token"
+                })
+            }
+
+
             const result =
                 await this.facade
                     .getPendingPatientsByNurse({
-                        nurseId:
-                        req.params.nurseId
+                        nurseId: nurseId
                     });
 
             res.status(200).json(
@@ -410,6 +420,22 @@ export class TreatmentController {
             res.status(400).json({
                 error:error.message
             });
+        }
+    };
+
+    forceOmitDoseForTesting = async (req: Request, res: Response) => {
+        try {
+            const { dailyDoseId } = req.body;
+
+            if (!dailyDoseId) {
+                return res.status(400).json({ error: "dailyDoseId is required" });
+            }
+
+            const result = await this.facade.forceOmitDoseForTesting(dailyDoseId);
+            res.status(200).json(result);
+
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
         }
     };
 }
