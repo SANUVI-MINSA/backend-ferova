@@ -53,6 +53,8 @@ export class TreatmentCommandServiceImpl
             command.observation
         );
 
+        await this.deleteAllDosesForTreatment(treatment.getId());
+
         // Persistir
 
         await this
@@ -64,8 +66,7 @@ export class TreatmentCommandServiceImpl
         // Responses
 
         return {
-            message:
-                "Treatment marked as abandoned successfully",
+            message: "Treatment marked as abandoned successfully. All associated doses have been removed.",
             treatment:
                 treatment.toPrimitives()
         };
@@ -431,5 +432,25 @@ export class TreatmentCommandServiceImpl
             dose: dose.toPrimitives(),
             treatment: treatment.toPrimitives()
         };
+    }
+
+    /**
+     * Elimina todas las dosis asociadas a un tratamiento
+     *
+     */
+    private async deleteAllDosesForTreatment(treatmentId: string): Promise<void> {
+        const allDoses = await this.dailyDoseRepository.findByTreatmentId(treatmentId);
+
+        if (allDoses.length === 0) {
+            console.log(`[abandonTreatment] No doses to delete for treatment ${treatmentId}`);
+            return
+        }
+
+        const doseIds = allDoses.map(dose => dose.getId());
+
+        console.log(`[abandonTreatment] Deleting ${doseIds.length} doses (PENDING, CONFIRMED, OMITTED) for abandoned treatment ${treatmentId}`);
+
+        await this.dailyDoseRepository.deleteMany(doseIds);
+
     }
 }
