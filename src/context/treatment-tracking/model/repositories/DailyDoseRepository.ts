@@ -22,6 +22,10 @@ export interface DailyDoseRepository {
         treatmentId: string
     ): Promise<DailyDose[]>;
 
+    delete(dailyDoseId: string): Promise<void>;
+
+    deleteMany(dailyDoseIds: string[]): Promise<void>;
+
     findTodayDose(
         treatmentId: string
     ): Promise<DailyDose | null>;

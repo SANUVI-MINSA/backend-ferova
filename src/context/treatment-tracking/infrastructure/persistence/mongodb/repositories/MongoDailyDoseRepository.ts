@@ -138,4 +138,13 @@ export class MongoDailyDoseRepository
                 data
             );
     }
+
+    async delete(dailyDoseId: string): Promise<void> {
+        await DailyDoseModel.findOneAndDelete({ id: dailyDoseId });
+    }
+
+    async deleteMany(dailyDoseIds: string[]): Promise<void> {
+        await DailyDoseModel.deleteMany({ id: { $in: dailyDoseIds } });
+    }
+
 }
