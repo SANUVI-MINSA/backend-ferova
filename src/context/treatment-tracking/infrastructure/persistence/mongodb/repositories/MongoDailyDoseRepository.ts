@@ -43,34 +43,16 @@ export class MongoDailyDoseRepository
         );
     }
 
-    async findPendingOlderThanHours(
-        hours: number
-    ): Promise<DailyDose[]> {
+    // En MongoDailyDoseRepository.ts
+    async findPendingOlderThanHours(hours: number): Promise<DailyDose[]> {
+        const threshold = new Date(Date.now() - hours * 60 * 60 * 1000);
 
-        const threshold =
-            new Date(
-                Date.now() -
-                hours *
-                60 *
-                60 *
-                1000
-            );
+        const doses = await DailyDoseModel.find({
+            status: DoseStatus.PENDING,
+            scheduledDate: { $lte: threshold }
+        });
 
-        const doses =
-            await DailyDoseModel
-                .find({
-                    status:
-                    DoseStatus.PENDING,
-                    scheduledDate: {
-                        $lte: threshold
-                    }
-                });
-
-        return doses.map(
-            d =>
-                DailyDoseMapper
-                    .toDomain(d)
-        );
+        return doses.map(d => DailyDoseMapper.toDomain(d));
     }
 
     async findTodayDose(
