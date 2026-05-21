@@ -1,5 +1,5 @@
 export interface AbandonTreatmentResource {
     treatmentId: string;
-    nurseId: string;
+    nurseId?: string;
     observation?: string;
 }
