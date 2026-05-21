@@ -392,4 +392,44 @@ export class TreatmentCommandServiceImpl
         };
     }
 
+    // Solo para pruebas - forzar omision de una dosis
+    async forceOmitDoseForTesting(dailyDoseId: string): Promise<any> {
+        // Buscar dosis
+        const dose = await this.dailyDoseRepository.findById(dailyDoseId);
+        if (!dose) {
+            throw new Error("Daily dose not found");
+        }
+
+        if (dose.getStatus() !== DoseStatus.PENDING) {
+            throw new Error("Only pending doses can be omitted");
+        }
+
+        // Marcar como omitida
+        dose.markAsOmitted();
+
+        // Buscar tratamiento
+        const treatment = await this.treatmentRepository.findById(dose.getTreatmentId());
+        if (!treatment) {
+            throw new Error("Treatment not found");
+        }
+
+        // Actualizar adherencia (false = omitida)
+        treatment.updateAdherenceMetrics(false);
+
+        // Subir riesgo +20
+        const risk = treatment.getRiskScore();
+        const newScore = Math.min(100, risk.getScore() + 20);
+        risk.updateScore(newScore);
+        treatment.updateRiskScore(risk);
+
+        // Persistir
+        await this.dailyDoseRepository.update(dose);
+        await this.treatmentRepository.update(treatment);
+
+        return {
+            message: "Dose force-omitted for testing",
+            dose: dose.toPrimitives(),
+            treatment: treatment.toPrimitives()
+        };
+    }
 }

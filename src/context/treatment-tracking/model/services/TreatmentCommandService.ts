@@ -26,4 +26,7 @@ export interface TreatmentCommandService {
         command: EvaluateMissedDoseCommand
     ): Promise<any>;
 
+    // Nuevo método solo para pruebas
+    forceOmitDoseForTesting(dailyDoseId: string): Promise<any>;
+
 }
