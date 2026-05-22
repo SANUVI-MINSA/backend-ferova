@@ -3,7 +3,6 @@ import {TreatmentRepository} from "../../model/repositories/TreatmentRepository"
 import {DailyDoseRepository} from "../../model/repositories/DailyDoseRepository";
 import {PatientRepository} from "../../../patient-management/domain/repositories/PatientRepository";
 import {AbandonTreatmentCommand} from "../../model/domain/commands/AbandonTreatmentCommand";
-import {Promise} from "mongoose";
 import {CompleteTreatmentCommand} from "../../model/domain/commands/CompleteTreatmentCommand";
 import {ConfirmDoseCommand} from "../../model/domain/commands/ConfirmDoseCommand";
 import {EvaluateMissedDoseCommand} from "../../model/domain/commands/EvaluateMissedDoseCommand";
@@ -21,13 +20,13 @@ export class TreatmentCommandServiceImpl
 
     constructor(
         private treatmentRepository:
-            TreatmentRepository,
+        TreatmentRepository,
 
         private dailyDoseRepository:
-            DailyDoseRepository,
+        DailyDoseRepository,
 
         private patientRepository:
-            PatientRepository
+        PatientRepository
     ) {}
 
     async abandonTreatment(command: AbandonTreatmentCommand): Promise<any> {
@@ -177,9 +176,9 @@ export class TreatmentCommandServiceImpl
             await this.dailyDoseRepository.findById(command.dailyDoseId);
 
         if(!dose) {
-                throw new Error(
-                    "Daily dose not found"
-                )
+            throw new Error(
+                "Daily dose not found"
+            )
         }
 
         // Solo evaluar pendientes
@@ -395,7 +394,11 @@ export class TreatmentCommandServiceImpl
 
     // Solo para pruebas - forzar omision de una dosis
     async forceOmitDoseForTesting(dailyDoseId: string): Promise<any> {
-        // Buscar dosis
+
+        if (process.env.NODE_ENV === 'production') {
+            throw new Error("Force omit endpoint is only available in development environment");
+        }
+
         const dose = await this.dailyDoseRepository.findById(dailyDoseId);
         if (!dose) {
             throw new Error("Daily dose not found");
@@ -405,8 +408,16 @@ export class TreatmentCommandServiceImpl
             throw new Error("Only pending doses can be omitted");
         }
 
-        // Marcar como omitida
+        // Validar que la fecha ya pasó (no es futuro)
+        const now = new Date();
+        const scheduledDate = dose.getScheduledDate();
+
+        if (scheduledDate > now) {
+            throw new Error("Cannot omit a future dose. Wait until the scheduled date has passed.");
+        }
+
         dose.markAsOmitted();
+
 
         // Buscar tratamiento
         const treatment = await this.treatmentRepository.findById(dose.getTreatmentId());
