@@ -26,6 +26,7 @@ const swaggerOptions: Options = {
     },
     apis: [
         "src/context/**/interfaces/routes/**.ts",
+        "src/shared/**/*.ts"
     ]
 };
 
