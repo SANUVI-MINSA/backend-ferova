@@ -267,12 +267,20 @@ export class TreatmentQueryServiceImpl
                                     treatmentData.id
                                 );
 
+                        console.log(`[getPatientsByRiskLevel] Tratamiento ${treatmentData.id}`);
+                        console.log(`[getPatientsByRiskLevel] Total dosis encontradas: ${doses.length}`);
+
                         const pendingDoses =
                             doses.filter(
                                 dose =>
                                     dose.getStatus() ===
                                     "PENDING"
                             );
+
+                        console.log(`[getPatientsByRiskLevel] Dosis PENDING: ${pendingDoses.length}`);
+                        pendingDoses.forEach(dose => {
+                            console.log(`  - ID: ${dose.getId()}, scheduledDate: ${dose.getScheduledDate()}, status: ${dose.getStatus()}`);
+                        });
 
                         let hoursWithoutConfirmation =
                             null;
@@ -288,9 +296,14 @@ export class TreatmentQueryServiceImpl
                                         b.getScheduledDate().getTime()
                                 )[0];
 
+                            console.log(`[getPatientsByRiskLevel] Dosis PENDING más antigua: ID ${oldestPending.getId()}, scheduledDate: ${oldestPending.getScheduledDate()}`);
+
                             hoursWithoutConfirmation =
                                 oldestPending
                                     .calculateHoursWithoutConfirmation();
+
+                            console.log(`[getPatientsByRiskLevel] hoursWithoutConfirmation calculado: ${hoursWithoutConfirmation}`);
+
                         }
 
                         // Edad paciente
@@ -447,7 +460,7 @@ export class TreatmentQueryServiceImpl
                     .findByNurseId(
                         query.nurseId,
                         TreatmentStatus.ACTIVE
-                        );
+                    );
         } else {
             treatments =
                 await this.treatmentRepository.findAllActive();
@@ -717,79 +730,79 @@ export class TreatmentQueryServiceImpl
 
     async getTreatmentsByNurse(query: GetTreatmentsByNurseQuery): Promise<any> {
         // Buscar tratamientos
-       const treatments =
-           await this
-               .treatmentRepository
-               .findByNurseId(
-                   query.nurseId,
-                   query.status
-               );
-       // si no hay tratamientos
+        const treatments =
+            await this
+                .treatmentRepository
+                .findByNurseId(
+                    query.nurseId,
+                    query.status
+                );
+        // si no hay tratamientos
 
-       if (
-           treatments.length === 0
-       ) {
-           return {
-               nurseId:
-               query.nurseId,
+        if (
+            treatments.length === 0
+        ) {
+            return {
+                nurseId:
+                query.nurseId,
 
-               treatments: [],
+                treatments: [],
 
-               message:
-                   "No treatments found"
-           };
-       }
+                message:
+                    "No treatments found"
+            };
+        }
 
-       // Mapear con info del paciente
+        // Mapear con info del paciente
 
-       const mappedTreatments =
-           await Promise.all(
-               treatments.map(
-                   async treatment => {
+        const mappedTreatments =
+            await Promise.all(
+                treatments.map(
+                    async treatment => {
 
-                       const treatmentData =
-                           treatment
-                               .toPrimitives();
+                        const treatmentData =
+                            treatment
+                                .toPrimitives();
 
-                       const patient =
-                           await this
-                               .patientRepository
-                               .findById(
-                                   treatmentData.patientId
-                               );
+                        const patient =
+                            await this
+                                .patientRepository
+                                .findById(
+                                    treatmentData.patientId
+                                );
 
-                       const patientData =
-                           patient
-                               ?.toPrimitives();
+                        const patientData =
+                            patient
+                                ?.toPrimitives();
 
-                       return {
-                           treatmentId:
-                           treatmentData.id,
+                        return {
+                            treatmentId:
+                            treatmentData.id,
 
-                           patientId:
-                           treatmentData.patientId,
+                            patientId:
+                            treatmentData.patientId,
 
-                           patientName:
-                               patientData
-                                   ? `${patientData.name} ${patientData.lastName}`
-                                   : "Unknown patient",
+                            patientName:
+                                patientData
+                                    ? `${patientData.name} ${patientData.lastName}`
+                                    : "Unknown patient",
 
-                           status:
-                           treatmentData.status,
+                            status:
+                            treatmentData.status,
 
-                           supplementName:
-                           treatmentData.supplement
-                       };
-                   }
-               )
-           );
+                            supplementName:
+                            treatmentData.supplement
+                        };
+                    }
+                )
+            );
 
-       return {
-           nurseId:
-           query.nurseId,
+        return {
+            nurseId:
+            query.nurseId,
 
-           treatments:
-           mappedTreatments
-       };
+            treatments:
+            mappedTreatments
+        };
     }
 }
