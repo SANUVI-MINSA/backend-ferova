@@ -168,27 +168,28 @@ export class TreatmentController {
     };
 
     getTodayDose = async (
-        req: Request,
+        req: AuthRequest,
         res: Response
     ) => {
         try {
+            const motherId = req.user?.motherId;
 
-            const result =
-                await this.facade
-                    .getTodayDose({
-                        patientId:
-                        req.params.patientId,
-                        motherId:
-                        req.query.motherId
-                    });
+            if (!motherId) {
+                return res.status(401).json({
+                    error: "Mother ID not found in token"
+                });
+            }
 
-            res.status(200).json(
-                result
-            );
+            const result = await this.facade.getTodayDose({
+                patientId: req.params.patientId,
+                motherId: motherId
+            });
 
-        } catch (error:any) {
+            res.status(200).json(result);
+
+        } catch (error: any) {
             res.status(400).json({
-                error:error.message
+                error: error.message
             });
         }
     };
