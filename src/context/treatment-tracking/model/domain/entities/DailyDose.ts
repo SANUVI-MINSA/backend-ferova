@@ -89,25 +89,21 @@ export class DailyDose {
     }
 
     calculateHoursWithoutConfirmation(): number {
-
-        if (
-            this.status ===
-            DoseStatus.CONFIRMED
-        ) {
+        if (this.status === DoseStatus.CONFIRMED) {
             return 0;
         }
 
-        const now =
-            new Date();
+        const now = new Date();
+        const differenceMs = now.getTime() - this.scheduledDate.getTime();
+        const hours = Math.floor(differenceMs / (1000 * 60 * 60));
 
-        const differenceMs =
-            now.getTime() -
-            this.scheduledDate.getTime();
+        console.log(`[calculateHoursWithoutConfirmation] Dosis ${this.id}`);
+        console.log(`  - scheduledDate: ${this.scheduledDate.toISOString()}`);
+        console.log(`  - now: ${now.toISOString()}`);
+        console.log(`  - differenceMs: ${differenceMs}`);
+        console.log(`  - hours: ${hours}`);
 
-        return Math.floor(
-            differenceMs /
-            (1000 * 60 * 60)
-        );
+        return hours;
     }
 
     getId(): string {
