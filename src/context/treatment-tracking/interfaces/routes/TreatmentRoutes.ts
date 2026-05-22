@@ -182,14 +182,11 @@ router.post(
  *     summary: Get today's dose
  *     tags:
  *       - Treatment Tracking
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: patientId
- *         required: true
- *         schema:
- *           type: string
- *       - in: query
- *         name: motherId
  *         required: true
  *         schema:
  *           type: string
@@ -199,6 +196,8 @@ router.post(
  */
 router.get(
     "/patients/:patientId/today-dose",
+    authenticate,
+    requireMother,
     treatmentController.getTodayDose
 );
 
