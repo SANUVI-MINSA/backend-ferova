@@ -9,7 +9,7 @@ export class Achievement {
         private durationDays: number,
         private currentStreak: number,
         private longestStreak: number,
-        private bestStreak: number,      // ← NUEVO: mejor racha histórica (para badges)
+        private bestStreak: number,      //  mejor racha histórica (para badges)
         private streakStartDate: Date | null,
         private totalPoints: number,
         private status: AchievementStatus
