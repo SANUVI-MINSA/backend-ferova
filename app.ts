@@ -6,6 +6,8 @@ import patientRoutes from "./src/context/patient-management/interfaces/routes/Pa
 import nutritionalDiaryRoutes from "./src/context/nutration-diary/interfaces/routes/NutritionalDiaryRoutes";
 import communicationRoutes from "./src/context/comunication-management/interfaces/routes/CommunicationRoutes"
 import treatmentRoutes from "./src/context/treatment-tracking/interfaces/routes/TreatmentRoutes";
+import AchievementsRewards from "./src/context/achievements-rewards/interfaces/routes/AchievementRoutes"
+
 import testRoutes from "./src/shared/test/route-testing"
 
 const app = express();
@@ -38,6 +40,10 @@ app.use(
 app.use("/api/treatment-tracking",
     treatmentRoutes
 );
+
+app.use("/api/achievements-rewards",
+    AchievementsRewards
+    );
 
 app.use("/api/test",
         testRoutes
