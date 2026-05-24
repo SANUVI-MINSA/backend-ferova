@@ -17,7 +17,7 @@ export class Badge {
     }
     private validate(): void {
         if (!this.id) {
-           throw new Error("Badge id is required")
+            throw new Error("Badge id is required")
         }
         if (!this.achievementId) {
             throw new Error("AchievementId is required")
@@ -88,7 +88,7 @@ export class Badge {
                 break;
             case BadgeType.FIRST_MONTH:
                 name = "Primer mes";
-                description = "Completaste 30 días consecutivos sin fallar";
+                description = "Completaste 30 días consecutivos sin fallar (solo para tratamientos de 90 días o más)";
                 break;
             case BadgeType.HALF_TREATMENT:
                 name = "Mitad del tratamiento";
