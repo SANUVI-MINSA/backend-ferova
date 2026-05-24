@@ -49,4 +49,8 @@ export class MongoAchievementRepository implements AchievementRepository {
         });
         return documents.map(doc => AchievementMapper.toDomain(doc));
     }
+
+    async delete(id: string): Promise<void> {
+        await AchievementModel.findOneAndDelete({ id });
+    }
 }
