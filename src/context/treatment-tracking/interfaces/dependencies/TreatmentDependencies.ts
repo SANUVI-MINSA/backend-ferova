@@ -7,6 +7,12 @@ import {TreatmentCommandServiceImpl} from "../../application/services/TreatmentC
 import {TreatmentQueryServiceImpl} from "../../application/services/TreatmentQueryServiceImpl";
 import {TreatmentFacade} from "../facade/TreatmentFacade";
 import {TreatmentController} from "../TreatmentController";
+import {
+    MongoAchievementRepository
+} from "../../../achievements-rewards/infrastructure/persistence/mongodb/repositories/MongoAchievementRepository";
+import {
+    MongoBadgeRepository
+} from "../../../achievements-rewards/infrastructure/persistence/mongodb/repositories/MongoBadgeRepository";
 
 const treatmentRepository =
     new MongoTreatmentRepository();
@@ -17,11 +23,19 @@ const dailyDoseRepository =
 const patientRepository =
     new MongoPatientRepository();
 
+const achievementRepository =
+    new MongoAchievementRepository();
+
+const badgeRepository =
+    new MongoBadgeRepository();
+
 const treatmentCommandService =
     new TreatmentCommandServiceImpl(
         treatmentRepository,
         dailyDoseRepository,
-        patientRepository
+        patientRepository,
+        achievementRepository,
+        badgeRepository
     );
 
 const treatmentQueryService =
