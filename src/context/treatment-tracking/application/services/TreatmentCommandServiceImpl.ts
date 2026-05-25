@@ -444,10 +444,6 @@ export class TreatmentCommandServiceImpl
     // Solo para pruebas - forzar omision de una dosis
     async forceOmitDoseForTesting(dailyDoseId: string): Promise<any> {
 
-        if (process.env.NODE_ENV === 'production') {
-            throw new Error("Force omit endpoint is only available in development environment");
-        }
-
         const dose = await this.dailyDoseRepository.findById(dailyDoseId);
         if (!dose) {
             throw new Error("Daily dose not found");
