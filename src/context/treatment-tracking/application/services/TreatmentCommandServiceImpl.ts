@@ -520,7 +520,10 @@ export class TreatmentCommandServiceImpl
             const achievement = await this.achievementRepository.findByTreatmentId(treatmentId);
 
             if (achievement) {
-                // 1. Eliminar achievement
+                // 1. Primero eliminar los badges asociados
+                await this.badgeRepository.deleteByAchievementId(achievement.getId());
+
+                // 2. Luego eliminar el achievement
                 await this.achievementRepository.delete(achievement.getId());
             } else {
                 console.log(`[abandonTreatment] No achievement found for treatment ${treatmentId}`);
