@@ -529,4 +529,74 @@ export class TreatmentCommandServiceImpl
             console.error(`[abandonTreatment] Error deleting achievement and badges:`, error);
         }
     }
+    /**
+     * [SOLO PRUEBAS] Forzar confirmación de una dosis usando solo dailyDoseId
+     */
+    async forceConfirmDoseForTesting(dailyDoseId: string): Promise<any> {
+        // 1. Buscar la dosis
+        const dose = await this.dailyDoseRepository.findById(dailyDoseId);
+        if (!dose) {
+            throw new Error("Daily dose not found");
+        }
+
+        if (dose.getStatus() !== DoseStatus.PENDING) {
+            throw new Error("Dose is already confirmed or omitted");
+        }
+
+        // 2. Buscar el tratamiento para obtener patientId
+        const treatment = await this.treatmentRepository.findById(dose.getTreatmentId());
+        if (!treatment) {
+            throw new Error("Treatment not found");
+        }
+
+        if (treatment.getStatus() !== TreatmentStatus.ACTIVE) {
+            throw new Error("Treatment is not active");
+        }
+
+        const patientId = treatment.getPatientId();
+
+        // 3. Buscar el paciente para obtener motherId
+        const patient = await this.patientRepository.findById(patientId);
+        if (!patient) {
+            throw new Error("Patient not found");
+        }
+
+        const patientData = patient.toPrimitives();
+        const motherId = patientData.motherId;
+
+        // 4. Validar que la madre existe
+        if (!motherId) {
+            throw new Error("Patient has no mother assigned");
+        }
+
+        // 5. Forzar confirmación
+        dose.confirm();
+
+        // 6. Actualizar adherencia
+        treatment.updateAdherenceMetrics(true);
+
+        // 7. Recalcular riesgo (-10 puntos)
+        const risk = treatment.getRiskScore();
+        const currentScore = Math.max(0, risk.getScore() - 10);
+        risk.updateScore(currentScore);
+        treatment.updateRiskScore(risk);
+
+        // 8. Persistir
+        await this.dailyDoseRepository.update(dose);
+        await this.treatmentRepository.update(treatment);
+
+        // 9. Publicar evento para Achievements
+        await eventPublisher.publish("DailyDoseConfirmed", {
+            treatmentId: treatment.getId(),
+            patientId: patientId,
+            dailyDoseId: dose.getId(),
+            motherId: motherId
+        });
+
+        return {
+            message: "Dose force-confirmed for testing",
+            dose: dose.toPrimitives(),
+            treatment: treatment.toPrimitives()
+        };
+    }
 }

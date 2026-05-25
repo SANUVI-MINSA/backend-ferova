@@ -29,4 +29,5 @@ export interface TreatmentCommandService {
     // Nuevo método solo para pruebas
     forceOmitDoseForTesting(dailyDoseId: string): Promise<any>;
 
+    forceConfirmDoseForTesting(dailyDoseId: string): Promise<any>;
 }

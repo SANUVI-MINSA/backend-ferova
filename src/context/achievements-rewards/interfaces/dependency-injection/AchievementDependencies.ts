@@ -8,6 +8,7 @@ import {AchievementFacade} from "../facade/AchievementFacade";
 import {AchievementController} from "../controllers/AchievementController";
 import {TreatmentEventHandlers} from "../../application/event-handlers/TreatmentEventHandlers";
 import {eventPublisher} from "../../../../shared/infrastructure/events/EventPublisher";
+import {AchievementCommandServiceImpl} from "../../application/services/AchievementCommandServiceImpl";
 
 const achievementRepository  = new MongoAchievementRepository();
 const badgeRepository = new MongoBadgeRepository();
@@ -45,7 +46,9 @@ const achievementQueryService = new AchievementQueryServiceImpl(
     patientRepository
 );
 
-const achievementFacade = new AchievementFacade(achievementQueryService);
+const achievementCommandService = new AchievementCommandServiceImpl(achievementRepository,badgeRepository)
+
+const achievementFacade = new AchievementFacade(achievementQueryService, achievementCommandService);
 
 
 export const achievementController = new

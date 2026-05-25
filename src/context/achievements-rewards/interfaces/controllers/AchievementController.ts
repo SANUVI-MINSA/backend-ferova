@@ -1,10 +1,11 @@
 import {AchievementFacade} from "../facade/AchievementFacade";
 import {AuthRequest} from "../../../../middlewares/auth.middleware";
-import { Response } from "express";
+import { Response, Request } from "express";
 
 export class AchievementController {
     constructor(
         private facade: AchievementFacade  // ← Ahora usa Facade
+
     ) {}
 
     /**
@@ -46,6 +47,23 @@ export class AchievementController {
                 motherId: motherId
             });
 
+            res.status(200).json(result);
+
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    };
+
+    // ========== ENDPOINT DE PRUEBA (sin autenticación, solo testeos) ==========
+    forceEvaluateBadges = async (req: Request, res: Response) => {
+        try {
+            const { patientId } = req.params as { patientId: string };
+
+            if (!patientId) {
+                return res.status(400).json({ error: "patientId is required" });
+            }
+
+            const result = await this.facade.forceEvaluateBadges(patientId);
             res.status(200).json(result);
 
         } catch (error: any) {
