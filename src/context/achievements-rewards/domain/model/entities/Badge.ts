@@ -86,10 +86,6 @@ export class Badge {
                 name = "Primera semana";
                 description = "Completaste 7 días consecutivos sin fallar";
                 break;
-            case BadgeType.FIRST_MONTH:
-                name = "Primer mes";
-                description = "Completaste 30 días consecutivos sin fallar (solo para tratamientos de 90 días o más)";
-                break;
             case BadgeType.HALF_TREATMENT:
                 name = "Mitad del tratamiento";
                 description = `Alcanzaste la mitad del tratamiento (${milestone} días consecutivos)`;
