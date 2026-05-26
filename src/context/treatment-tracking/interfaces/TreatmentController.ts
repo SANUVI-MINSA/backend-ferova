@@ -441,4 +441,23 @@ export class TreatmentController {
             res.status(400).json({ error: error.message });
         }
     };
+
+
+    forceConfirmDoseForTesting = async (req: Request, res: Response) => {
+        try {
+            const { dailyDoseId } = req.body;
+
+            if (!dailyDoseId) {
+                return res.status(400).json({
+                    error: "dailyDoseId is required"
+                });
+            }
+
+            const result = await this.facade.forceConfirmDoseForTesting(dailyDoseId);
+            res.status(200).json(result);
+
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    };
 }

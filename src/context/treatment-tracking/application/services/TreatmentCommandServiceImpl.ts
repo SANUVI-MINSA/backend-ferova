@@ -14,6 +14,9 @@ import {Treatment} from "../../model/domain/aggregates/Treatment";
 import {TreatmentStatus} from "../../model/domain/value-objects/enum/TreatementStatus";
 import {DailyDose} from "../../model/domain/entities/DailyDose";
 import {DoseStatus} from "../../model/domain/value-objects/enum/DoseStatus";
+import {eventPublisher} from "../../../../shared/infrastructure/events/EventPublisher";
+import {AchievementRepository} from "../../../achievements-rewards/domain/repositories/AchievementRepository";
+import {BadgeRepository} from "../../../achievements-rewards/domain/repositories/BadgeRepository";
 
 export class TreatmentCommandServiceImpl
     implements TreatmentCommandService {
@@ -26,7 +29,13 @@ export class TreatmentCommandServiceImpl
         DailyDoseRepository,
 
         private patientRepository:
-        PatientRepository
+        PatientRepository,
+
+        private achievementRepository:
+            AchievementRepository,
+
+        private badgeRepository:
+            BadgeRepository,
     ) {}
 
     async abandonTreatment(command: AbandonTreatmentCommand): Promise<any> {
@@ -54,6 +63,10 @@ export class TreatmentCommandServiceImpl
 
         await this.deleteAllDosesForTreatment(treatment.getId());
 
+        // ELIMINAR ACHIEVEMENT Y BADGES
+        await this.deleteAchievementAndBadgesForTreatment(treatment.getId());
+
+
         // Persistir
 
         await this
@@ -62,11 +75,15 @@ export class TreatmentCommandServiceImpl
                 treatment
             );
 
+        // Publicar evento para Achievements
+        await eventPublisher.publish("TreatmentAbandoned", {
+            treatmentId: command.treatmentId
+        });
+
         // Responses
 
         return {
-            message: "Treatment marked as abandoned successfully. All associated doses have been removed.",
-            treatment:
+            message: "Treatment marked as abandoned successfully. All associated doses, achievements and badges have been removed.",            treatment:
                 treatment.toPrimitives()
         };
     }
@@ -100,6 +117,11 @@ export class TreatmentCommandServiceImpl
             .update(
                 treatment
             );
+
+        // Publicar evento para Achievements
+        await eventPublisher.publish("TreatmentCompleted", {
+            treatmentId: command.treatmentId
+        });
 
         // Responses
 
@@ -162,7 +184,14 @@ export class TreatmentCommandServiceImpl
         await this.dailyDoseRepository.update(todayDose);
         await this.treatmentRepository.update(treatment);
 
-        // 9. Response
+        // 9 Publicar evento para Achievements
+        await eventPublisher.publish("DailyDoseConfirmed", {
+            treatmentId: treatment.getId(),
+            patientId: command.patientId,
+            dailyDoseId: todayDose.getId()
+        });
+
+        // 10. Response
         return {
             message: "Dose confirmed successfully",
             dose: todayDose.toPrimitives(),
@@ -260,8 +289,13 @@ export class TreatmentCommandServiceImpl
             .treatmentRepository
             .update(treatment);
 
-        // Response
+        // Publicar evento para Achievements (solo si se omitió)
+        await eventPublisher.publish("DailyDoseOmitted", {
+            treatmentId: treatment.getId(),
+            dailyDoseId: dose.getId()
+        });
 
+        // Response
         return {
             message:
                 "Missed dose evaluated successfully",
@@ -382,6 +416,21 @@ export class TreatmentCommandServiceImpl
             .dailyDoseRepository
             .saveMany(doses);
 
+        // ========== PUBLICAR EVENTO ==========
+        const patientData = patient!.toPrimitives();
+
+
+        await eventPublisher.publish("TreatmentStarted", {
+            treatmentId: treatment.getId(),
+            patientId: command.patientId,
+            motherId: patientData.motherId,
+            nurseId: command.nurseId,
+            durationDays: command.durationDays,
+            startDate: startDate,
+            endDate: endDate
+        });
+        // =====================================
+
         return {
             message:
                 "Treatment started successfully",
@@ -395,10 +444,6 @@ export class TreatmentCommandServiceImpl
     // Solo para pruebas - forzar omision de una dosis
     async forceOmitDoseForTesting(dailyDoseId: string): Promise<any> {
 
-        if (process.env.NODE_ENV === 'production') {
-            throw new Error("Force omit endpoint is only available in development environment");
-        }
-
         const dose = await this.dailyDoseRepository.findById(dailyDoseId);
         if (!dose) {
             throw new Error("Daily dose not found");
@@ -408,13 +453,12 @@ export class TreatmentCommandServiceImpl
             throw new Error("Only pending doses can be omitted");
         }
 
-        // Validar que la fecha ya pasó (no es futuro)
-        const now = new Date();
-        const scheduledDate = dose.getScheduledDate();
-
-        if (scheduledDate > now) {
-            throw new Error("Cannot omit a future dose. Wait until the scheduled date has passed.");
-        }
+        // ✅ Validación de fecha futuro DESACTIVADA para pruebas
+        // const now = new Date();
+        // const scheduledDate = dose.getScheduledDate();
+        // if (scheduledDate > now) {
+        //     throw new Error("Cannot omit a future dose. Wait until the scheduled date has passed.");
+        // }
 
         dose.markAsOmitted();
 
@@ -438,6 +482,12 @@ export class TreatmentCommandServiceImpl
         await this.dailyDoseRepository.update(dose);
         await this.treatmentRepository.update(treatment);
 
+        // 🔥 PUBLICAR EVENTO PARA ACHIEVEMENTS
+        await eventPublisher.publish("DailyDoseOmitted", {
+            treatmentId: treatment.getId(),
+            dailyDoseId: dose.getId()
+        });
+
         return {
             message: "Dose force-omitted for testing",
             dose: dose.toPrimitives(),
@@ -453,15 +503,104 @@ export class TreatmentCommandServiceImpl
         const allDoses = await this.dailyDoseRepository.findByTreatmentId(treatmentId);
 
         if (allDoses.length === 0) {
-            console.log(`[abandonTreatment] No doses to delete for treatment ${treatmentId}`);
             return
         }
 
         const doseIds = allDoses.map(dose => dose.getId());
 
-        console.log(`[abandonTreatment] Deleting ${doseIds.length} doses (PENDING, CONFIRMED, OMITTED) for abandoned treatment ${treatmentId}`);
-
         await this.dailyDoseRepository.deleteMany(doseIds);
 
+    }
+
+    /**
+     * Elimina el Achievement y Badges asociados a un tratamiento abandonado
+     */
+    private async deleteAchievementAndBadgesForTreatment(treatmentId: string): Promise<void> {
+        try {
+            // Buscar achievement por treatmentId
+            const achievement = await this.achievementRepository.findByTreatmentId(treatmentId);
+
+            if (achievement) {
+                // 1. Primero eliminar los badges asociados
+                await this.badgeRepository.deleteByAchievementId(achievement.getId());
+
+                // 2. Luego eliminar el achievement
+                await this.achievementRepository.delete(achievement.getId());
+            } else {
+                console.log(`[abandonTreatment] No achievement found for treatment ${treatmentId}`);
+            }
+        } catch (error) {
+            console.error(`[abandonTreatment] Error deleting achievement and badges:`, error);
+        }
+    }
+    /**
+     * [SOLO PRUEBAS] Forzar confirmación de una dosis usando solo dailyDoseId
+     */
+    async forceConfirmDoseForTesting(dailyDoseId: string): Promise<any> {
+        // 1. Buscar la dosis
+        const dose = await this.dailyDoseRepository.findById(dailyDoseId);
+        if (!dose) {
+            throw new Error("Daily dose not found");
+        }
+
+        if (dose.getStatus() !== DoseStatus.PENDING) {
+            throw new Error("Dose is already confirmed or omitted");
+        }
+
+        // 2. Buscar el tratamiento para obtener patientId
+        const treatment = await this.treatmentRepository.findById(dose.getTreatmentId());
+        if (!treatment) {
+            throw new Error("Treatment not found");
+        }
+
+        if (treatment.getStatus() !== TreatmentStatus.ACTIVE) {
+            throw new Error("Treatment is not active");
+        }
+
+        const patientId = treatment.getPatientId();
+
+        // 3. Buscar el paciente para obtener motherId
+        const patient = await this.patientRepository.findById(patientId);
+        if (!patient) {
+            throw new Error("Patient not found");
+        }
+
+        const patientData = patient.toPrimitives();
+        const motherId = patientData.motherId;
+
+        // 4. Validar que la madre existe
+        if (!motherId) {
+            throw new Error("Patient has no mother assigned");
+        }
+
+        // 5. Forzar confirmación
+        dose.confirm();
+
+        // 6. Actualizar adherencia
+        treatment.updateAdherenceMetrics(true);
+
+        // 7. Recalcular riesgo (-10 puntos)
+        const risk = treatment.getRiskScore();
+        const currentScore = Math.max(0, risk.getScore() - 10);
+        risk.updateScore(currentScore);
+        treatment.updateRiskScore(risk);
+
+        // 8. Persistir
+        await this.dailyDoseRepository.update(dose);
+        await this.treatmentRepository.update(treatment);
+
+        // 9. Publicar evento para Achievements
+        await eventPublisher.publish("DailyDoseConfirmed", {
+            treatmentId: treatment.getId(),
+            patientId: patientId,
+            dailyDoseId: dose.getId(),
+            motherId: motherId
+        });
+
+        return {
+            message: "Dose force-confirmed for testing",
+            dose: dose.toPrimitives(),
+            treatment: treatment.toPrimitives()
+        };
     }
 }

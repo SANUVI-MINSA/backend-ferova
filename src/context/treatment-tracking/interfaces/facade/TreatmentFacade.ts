@@ -182,4 +182,8 @@ export class TreatmentFacade {
         return this.commandService.forceOmitDoseForTesting(dailyDoseId);
     }
 
+    async forceConfirmDoseForTesting(dailyDoseId: string): Promise<any> {
+        return this.commandService.forceConfirmDoseForTesting(dailyDoseId);
+    }
+
 }
