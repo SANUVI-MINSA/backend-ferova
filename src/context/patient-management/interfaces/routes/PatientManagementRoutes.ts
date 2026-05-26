@@ -113,6 +113,42 @@ router.post(
 
 /**
  * @swagger
+ * /api/patients/{id}:
+ *   get:
+ *     summary: Obtener información básica de un paciente
+ *     tags:
+ *       - Patients
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del paciente
+ *     responses:
+ *       200:
+ *         description: Información del paciente obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 name:
+ *                   type: string
+ *                 lastName:
+ *                   type: string
+ *       404:
+ *         description: Patient not found
+ */
+router.get(
+    "/:id",
+    patientManagementController.getPatientBasicInfo  // ✅ Sin middlewares de autenticación
+);
+
+/**
+ * @swagger
  * /api/patients/medical-record:
  *   post:
  *     summary: Create initial medical record
