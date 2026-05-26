@@ -74,5 +74,6 @@ const healthFacilityFacade =
 // controller
 export const healthFacilityController =
     new HealthFacilityController(
-        healthFacilityFacade
+        healthFacilityFacade,
+        districtRepository
     );

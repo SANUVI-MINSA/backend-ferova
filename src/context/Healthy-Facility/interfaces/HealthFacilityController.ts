@@ -5,12 +5,15 @@ import {AppointmentHistoryResourceAssembler} from "./assemblers/AppointmentHisto
 import {NurseAppointmentScheduleAssembler} from "./assemblers/NurseAppointmentScheduleAssembler";
 import {MotherNextAppointmentResourceAssembler} from "./assemblers/MotherNextAppointmentResourceAssembler";
 import {AuthRequest} from "../../../middlewares/auth.middleware";
+import {DistrictRepository} from "../../../shared/catalogs/district/DistrictRepository";
 
 export class HealthFacilityController {
 
     constructor(
         private healthFacilityFacade:
-        HealthFacilityFacade
+        HealthFacilityFacade,
+        private districtRepository:
+        DistrictRepository
     ) {}
 
     registerHealthFacility = async (req: AuthRequest, res: Response) => {
@@ -325,7 +328,21 @@ export class HealthFacilityController {
         }
     };
 
-    // Ayuda a manejar parámetros que pueden ser string o array de strings (en caso de múltiples valores)
+    listDistricts = async (req: AuthRequest, res: Response) => {
+            try {
+                const districts = this.districtRepository.findAll();
+                const response = districts.map(district => ({
+                    id: district.getId(),
+                    name: district.getName()
+                }));
+                res.status(200).json(response);
+            } catch (error: any) {
+                res.status(400).json({ error: error.message });
+            }
+    };
+
+
+        // Ayuda a manejar parámetros que pueden ser string o array de strings (en caso de múltiples valores)
     private getStringParam(param: string | string[] | undefined): string | undefined {
         if (!param) return undefined;
         return Array.isArray(param) ? param[0] : param;

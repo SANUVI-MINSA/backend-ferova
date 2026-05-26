@@ -223,6 +223,26 @@ router.get(
 
 /**
  * @swagger
+ * /api/health-facilities/districts:
+ *   get:
+ *     summary: List all districts for dropdown
+ *     tags:
+ *       - Health Facilities
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of districts retrieved successfully
+ */
+router.get(
+    "/districts",
+    authenticate,
+    requireAdmin,
+    healthFacilityController.listDistricts
+);
+
+/**
+ * @swagger
  * /api/health-facilities/{id}:
  *   get:
  *     summary: Get health facility detail
