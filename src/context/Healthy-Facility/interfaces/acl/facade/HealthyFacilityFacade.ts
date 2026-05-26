@@ -11,6 +11,7 @@ import {GetNurseAppointmentScheduleQuery} from "../../../domain/model/queries/Ge
 import {Appointment} from "../../../domain/model/entities/Appointment";
 import {GetFacilityAvailableSlotsQuery} from "../../../domain/model/queries/GetFacilityAvailableSlotsQuery";
 import {GetMotherNextAppointmentQuery} from "../../../domain/model/queries/GetMotherNextAppointmentQuery";
+import {ListUnassignedNursesQuery} from "../../../domain/model/queries/ListUnassignedNursesQuery";
 
 export class HealthFacilityFacade {
 
@@ -129,6 +130,12 @@ export class HealthFacilityFacade {
             .getMotherNextAppointment(
                 query
             );
+    }
+
+    async listUnassignedNurses(
+        query: ListUnassignedNursesQuery
+    ): Promise<{ id: string; fullName: string }[]> {
+        return await this.queryService.listUnassignedNurses(query);
     }
 
     async validatePatientBelongsToMother(patientId: string, motherId: string): Promise<void> {

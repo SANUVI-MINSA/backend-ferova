@@ -6,6 +6,7 @@ import {GetPatientAppointmentHistoryQuery} from "../model/queries/GetPatientAppo
 import {GetNurseAppointmentScheduleQuery} from "../model/queries/GetNurseAppointmentScheduleQuery";
 import {GetFacilityAvailableSlotsQuery} from "../model/queries/GetFacilityAvailableSlotsQuery";
 import {GetMotherNextAppointmentQuery} from "../model/queries/GetMotherNextAppointmentQuery";
+import {ListUnassignedNursesQuery} from "../model/queries/ListUnassignedNursesQuery";
 
 export interface HealthFacilityQueryService {
 
@@ -32,4 +33,8 @@ export interface HealthFacilityQueryService {
     getMotherNextAppointment(
         query: GetMotherNextAppointmentQuery
     ): Promise<any>;
+
+    listUnassignedNurses(
+        query: ListUnassignedNursesQuery
+    ): Promise<{ id: string; fullName: string }[]>;
 }

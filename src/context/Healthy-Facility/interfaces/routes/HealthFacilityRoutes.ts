@@ -326,6 +326,46 @@ router.get(
 
 /**
  * @swagger
+ * /api/health-facilities/nurses/unassigned:
+ *   get:
+ *     summary: List all unassigned nurses (available for facility assignment)
+ *     tags:
+ *       - Health Facilities
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of unassigned nurses retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       fullName:
+ *                         type: string
+ *       401:
+ *         description: Unauthorized - Token required
+ *       403:
+ *         description: Forbidden - Admin role required
+ */
+router.get(
+    "/nurses/unassigned",
+    authenticate,
+    requireAdmin,
+    healthFacilityController.listUnassignedNurses
+);
+
+/**
+ * @swagger
  * /api/health-facilities/appointments/mother/next:
  *   get:
  *     summary: Get mother's next appointment (motherId from token)

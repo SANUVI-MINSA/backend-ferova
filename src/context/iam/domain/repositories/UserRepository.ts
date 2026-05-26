@@ -40,4 +40,6 @@ export interface UserRepository {
     findMotherById(
         id: string
     ): Promise<User | null>;
+
+    findAllNurses(): Promise<User[]>;
 }

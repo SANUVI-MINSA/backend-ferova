@@ -10,6 +10,9 @@ import {Appointment} from "../../../domain/model/entities/Appointment";
 import {GetFacilityAvailableSlotsQuery} from "../../../domain/model/queries/GetFacilityAvailableSlotsQuery";
 import {GetMotherNextAppointmentQuery} from "../../../domain/model/queries/GetMotherNextAppointmentQuery";
 import {PatientRepository} from "../../../../patient-management/domain/repositories/PatientRepository";
+import { ListUnassignedNursesQuery } from "../../../domain/model/queries/ListUnassignedNursesQuery";
+import { UserRepository } from "../../../../iam/domain/repositories/UserRepository";
+import { NurseAssignmentRepository } from "../../../domain/repositories/NurseAssignmentRepository";
 
 export class HealthFacilityQueryServiceImpl
     implements HealthFacilityQueryService {
@@ -17,12 +20,42 @@ export class HealthFacilityQueryServiceImpl
     constructor(
         private healthFacilityRepository:
         HealthyFacilityRepository,
-
         private appointmentRepository:
         AppointmentRepository,
+        private patientRepository: PatientRepository,
+        private userRepository: UserRepository,
+        private nurseAssignmentRepository: NurseAssignmentRepository
+    ) {
+    }
 
-        private patientRepository: PatientRepository
-    ) {}
+    async listUnassignedNurses(
+        query: ListUnassignedNursesQuery
+    ): Promise<{ id: string; fullName: string }[]> {
+
+        const allNurses = await this.userRepository.findAllNurses();
+
+        if (!allNurses || allNurses.length === 0) {
+            return [];
+        }
+
+        const unassignedNurses: { id: string; fullName: string }[] = [];
+
+        for (const nurse of allNurses) {
+            const nurseData = nurse.toPrimitives();
+
+            const activeAssignment = await this.nurseAssignmentRepository
+                .findActiveByNurseId(nurseData.id);
+
+            if (!activeAssignment) {
+                unassignedNurses.push({
+                    id: nurseData.id,
+                    fullName: `${nurseData.name} ${nurseData.lastname}`
+                });
+            }
+        }
+
+        return unassignedNurses;
+    }
 
     async listHealthFacilities(
         query: ListHealthFacilitiesQuery
