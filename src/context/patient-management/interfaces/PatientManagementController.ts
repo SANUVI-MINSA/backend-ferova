@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import {PatientManagementFacade} from "./facade/PatientManagementFacade";
 import {HemoglobinHistoryResourceAssembler} from "./assemblers/HemoglobinHistoryResourceAssembler";
-import {EligibleDischargePatientResourceAssembler} from "./assemblers/EligibleDischargePatientResourceAssembler";
 import {AuthRequest} from "../../../middlewares/auth.middleware";
+import {GetPatientBasicInfoQuery} from "../domain/model/queries/GetPatientBasicInfoQuery";
 
 export class PatientManagementController {
 
@@ -424,6 +424,29 @@ export class PatientManagementController {
                 motherId,
                 patients
             });
+
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    };
+
+    getPatientBasicInfo = async (req: Request, res: Response) => {
+        try {
+            const patientId = req.params.id as string;
+
+            if (!patientId) {
+                return res.status(400).json({ error: "Patient ID es requerido" });
+            }
+
+            const query: GetPatientBasicInfoQuery = { patientId };
+
+            const patient = await this.patientFacade.getPatientBasicInfo(query);
+
+            if (!patient) {
+                return res.status(404).json({ error: "Patient not found" });
+            }
+
+            res.status(200).json(patient);
 
         } catch (error: any) {
             res.status(400).json({ error: error.message });
