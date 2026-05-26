@@ -17,6 +17,7 @@ import {GetPatientsAssignedToNurseQuery} from "../../domain/model/queries/GetPat
 import {GetHemoglobinEvolutionChartQuery} from "../../domain/model/queries/getHemoglobinEvolutionChart";
 import {GetMotherPatientsSummaryQuery} from "../../domain/model/queries/GetMotherPatientsSummaryQuery";
 import {GetActivePatientsCountQuery} from "../../domain/model/queries/GetActivePatientsCountQuery";
+import {GetPatientBasicInfoQuery} from "../../domain/model/queries/GetPatientBasicInfoQuery";
 
 export class PatientManagementFacade {
 
@@ -248,6 +249,12 @@ export class PatientManagementFacade {
 
     async getMotherPatientsSummary(query: GetMotherPatientsSummaryQuery): Promise<Array<any>> {
         return await this.queryService.getMotherPatientsSummary(query);
+    }
+
+    async getPatientBasicInfo(
+        query: GetPatientBasicInfoQuery
+    ): Promise<{ id: string; name: string; lastName: string } | null> {
+        return await this.queryService.getPatientBasicInfo(query);
     }
 
 }

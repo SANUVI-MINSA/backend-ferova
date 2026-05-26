@@ -16,6 +16,7 @@ import {GetHemoglobinEvolutionChartQuery} from "../../domain/model/queries/getHe
 import {GetPatientQuery} from "../../domain/model/queries/GetPatientQuery";
 import { GetActivePatientsCountQuery } from "../../domain/model/queries/GetActivePatientsCountQuery";
 import { GetMotherPatientsSummaryQuery } from "../../domain/model/queries/GetMotherPatientsSummaryQuery";
+import { GetPatientBasicInfoQuery } from "../../domain/model/queries/GetPatientBasicInfoQuery";
 
 export class PatientQueryServiceImpl
     implements PatientQueryService {
@@ -27,7 +28,28 @@ export class PatientQueryServiceImpl
         MedicalRecordRepository,
         // Inyectar UserRepository si es necesario para obtener información adicional sobre los usuarios madres
         private userRepository: UserRepository
-    ) {}
+    ) {
+    }
+
+    async getPatientBasicInfo(
+        query: GetPatientBasicInfoQuery
+    ): Promise<{ id: string; name: string; lastName: string } | null> {
+
+        const patient = await this.patientRepository.findById(query.patientId);
+
+        if (!patient) {
+            return null;
+        }
+
+        const data = patient.toPrimitives();
+
+        return {
+            id: data.id,
+            name: data.name,
+            lastName: data.lastName
+        };
+    }
+
 
     async getMotherPatientsSummary(query: GetMotherPatientsSummaryQuery): Promise<Array<any>> {
         const patients = await this.patientRepository.findByMotherId(query.motherId);
