@@ -308,6 +308,23 @@ export class HealthFacilityController {
         }
     };
 
+    listUnassignedNurses = async (req: AuthRequest, res: Response) => {
+        try {
+            const nurses = await this.healthFacilityFacade.listUnassignedNurses({});
+
+            res.status(200).json({
+                success: true,
+                data: nurses
+            });
+
+        } catch (error: any) {
+            res.status(400).json({
+                success: false,
+                error: error.message
+            });
+        }
+    };
+
     // Ayuda a manejar parámetros que pueden ser string o array de strings (en caso de múltiples valores)
     private getStringParam(param: string | string[] | undefined): string | undefined {
         if (!param) return undefined;
