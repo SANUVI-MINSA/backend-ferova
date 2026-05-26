@@ -453,13 +453,12 @@ export class TreatmentCommandServiceImpl
             throw new Error("Only pending doses can be omitted");
         }
 
-        // Validar que la fecha ya pasó (no es futuro)
-        const now = new Date();
-        const scheduledDate = dose.getScheduledDate();
-
-        if (scheduledDate > now) {
-            throw new Error("Cannot omit a future dose. Wait until the scheduled date has passed.");
-        }
+        // ✅ Validación de fecha futuro DESACTIVADA para pruebas
+        // const now = new Date();
+        // const scheduledDate = dose.getScheduledDate();
+        // if (scheduledDate > now) {
+        //     throw new Error("Cannot omit a future dose. Wait until the scheduled date has passed.");
+        // }
 
         dose.markAsOmitted();
 
@@ -482,6 +481,12 @@ export class TreatmentCommandServiceImpl
         // Persistir
         await this.dailyDoseRepository.update(dose);
         await this.treatmentRepository.update(treatment);
+
+        // 🔥 PUBLICAR EVENTO PARA ACHIEVEMENTS
+        await eventPublisher.publish("DailyDoseOmitted", {
+            treatmentId: treatment.getId(),
+            dailyDoseId: dose.getId()
+        });
 
         return {
             message: "Dose force-omitted for testing",

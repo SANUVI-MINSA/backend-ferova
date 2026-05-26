@@ -3,6 +3,7 @@ import { DailyDoseRepository } from "../../model/repositories/DailyDoseRepositor
 import { TreatmentRepository } from "../../model/repositories/TreatmentRepository";
 import { DoseStatus } from "../../model/domain/value-objects/enum/DoseStatus";
 import { DOSE_CONFIG } from "../../../../shared/infrastructure/config/dose.config";
+import { eventPublisher } from "../../../../shared/infrastructure/events/EventPublisher";
 
 export class DoseEvaluationScheduler {
 
@@ -15,7 +16,6 @@ export class DoseEvaluationScheduler {
      * Inicia el scheduler que evalúa dosis pendientes cada minuto
      */
     startScheduler(): void {
-        // Ejecutar cada minuto
         cron.schedule('* * * * *', async () => {
             console.log('[DoseEvaluation] Evaluando dosis pendientes...', new Date().toISOString());
 
@@ -26,7 +26,6 @@ export class DoseEvaluationScheduler {
             }
         });
 
-        // ✅ CORREGIDO: Usar el método getOmissionThresholdHours()
         const thresholdHours = DOSE_CONFIG.getOmissionThresholdHours();
         console.log(`[DoseEvaluation] Scheduler iniciado. Umbral: ${thresholdHours} horas (${thresholdHours * 60} minutos)`);
     }
@@ -37,7 +36,6 @@ export class DoseEvaluationScheduler {
     async evaluatePendingDoses(): Promise<void> {
         const thresholdHours = DOSE_CONFIG.getOmissionThresholdHours();
 
-        // Buscar dosis pendientes que superan el umbral
         const pendingDoses = await this.dailyDoseRepository.findPendingOlderThanHours(thresholdHours);
 
         if (pendingDoses.length === 0) {
@@ -47,7 +45,6 @@ export class DoseEvaluationScheduler {
 
         console.log(`[DoseEvaluation] Encontradas ${pendingDoses.length} dosis para evaluar`);
 
-        // Agrupar por tratamiento para no actualizar el mismo múltiples veces
         const treatmentMap = new Map<string, { doses: any[], treatment: any }>();
 
         for (const dose of pendingDoses) {
@@ -65,12 +62,10 @@ export class DoseEvaluationScheduler {
             }
         }
 
-        // Procesar cada tratamiento
         for (const [treatmentId, { doses, treatment }] of treatmentMap) {
             console.log(`[DoseEvaluation] Procesando tratamiento ${treatmentId}, ${doses.length} dosis`);
 
             for (const dose of doses) {
-                // Solo procesar si sigue pendiente
                 if (dose.getStatus() === DoseStatus.PENDING) {
                     const hoursOverdue = dose.calculateHoursWithoutConfirmation();
 
@@ -79,6 +74,12 @@ export class DoseEvaluationScheduler {
                     // Marcar como omitida
                     dose.markAsOmitted();
                     await this.dailyDoseRepository.update(dose);
+
+                    // 🔥 PUBLICAR EVENTO PARA ACHIEVEMENTS
+                    await eventPublisher.publish("DailyDoseOmitted", {
+                        treatmentId: treatment.getId(),
+                        dailyDoseId: dose.getId()
+                    });
 
                     // Actualizar métricas del tratamiento
                     treatment.updateAdherenceMetrics(false);
@@ -91,7 +92,6 @@ export class DoseEvaluationScheduler {
                 }
             }
 
-            // Guardar cambios del tratamiento
             await this.treatmentRepository.update(treatment);
         }
 
