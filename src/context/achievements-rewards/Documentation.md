@@ -1,40 +1,35 @@
 # Achievements & Rewards — Bounded Context
 
-## Contexto: Gamificación del Tratamiento
-
-El Bounded Context de **Achievements & Rewards** gestiona la **gamificación del tratamiento de anemia** dentro de Ferova Family. Su propósito es motivar a la madre a mantener la constancia en el tratamiento mediante recompensas digitales.
-
-### ¿Qué puede hacer la madre?
-- Ver el progreso de su tratamiento (puntos acumulados, racha actual, mejor racha)
-- Visualizar las medallas que puede desbloquear (_First Week_, _First Month_, _Half Treatment_, _Treatment Completed_)
-- Seguir el progreso hacia cada medalla con barras de avance
-- Recibir notificaciones al desbloquear una nueva medalla (aun no se toma en cuenta)
-
-### ¿Qué puede hacer la enfermera?
-> ❌ **NADA** — Este BC es exclusivo para Ferova Family (madres). Las enfermeras no tienen acceso a esta información.
-
-### Reglas de negocio importantes
-- Las medallas se desbloquean **en orden secuencial** (primero First Week, luego First Month, etc.)
-- Cada medalla requiere una **racha consecutiva de días sin fallar**
-- Al confirmar una dosis: **+10 puntos** y aumenta la racha
-- Al omitir una dosis: **la racha se reinicia a 0**, pero NO se pierden puntos
-- Al completar el tratamiento: **+50 puntos de bonus**
-- Las medallas ya desbloqueadas **NUNCA se pierden**, aunque la racha se reinicie
+> **Contexto:** Gamificación del tratamiento de anemia en Ferova Family.
+> Motiva a la madre a mantener la constancia mediante recompensas digitales.
 
 ---
 
-## ⚠️ Autenticación
+## ¿Quién puede usar este BC?
 
-Todos los endpoints requieren autenticación mediante **Bearer Token (JWT)**.
+| Rol | Acceso |
+|-----|--------|
+| **Madre** (`MOTHER`) | ✅ Acceso completo |
+| **Enfermera** | ❌ Sin acceso |
+
+### La madre puede:
+- Ver su progreso (puntos, racha actual, mejor racha)
+- Visualizar las medallas disponibles y su avance
+- Seguir el progreso hacia cada medalla con barras de avance
+- Recibir notificaciones al desbloquear una medalla *(pendiente de implementar)*
+
+---
+
+## Autenticación
+
+Todos los endpoints requieren un **Bearer Token (JWT)** con rol `MOTHER`.
 
 ```
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
 
-**Rol requerido:** `MOTHER` (madre)
-
-> El `motherId` se extrae automáticamente del token. **No enviar motherId en la URL ni en el body.**
+> ⚠️ El `motherId` se extrae automáticamente del token. **No enviarlo en la URL ni en el body.**
 
 ---
 
@@ -48,28 +43,24 @@ Content-Type: application/json
 
 ## Resumen de Endpoints
 
-| Método | Endpoint | Descripción | Rol |
-|--------|----------|-------------|-----|
-| `GET` | `/patients/:patientId/achievement` | Obtener progreso del tratamiento (puntos, rachas) | Madre |
-| `GET` | `/patients/:patientId/badges` | Obtener todas las medallas con su progreso | Madre |
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| `GET` | `/patients/:patientId/achievement` | Progreso del tratamiento (puntos, rachas) |
+| `GET` | `/patients/:patientId/badges` | Todas las medallas con su progreso |
 
 ---
 
 ## Endpoints Detallados
 
-### 1. Obtener progreso del tratamiento
+### 1. `GET /patients/:patientId/achievement`
 
-**`GET /patients/:patientId/achievement`**
-
-La madre obtiene el resumen de su progreso en el tratamiento: puntos acumulados, racha actual y mejor racha histórica.
+Obtiene el resumen del progreso de la madre: puntos acumulados, racha actual y mejor racha histórica.
 
 #### Path Parameters
 
 | Parámetro | Tipo | Descripción |
 |-----------|------|-------------|
 | `patientId` | `string` | ID del paciente (hijo/a) |
-
-> El `motherId` se extrae automáticamente del token JWT.
 
 #### Response `200 OK`
 
@@ -103,19 +94,15 @@ La madre obtiene el resumen de su progreso en el tratamiento: puntos acumulados,
 
 ---
 
-### 2. Obtener medallas del paciente
+### 2. `GET /patients/:patientId/badges`
 
-**`GET /patients/:patientId/badges`**
-
-La madre obtiene la lista completa de medallas, su estado (desbloqueada o bloqueada) y el progreso hacia cada una.
+Obtiene la lista completa de medallas, su estado (desbloqueada o bloqueada) y el progreso hacia cada una.
 
 #### Path Parameters
 
 | Parámetro | Tipo | Descripción |
 |-----------|------|-------------|
 | `patientId` | `string` | ID del paciente (hijo/a) |
-
-> El `motherId` se extrae automáticamente del token JWT.
 
 #### Response `200 OK`
 
@@ -137,36 +124,25 @@ La madre obtiene la lista completa de medallas, su estado (desbloqueada o bloque
     },
     {
       "id": "uuid",
-      "type": "FIRST_MONTH",
-      "name": "Primer mes",
-      "description": "Completaste 30 días consecutivos sin fallar",
-      "milestone": 30,
-      "isUnlocked": false,
-      "unlockedAt": null,
-      "progress": 23,
-      "daysNeeded": 23
-    },
-    {
-      "id": "uuid",
       "type": "HALF_TREATMENT",
       "name": "Mitad del tratamiento",
-      "description": "Alcanzaste la mitad del tratamiento (45 días consecutivos)",
-      "milestone": 45,
+      "description": "Alcanzaste la mitad del tratamiento (15 días consecutivos)",
+      "milestone": 15,
       "isUnlocked": false,
       "unlockedAt": null,
-      "progress": 0,
-      "daysNeeded": 45
+      "progress": 53,
+      "daysNeeded": 7
     },
     {
       "id": "uuid",
       "type": "TREATMENT_COMPLETED",
       "name": "Tratamiento completado",
-      "description": "Completaste el tratamiento completo de 90 días",
-      "milestone": 90,
+      "description": "Completaste el tratamiento completo de 30 días",
+      "milestone": 30,
       "isUnlocked": false,
       "unlockedAt": null,
       "progress": 0,
-      "daysNeeded": 90
+      "daysNeeded": 30
     }
   ]
 }
@@ -175,42 +151,41 @@ La madre obtiene la lista completa de medallas, su estado (desbloqueada o bloque
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
 | `id` | `string` | ID único de la medalla |
-| `type` | `string` | `FIRST_WEEK`, `FIRST_MONTH`, `HALF_TREATMENT`, `TREATMENT_COMPLETED` |
+| `type` | `string` | `FIRST_WEEK`, `HALF_TREATMENT`, `TREATMENT_COMPLETED` |
 | `name` | `string` | Nombre legible de la medalla |
-| `description` | `string` | Descripción de lo que se necesita para desbloquear |
-| `milestone` | `number` | Días totales necesarios para desbloquear |
+| `description` | `string` | Descripción del requisito para desbloquear |
+| `milestone` | `number` | Días consecutivos necesarios para desbloquear |
 | `isUnlocked` | `boolean` | `true` si ya está desbloqueada |
 | `unlockedAt` | `string (ISO date)` | Fecha de desbloqueo (`null` si no desbloqueada) |
 | `progress` | `number` | Porcentaje de avance (0–100) |
-| `daysNeeded` | `number` | Días restantes para desbloquear (`0` si ya desbloqueada) |
+| `daysNeeded` | `number` | Días restantes para desbloquear (0 si ya desbloqueada) |
 
-#### Orden de las medallas
+#### Medallas según duración del tratamiento
 
-Las medallas se muestran en este orden:
+| Duración | Badges creadas | Milestones |
+|----------|----------------|------------|
+| 7 días | `FIRST_WEEK` + `TREATMENT_COMPLETED` | 7, 7 |
+| 15 días | `FIRST_WEEK` + `TREATMENT_COMPLETED` | 7, 15 |
+| 30 días | `FIRST_WEEK` + `HALF_TREATMENT` + `TREATMENT_COMPLETED` | 7, 15, 30 |
+| 45 días | `FIRST_WEEK` + `HALF_TREATMENT` + `TREATMENT_COMPLETED` | 7, 23, 45 |
+| 60 días | `FIRST_WEEK` + `HALF_TREATMENT` + `TREATMENT_COMPLETED` | 7, 30, 60 |
 
-| Posición | Medalla | Milestone |
-|----------|---------|-----------|
-| 1 | `FIRST_WEEK` | 7 días |
-| 2 | `FIRST_MONTH` | 30 días |
-| 3 | `HALF_TREATMENT` | Mitad del tratamiento |
-| 4 | `TREATMENT_COMPLETED` | Duración total del tratamiento |
+#### Cálculo de progreso
 
-#### Progreso Secuencial
+El progreso de cada medalla se calcula **de forma independiente** según la racha actual:
 
-Las medallas se desbloquean en orden. El progreso se calcula así:
+```
+progress   = min(100, floor((currentStreak / milestone) * 100))
+daysNeeded = max(0, milestone - currentStreak)
+```
 
-- **Medallas anteriores** a la activa → `progress = 100`, `daysNeeded = 0`
-- **Medalla activa** (primera sin desbloquear) → progreso calculado desde el milestone anterior
-- **Medallas futuras** → `progress = 0`, `daysNeeded = milestone`
+**Ejemplo** — tratamiento de 30 días, racha actual = 10 días:
 
-**Ejemplo con tratamiento de 90 días y racha actual = 15 días:**
-
-| Medalla | Progreso | Cálculo |
-|---------|----------|---------|
-| `FIRST_WEEK` | 100% ✅ | Ya desbloqueada (7/7) |
-| `FIRST_MONTH` | 34% | (15-7) / (30-7) = 8/23 |
-| `HALF_TREATMENT` | 0% | Aún no activa |
-| `TREATMENT_COMPLETED` | 0% | Aún no activa |
+| Medalla | Milestone | Progreso | Días restantes |
+|---------|-----------|----------|----------------|
+| `FIRST_WEEK` | 7 | 100% ✅ | 0 |
+| `HALF_TREATMENT` | 15 | 66% | 5 |
+| `TREATMENT_COMPLETED` | 30 | 33% | 20 |
 
 #### Errores `400`
 
@@ -222,44 +197,55 @@ Las medallas se desbloquean en orden. El progreso se calcula así:
 
 ---
 
-## 🧠 Arquitectura y Eventos
+## Reglas de Negocio
 
-### Eventos que consume del BC Treatment Tracking
+| Acción | Efecto en puntos | Efecto en racha |
+|--------|-----------------|-----------------|
+| Confirmar una dosis | **+10 puntos** | Racha +1 |
+| Omitir una dosis | Sin cambio | **Racha se reinicia a 0** |
+| Completar el tratamiento | **+50 puntos (bonus)** | — |
 
-| Evento | Qué hace Achievements |
-|--------|-----------------------|
-| `TreatmentStarted` | Crea un nuevo `Achievement` y genera las `Badges` según la duración del tratamiento |
-| `DailyDoseConfirmed` | Suma +10 puntos, aumenta la racha, evalúa si se desbloquean nuevas medallas |
-| `DailyDoseOmitted` | Reinicia la racha actual a 0 (NO pierde puntos) |
-| `TreatmentCompleted` | Marca el `Achievement` como `COMPLETED`, otorga +50 puntos de bonus |
-| `TreatmentAbandoned` | Marca el `Achievement` como `ABANDONED` |
-
-### Eventos que emite (para otros BCs)
-
-Posibilidad aun esta en decision problamente no se haga
-
-| Evento | Cuándo se emite | Consumidor potencial                                         |
-|--------|-----------------|--------------------------------------------------------------|
-| `BadgeUnlocked` | Cuando se desbloquea una nueva medalla | Communication (notificaciones push) -> aun no se complementa |
-| `PointsEarned` | Cuando se suman puntos (confirmación o bonus) | Analytics                                                    |
-| `StreakMilestoneReached` | Cuando se alcanza un hito de racha (7, 30, etc.) | Communication                                                |
+> - Las medallas se desbloquean **independientemente** según la racha alcanzada.
+> - Las medallas ya desbloqueadas **nunca se pierden**, aunque la racha se reinicie.
+> - No se pierden puntos al omitir una dosis.
 
 ---
 
-## 🔄 Flujo Completo
+## Arquitectura y Eventos
+
+### Eventos que consume (desde Treatment Tracking BC)
+
+| Evento | Qué hace Achievements |
+|--------|-----------------------|
+| `TreatmentStarted` | Crea un nuevo Achievement y genera las Badges según la duración |
+| `DailyDoseConfirmed` | +10 puntos, racha +1, evalúa desbloqueo de medallas |
+| `DailyDoseOmitted` | Reinicia racha a 0 (no pierde puntos) |
+| `TreatmentCompleted` | Marca Achievement como `COMPLETED`, otorga +50 puntos bonus |
+| `TreatmentAbandoned` | Marca Achievement como `ABANDONED` |
+
+### Eventos que emite *(pendientes de implementar)*
+
+| Evento | Cuándo se emite | Posible consumidor |
+|--------|-----------------|--------------------|
+| `BadgeUnlocked` | Al desbloquear una nueva medalla | Communication (push notifications) |
+| `PointsEarned` | Al sumar puntos | Analytics |
+| `StreakMilestoneReached` | Al alcanzar un hito de racha | Communication |
+
+---
+
+## Flujo Completo
 
 ```
-1. Enfermera inicia tratamiento (70 días)
+1. Enfermera inicia tratamiento (ej: 30 días)
    ↓
 2. Achievements BC recibe evento TreatmentStarted
    ↓
 3. Se crea Achievement (puntos=0, racha=0, status=ACTIVE)
    ↓
 4. Se generan las Badges según duración:
-   - FIRST_WEEK         (milestone = 7)
-   - FIRST_MONTH        (milestone = 30)
-   - HALF_TREATMENT     (milestone = 35)
-   - TREATMENT_COMPLETED (milestone = 70)
+   - FIRST_WEEK        (milestone = 7)
+   - HALF_TREATMENT    (milestone = 15)
+   - TREATMENT_COMPLETED (milestone = 30)
    ↓
 5. Madre confirma dosis → evento DailyDoseConfirmed
    ↓
@@ -267,72 +253,75 @@ Posibilidad aun esta en decision problamente no se haga
    ↓
 7. Se evalúa si la racha alcanza algún milestone
    ↓
-8. Si alcanza → Badge se desbloquea → evento BadgeUnlocked
+8. Si alcanza → Badge se desbloquea → se guarda unlockedAt
    ↓
-9. Madre ve en su app la nueva medalla desbloqueada
+9. Madre ve en su app la nueva medalla desbloqueada 🎖️
 ```
 
 ---
 
-## 📊 Ejemplos de Progreso (Tratamiento de 90 días)
+## Progreso por días (Tratamiento 30 días)
 
-| Días de racha | FIRST_WEEK | FIRST_MONTH | HALF_TREATMENT | TREATMENT_COMPLETED |
-|---------------|-----------|-------------|----------------|---------------------|
-| 1 día | 14% | 0% | 0% | 0% |
-| 7 días | 100% ✅ | 0% | 0% | 0% |
-| 15 días | 100% | 34% | 0% | 0% |
-| 30 días | 100% | 100% ✅ | 0% | 0% |
-| 38 días | 100% | 100% | 53% | 0% |
-| 45 días | 100% | 100% | 100% ✅ | 0% |
-| 60 días | 100% | 100% | 100% | 33% |
-| 90 días | 100% | 100% | 100% | 100% ✅ |
+| Días de racha | FIRST_WEEK | HALF_TREATMENT | TREATMENT_COMPLETED |
+|---------------|------------|----------------|---------------------|
+| 1 día | 14% | 0% | 0% |
+| 7 días | **100% ✅** | 0% | 0% |
+| 10 días | 100% | 66% | 33% |
+| 15 días | 100% | **100% ✅** | 50% |
+| 20 días | 100% | 100% | 66% |
+| 30 días | 100% | 100% | **100% ✅** |
 
 ---
 
-## 🎨 UI Sugerida para Frontend
+## UI Sugerida para Frontend
 
-### Tarjeta de Progreso Principal
+### Tarjeta de progreso principal
 
 ```
 ┌─────────────────────────────────┐
 │  Estado de salud: ACTIVO        │
 │  Puntos Totales: 70             │
-│  Racha actual: 7 días           │
-│  Más larga: 30 días             │
+│  Racha actual:   7 días         │
+│  Más larga:      30 días        │
 └─────────────────────────────────┘
 ```
 
-### Sección de Medallas
+### Tarjetas de medallas
 
 ```
-┌─────────────────────────────────┐
-│  🏅 First Week                  │
-│  Completa los 7 días sin fallar │
-│  ▓▓▓▓▓▓▓▓▓▓ 100%               │
-│  ✅ Desbloqueada el 22/05/2026  │
-└─────────────────────────────────┘
+┌──────────────────────────────────────┐
+│  🏅 First Week                       │
+│  Completa los 7 días sin fallar      │
+│  ██████████ 100%                     │
+│  ✅ Desbloqueada el 22/05/2026       │
+└──────────────────────────────────────┘
 
-┌─────────────────────────────────┐
-│  🏅 First Month                 │
-│  Completa los 30 días sin fallar│
-│  ▓▓▓▓▓░░░░░ 53%                 │
-│  Te faltan 14 días              │
-└─────────────────────────────────┘
+┌──────────────────────────────────────┐
+│  🏅 Half Treatment                   │
+│  Completa la mitad del tratamiento   │
+│  █████░░░░░ 66%                      │
+│  Te faltan 5 días                    │
+└──────────────────────────────────────┘
 
-┌─────────────────────────────────┐
-│  🏅 Half Treatment              │
-│  Completa la mitad del tratamiento│
-│  ░░░░░░░░░░ 0%                  │
-│  Necesitas 45 días consecutivos │
-└─────────────────────────────────┘
-
-┌─────────────────────────────────┐
-│  🏅 Treatment Completed         │
-│  Completa el tratamiento completo│
-│  ░░░░░░░░░░ 0%                  │
-│  Necesitas 90 días consecutivos │
-└─────────────────────────────────┘
+┌──────────────────────────────────────┐
+│  🏅 Treatment Completed              │
+│  Completa el tratamiento completo    │
+│  ███░░░░░░░ 33%                      │
+│  Te faltan 20 días                   │
+└──────────────────────────────────────┘
 ```
+
+---
+
+## Endpoints de Prueba *(Solo Desarrollo)*
+
+Disponibles únicamente al correr `npm run dev`.
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| `POST` | `/api/test/force-evaluate-badges/:patientId` | Fuerza evaluación de badges según racha actual |
+| `POST` | `/api/test/doses/force-confirm` | Fuerza confirmación de dosis (sin validar fechas) |
+| `POST` | `/api/test/doses/force-omit` | Fuerza omisión de dosis (sin validar fechas) |
 
 ---
 
@@ -343,5 +332,5 @@ Posibilidad aun esta en decision problamente no se haga
 | `200` | OK — Operación exitosa |
 | `400` | Bad Request — Error de validación |
 | `401` | Unauthorized — Token no proporcionado o inválido |
-| `403` | Forbidden — Rol incorrecto (se requiere madre) |
+| `403` | Forbidden — Rol incorrecto (se requiere `MOTHER`) |
 | `404` | Not Found — Recurso no encontrado |
