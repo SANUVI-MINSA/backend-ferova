@@ -203,4 +203,12 @@ export class MongoUserRepository implements UserRepository {
 
         return UserMapper.toDomain(user);
     }
+
+    async findAllNurses(): Promise<User[]> {
+        const users = await UserModel.find({
+            role: "Nurse"
+        });
+
+        return users.map(user => UserMapper.toDomain(user));
+    }
 }
