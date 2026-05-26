@@ -7,9 +7,9 @@ import {DownloadHemoglobinReportPdfQuery} from "../model/queries/DownloadHemoglo
 import {GetPatientsEligibleForDischargeQuery} from "../model/queries/GetPatientsEligibleForDischargeQuery";
 import {GetPatientsAssignedToNurseQuery} from "../model/queries/GetPatientsAssignedToNurseQuery";
 import {GetHemoglobinEvolutionChartQuery} from "../model/queries/getHemoglobinEvolutionChart";
-import {GetPatientQuery} from "../model/queries/GetPatientQuery";
 import {GetActivePatientsCountQuery} from "../model/queries/GetActivePatientsCountQuery";
 import {GetMotherPatientsSummaryQuery} from "../model/queries/GetMotherPatientsSummaryQuery";
+import {GetPatientBasicInfoQuery} from "../model/queries/GetPatientBasicInfoQuery";
 
 export interface PatientQueryService {
 
@@ -67,4 +67,8 @@ export interface PatientQueryService {
 
     // Agregar esta firma
     getMotherPatientsSummary(query: GetMotherPatientsSummaryQuery): Promise<Array<any>>;
+
+    getPatientBasicInfo(
+        query: GetPatientBasicInfoQuery
+    ): Promise<{ id: string; name: string; lastName: string } | null>;
 }
