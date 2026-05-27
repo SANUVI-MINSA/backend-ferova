@@ -7,6 +7,46 @@ const router = Router();
 
 /**
  * @swagger
+ * /api/health-facilities/can-register:
+ *   get:
+ *     summary: Verificar si hay enfermeros disponibles para registrar nueva posta
+ *     tags:
+ *       - Health Facilities
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Disponibilidad verificada
+ */
+router.get(
+    "/can-register",
+    authenticate,
+    requireAdmin,
+    healthFacilityController.canRegisterFacility
+);
+
+/**
+ * @swagger
+ * /api/health-facilities:
+ *   get:
+ *     summary: Listar todas las postas (para administrador)
+ *     tags:
+ *       - Health Facilities
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Listado de postas obtenido exitosamente
+ */
+router.get(
+    "/",
+    authenticate,
+    requireAdmin,
+    healthFacilityController.listAllHealthFacilities
+);
+
+/**
+ * @swagger
  * /api/health-facilities:
  *   post:
  *     summary: Register a new health facility

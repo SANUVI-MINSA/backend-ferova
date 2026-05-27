@@ -7,6 +7,10 @@ import {GetNurseAppointmentScheduleQuery} from "../model/queries/GetNurseAppoint
 import {GetFacilityAvailableSlotsQuery} from "../model/queries/GetFacilityAvailableSlotsQuery";
 import {GetMotherNextAppointmentQuery} from "../model/queries/GetMotherNextAppointmentQuery";
 import {ListUnassignedNursesQuery} from "../model/queries/ListUnassignedNursesQuery";
+import {CanRegisterFacilityQuery} from "../model/queries/CanRegisterFacilityQuery";
+import {ListAllHealthFacilitiesQuery} from "../model/queries/ListAllHealthFacilitiesQuery";
+import {CanRegisterResponseDto} from "../../application/dto/CanRegisterResponseDto";
+import {HealthFacilityAdminListResponseDto} from "../../application/dto/HealthFacilityAdminListResponseDto";
 
 export interface HealthFacilityQueryService {
 
@@ -37,4 +41,19 @@ export interface HealthFacilityQueryService {
     listUnassignedNurses(
         query: ListUnassignedNursesQuery
     ): Promise<{ id: string; fullName: string }[]>;
+
+    /**
+     * Verifica si hay al menos un enfermero no asignado disponible
+     * @returns true si hay al menos un enferfero libre
+     */
+    canRegisterFacility(
+        query: CanRegisterFacilityQuery
+    ): Promise<CanRegisterResponseDto>;
+
+    /**
+     * Lista todas las postas con información de asignación de enfermeros
+     */
+    listAllHealthFacilities(
+        query: ListAllHealthFacilitiesQuery
+    ): Promise<HealthFacilityAdminListResponseDto>;
 }

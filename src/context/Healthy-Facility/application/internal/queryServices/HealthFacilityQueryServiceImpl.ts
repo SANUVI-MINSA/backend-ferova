@@ -13,6 +13,13 @@ import {PatientRepository} from "../../../../patient-management/domain/repositor
 import { ListUnassignedNursesQuery } from "../../../domain/model/queries/ListUnassignedNursesQuery";
 import { UserRepository } from "../../../../iam/domain/repositories/UserRepository";
 import { NurseAssignmentRepository } from "../../../domain/repositories/NurseAssignmentRepository";
+import { CanRegisterFacilityQuery } from "../../../domain/model/queries/CanRegisterFacilityQuery";
+import { ListAllHealthFacilitiesQuery } from "../../../domain/model/queries/ListAllHealthFacilitiesQuery";
+import {CanRegisterResponseDto} from "../../dto/CanRegisterResponseDto";
+import {
+    HealthFacilityAdminItemDto,
+    HealthFacilityAdminListResponseDto
+} from "../../dto/HealthFacilityAdminListResponseDto";
 
 export class HealthFacilityQueryServiceImpl
     implements HealthFacilityQueryService {
@@ -26,6 +33,88 @@ export class HealthFacilityQueryServiceImpl
         private userRepository: UserRepository,
         private nurseAssignmentRepository: NurseAssignmentRepository
     ) {
+    }
+
+    async canRegisterFacility(
+        query: CanRegisterFacilityQuery
+    ): Promise<CanRegisterResponseDto> {
+
+        const allNurses = await this.userRepository.findAllNurses();
+
+        if (!allNurses || allNurses.length === 0) {
+            return new CanRegisterResponseDto(
+                false,
+                "Sin enfermeros disponibles",
+                "No hay personal de enfermería registrado en el sistema."
+            );
+        }
+
+        let unassignedCount = 0;
+
+        for (const nurse of allNurses) {
+            const nurseData = nurse.toPrimitives();
+            const activeAssignment = await this.nurseAssignmentRepository
+                .findActiveByNurseId(nurseData.id);
+
+            if (!activeAssignment) unassignedCount++;
+        }
+
+        if (unassignedCount > 0) {
+            return new CanRegisterResponseDto(
+                true,
+                `Hay ${unassignedCount} enfermero${unassignedCount !== 1 ? 's' : ''} disponible${unassignedCount !== 1 ? 's' : ''} para asignar a una nueva posta`
+            );
+        }
+
+        return new CanRegisterResponseDto(
+            false,
+            "Sin enfermeros disponibles",
+            "Actualmente, todo el personal de enfermería registrado ha sido asignado a una posta médica. Por favor, espere al registro de nuevo personal."
+        );
+    }
+
+
+    async listAllHealthFacilities(
+        query: ListAllHealthFacilitiesQuery
+    ): Promise<HealthFacilityAdminListResponseDto> {
+
+        const allFacilities = await this.healthFacilityRepository.findAll();
+
+        const healthFacilities = await Promise.all(
+            allFacilities.map(async (facility) => {
+                const data = facility.toPrimitives();
+
+                const activeAssignment = await this.nurseAssignmentRepository
+                    .findActiveByFacilityId(data.id);
+
+                if (!activeAssignment) {
+                    return new HealthFacilityAdminItemDto(
+                        data.id,
+                        data.name,
+                        data.address,
+                        null,
+                        false,
+                        "No nurse assigned yet"
+                    );
+                }
+
+                const nurse = await this.userRepository.findNurseById(activeAssignment.getNurseId());
+                const nurseData = nurse?.toPrimitives();
+
+                return new HealthFacilityAdminItemDto(
+                    data.id,
+                    data.name,
+                    data.address,
+                    nurseData ? `${nurseData.name} ${nurseData.lastname}` : null,
+                    true
+                );
+            })
+        );
+
+        return new HealthFacilityAdminListResponseDto(
+            healthFacilities.length,
+            healthFacilities
+        );
     }
 
     async listUnassignedNurses(
