@@ -341,6 +341,30 @@ export class HealthFacilityController {
             }
     };
 
+    /**
+     * Verifica si hay enfermeros disponibles para asignar a una nueva posta
+     */
+    canRegisterFacility = async (req: AuthRequest, res: Response) => {
+        try {
+            const result = await this.healthFacilityFacade.canRegisterFacility();
+            res.status(200).json(result);
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    };
+
+    /**
+     * Lista todas las postas con información de asignación (para admin)
+     */
+    listAllHealthFacilities = async (req: AuthRequest, res: Response) => {
+        try {
+            const result = await this.healthFacilityFacade.listAllHealthFacilities();
+            res.status(200).json(result);
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    };
+
 
         // Ayuda a manejar parámetros que pueden ser string o array de strings (en caso de múltiples valores)
     private getStringParam(param: string | string[] | undefined): string | undefined {

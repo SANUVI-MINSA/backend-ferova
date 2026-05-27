@@ -12,6 +12,8 @@ import {Appointment} from "../../../domain/model/entities/Appointment";
 import {GetFacilityAvailableSlotsQuery} from "../../../domain/model/queries/GetFacilityAvailableSlotsQuery";
 import {GetMotherNextAppointmentQuery} from "../../../domain/model/queries/GetMotherNextAppointmentQuery";
 import {ListUnassignedNursesQuery} from "../../../domain/model/queries/ListUnassignedNursesQuery";
+import {CanRegisterResponseDto} from "../../../application/dto/CanRegisterResponseDto";
+import {HealthFacilityAdminListResponseDto} from "../../../application/dto/HealthFacilityAdminListResponseDto";
 
 export class HealthFacilityFacade {
 
@@ -130,6 +132,14 @@ export class HealthFacilityFacade {
             .getMotherNextAppointment(
                 query
             );
+    }
+
+    async canRegisterFacility(): Promise<CanRegisterResponseDto> {
+        return await this.queryService.canRegisterFacility({});
+    }
+
+    async listAllHealthFacilities(): Promise<HealthFacilityAdminListResponseDto> {
+        return await this.queryService.listAllHealthFacilities({});
     }
 
     async listUnassignedNurses(
