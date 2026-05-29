@@ -6,6 +6,8 @@ import {GetFacilitiesAnalyticsQuery} from "../../domain/model/queries/GetFacilit
 import {FacilitiesAnalyticsResponseDto} from "../dto/FacilityAnalyticsItemDto";
 import {GetFacilityHeatmapDataQuery} from "../../domain/model/queries/GetFacilityHeatmapDataQuery";
 import {HeatmapDataResponseDto} from "../dto/HeatmapPointDto";
+import {GetTopFacilitiesQuery} from "../../domain/model/queries/GetTopFacilitiesQuery";
+import {TopFacilitiesResponseDto} from "../dto/TopFacilitiesResponseDto";
 
 export class AnalyticsQueryServiceImpl implements AnalyticsQueryService {
 
@@ -29,5 +31,11 @@ export class AnalyticsQueryServiceImpl implements AnalyticsQueryService {
         query: GetFacilityHeatmapDataQuery
     ): Promise<HeatmapDataResponseDto> {
         return await this.analyticsRepository.getFacilityHeatmapData(query.riskLevelFilter);
+    }
+
+    async getTopFacilities(
+        query: GetTopFacilitiesQuery
+    ): Promise<TopFacilitiesResponseDto> {
+        return await this.analyticsRepository.getTopFacilities();
     }
 }
