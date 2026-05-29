@@ -8,12 +8,19 @@ import {GetFacilityHeatmapDataQuery} from "../../domain/model/queries/GetFacilit
 import {HeatmapDataResponseDto} from "../dto/HeatmapPointDto";
 import {GetTopFacilitiesQuery} from "../../domain/model/queries/GetTopFacilitiesQuery";
 import {TopFacilitiesResponseDto} from "../dto/TopFacilitiesResponseDto";
+import {PdfReportService} from "./PdfReportService";
+import {GeneratePdfReportQuery} from "../../domain/model/queries/GeneratePdfReportQuery";
+import {PdfReportResponseDto} from "../dto/PdfReportResponseDto";
 
 export class AnalyticsQueryServiceImpl implements AnalyticsQueryService {
 
+    private pdfReportService: PdfReportService;
+
     constructor(
         private analyticsRepository: MongoAnalyticsRepository
-    ) {}
+    ) {
+        this.pdfReportService = new PdfReportService();
+    }
 
     async getDashboardSummary(
         query: GetDashboardSummaryQuery
@@ -38,4 +45,27 @@ export class AnalyticsQueryServiceImpl implements AnalyticsQueryService {
     ): Promise<TopFacilitiesResponseDto> {
         return await this.analyticsRepository.getTopFacilities();
     }
+
+    async generatePdfReport(
+        query: GeneratePdfReportQuery
+    ): Promise<PdfReportResponseDto> {
+        // Obtener datos
+        const summary = await this.analyticsRepository.getDashboardSummary();
+        const facilitiesResponse = await this.analyticsRepository.getFacilitiesAnalytics(undefined);
+
+        // Generar PDF
+        const pdfBuffer = await this.pdfReportService.generateFacilitiesReport(
+            summary,
+            facilitiesResponse.facilities
+        );
+
+        // Convertir a base64
+        const pdfBase64 = pdfBuffer.toString('base64');
+
+        return new PdfReportResponseDto(
+            pdfBase64,
+            `reporte_postas_${new Date().toISOString().split('T')[0]}.pdf`
+        );
+    }
+
 }
