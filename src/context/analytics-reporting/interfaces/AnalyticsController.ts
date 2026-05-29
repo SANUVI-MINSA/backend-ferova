@@ -52,4 +52,23 @@ export class AnalyticsController {
         }
     };
 
+    // AnalyticsController.ts - Agregar este nuevo método
+    generatePdfReport = async (req: AuthRequest, res: Response) => {
+        try {
+            const result = await this.analyticsQueryService.generatePdfReport({});
+
+            // Convertir base64 a buffer
+            const pdfBuffer = Buffer.from(result.pdfBase64, 'base64');
+
+            // Configurar headers para descarga
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename="${result.fileName}"`);
+            res.setHeader('Content-Length', pdfBuffer.length);
+
+            // Enviar el buffer directamente
+            res.send(pdfBuffer);
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    };
 }

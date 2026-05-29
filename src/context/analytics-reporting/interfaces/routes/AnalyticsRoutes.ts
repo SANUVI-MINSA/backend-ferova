@@ -140,4 +140,35 @@ router.get(
     analyticsController.getFacilityHeatmapData
 );
 
+/**
+ * @swagger
+ * /api/analytics/report/pdf:
+ *   get:
+ *     summary: Generate PDF report with facilities summary
+ *     tags:
+ *       - Analytics
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: PDF generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 pdfBase64:
+ *                   type: string
+ *                   description: PDF file in base64 format
+ *                 fileName:
+ *                   type: string
+ *                   example: reporte_postas_2024-01-15.pdf
+ */
+router.get(
+    "/report/pdf",
+    authenticate,
+    requireAdmin,
+    analyticsController.generatePdfReport
+);
+
 export default router;
