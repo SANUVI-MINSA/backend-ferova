@@ -7,6 +7,7 @@ import nutritionalDiaryRoutes from "./src/context/nutration-diary/interfaces/rou
 import communicationRoutes from "./src/context/comunication-management/interfaces/routes/CommunicationRoutes"
 import treatmentRoutes from "./src/context/treatment-tracking/interfaces/routes/TreatmentRoutes";
 import AchievementsRewards from "./src/context/achievements-rewards/interfaces/routes/AchievementRoutes"
+import AnalyticsRoutes from "./src/context/analytics-reporting/interfaces/routes/AnalyticsRoutes";
 
 import testRoutes from "./src/shared/test/route-testing"
 
@@ -45,8 +46,12 @@ app.use("/api/achievements-rewards",
     AchievementsRewards
     );
 
+app.use("/api/analytics",
+    AnalyticsRoutes
+);
+
 app.use("/api/test",
         testRoutes
-    )
+    );
 
 export default app;

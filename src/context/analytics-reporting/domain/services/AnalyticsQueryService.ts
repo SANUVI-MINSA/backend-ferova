@@ -1,0 +1,30 @@
+import {GetDashboardSummaryQuery} from "../model/queries/GetDashboardSummaryQuery";
+import {GetFacilitiesAnalyticsQuery} from "../model/queries/GetFacilitiesAnalyticsQuery";
+import {GetFacilityHeatmapDataQuery} from "../model/queries/GetFacilityHeatmapDataQuery";
+import {DashboardSummaryResponseDto} from "../../application/dto/DashboardSummaryResponseDto";
+import {FacilitiesAnalyticsResponseDto} from "../../application/dto/FacilityAnalyticsItemDto";
+import {HeatmapDataResponseDto} from "../../application/dto/HeatmapPointDto";
+import {GetTopFacilitiesQuery} from "../model/queries/GetTopFacilitiesQuery";
+import {TopFacilitiesResponseDto} from "../../application/dto/TopFacilitiesResponseDto";
+import {GeneratePdfReportQuery} from "../model/queries/GeneratePdfReportQuery";
+import {PdfReportResponseDto} from "../../application/dto/PdfReportResponseDto";
+
+export interface AnalyticsQueryService {
+    getDashboardSummary(
+        query: GetDashboardSummaryQuery
+    ): Promise<DashboardSummaryResponseDto>;
+
+    getFacilitiesAnalytics(
+        query: GetFacilitiesAnalyticsQuery
+    ): Promise<FacilitiesAnalyticsResponseDto>;
+
+    getFacilityHeatmapData(
+        query: GetFacilityHeatmapDataQuery
+    ): Promise<HeatmapDataResponseDto>;
+
+    getTopFacilities(query: GetTopFacilitiesQuery): Promise<TopFacilitiesResponseDto>;
+
+    generatePdfReport(
+        query: GeneratePdfReportQuery
+    ): Promise<PdfReportResponseDto>;
+}

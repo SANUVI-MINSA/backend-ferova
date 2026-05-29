@@ -20,6 +20,7 @@ import {
     HealthFacilityAdminItemDto,
     HealthFacilityAdminListResponseDto
 } from "../../dto/HealthFacilityAdminListResponseDto";
+import moment from 'moment-timezone';
 
 export class HealthFacilityQueryServiceImpl
     implements HealthFacilityQueryService {
@@ -208,11 +209,10 @@ export class HealthFacilityQueryServiceImpl
         query: GetPatientAppointmentHistoryQuery
     ): Promise<any[]> {
 
-        // Obtener todas las citas del paciente
         const appointments = await this.appointmentRepository
             .findByPatientId(query.patientId);
 
-        const now = new Date();
+        const nowPeru = moment().tz('America/Lima');
 
         // Filtrar citas que deben ir al historial
         const historyAppointments = appointments.filter(appointment => {
@@ -237,7 +237,7 @@ export class HealthFacilityQueryServiceImpl
                 b.toPrimitives().appointmentDate,
                 b.toPrimitives().appointmentTime
             );
-            return dateB.getTime() - dateA.getTime(); // Más reciente primero
+            return dateB.getTime() - dateA.getTime();
         });
 
         // Enriquecer con datos adicionales
@@ -253,12 +253,10 @@ export class HealthFacilityQueryServiceImpl
                 return {
                     appointment,
                     facilityName,
-                    // Datos adicionales útiles para el frontend
                     status: appointmentData.status,
                     statusLabel: appointmentData.status === "CANCELLED" ? "Cancelada" : "Completada",
                     wasCancelled: appointmentData.status === "CANCELLED",
                     appointmentDateTime: `${appointmentData.appointmentDate} ${appointmentData.appointmentTime}`,
-                    // Para canceladas, mostrar cuándo se canceló (si tienes ese campo)
                     cancelledAt: (appointment as any).cancelledAt || null
                 };
             })
@@ -271,24 +269,19 @@ export class HealthFacilityQueryServiceImpl
      * Verifica si una cita ya pasó
      */
     private isAppointmentPast(date: string, time: string): boolean {
-        const now = new Date();
-        const appointmentDateTime = this.toDateTime(date, time);
-        return appointmentDateTime < now;
+        const nowPeru = moment().tz('America/Lima');
+        const appointmentDateTime = moment.tz(
+            `${date} ${time}`,
+            'YYYY-MM-DD HH:mm',
+            'America/Lima'
+        );
+        return appointmentDateTime.isBefore(nowPeru);
     }
-
     /**
      * Convierte fecha y hora a objeto Date
      */
     private toDateTime(date: string, time: string): Date {
-        const [year, month, day] = date.split('-');
-        const [hours, minutes] = time.split(':');
-        return new Date(
-            parseInt(year),
-            parseInt(month) - 1,
-            parseInt(day),
-            parseInt(hours),
-            parseInt(minutes)
-        );
+        return moment.tz(`${date} ${time}`, 'YYYY-MM-DD HH:mm', 'America/Lima').toDate();
     }
 
     async getNurseAppointmentSchedule(

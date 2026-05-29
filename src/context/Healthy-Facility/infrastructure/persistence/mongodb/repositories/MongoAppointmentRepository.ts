@@ -2,6 +2,7 @@ import {AppointmentRepository} from "../../../../domain/repositories/Appointment
 import {Appointment} from "../../../../domain/model/entities/Appointment";
 import {AppointmentMapper} from "../../../mappers/AppointmentMapper";
 import {AppointmentModel} from "../models/AppointmentModel";
+import moment from 'moment-timezone';
 
 export class MongoAppointmentRepository implements AppointmentRepository {
 
@@ -132,26 +133,25 @@ export class MongoAppointmentRepository implements AppointmentRepository {
      * @param motherId - ID de la madre
      * @returns La próxima cita futura o null si no existe
      */
+
     async findNextAppointmentByMotherId(
         motherId: string
     ): Promise<Appointment | null> {
+        // Obtener fecha y hora actual en zona horaria de Perú
+        const nowPeru = moment().tz('America/Lima');
+        const today = nowPeru.format('YYYY-MM-DD');
+        const currentTime = nowPeru.format('HH:mm');
 
-        // Obtener fecha y hora actual en formato ISO (YYYY-MM-DD y HH:MM)
-        const now = new Date();
-        const today = now.toISOString().split('T')[0]; // YYYY-MM-DD
-        const currentTime = now.toTimeString().slice(0, 5); // HH:MM
+        console.log(`📍 [findNextAppointmentByMotherId] Hora actual (Perú): ${today} ${currentTime}`);
 
-        // Construir query compleja
         const appointment = await AppointmentModel
             .findOne({
                 motherId,
                 status: "CONFIRMED",
                 $or: [
-                    // Citas con fecha futura (cualquier hora)
-                    {
-                        appointmentDate: { $gt: today }
-                    },
-                    // Citas de hoy que aún no han pasado la hora
+                    // Citas con fecha futura
+                    { appointmentDate: { $gt: today } },
+                    // Citas de hoy con hora posterior a la actual
                     {
                         appointmentDate: today,
                         appointmentTime: { $gt: currentTime }
@@ -159,14 +159,11 @@ export class MongoAppointmentRepository implements AppointmentRepository {
                 ]
             })
             .sort({
-                appointmentDate: 1,  // Ordenar por fecha ascendente
-                appointmentTime: 1   // Y por hora ascendente
+                appointmentDate: 1,
+                appointmentTime: 1
             });
 
-        if (!appointment) {
-            return null;
-        }
-
+        if (!appointment) return null;
         return AppointmentMapper.toDomain(appointment);
     }
 }
