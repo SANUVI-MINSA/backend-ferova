@@ -4,6 +4,7 @@ import {HealthyFacilityRepository} from "../../../../../Healthy-Facility/domain/
 import {DashboardSummaryResponseDto} from "../../../../application/dto/DashboardSummaryResponseDto";
 import {FacilitiesAnalyticsResponseDto, FacilityAnalyticsItemDto} from "../../../../application/dto/FacilityAnalyticsItemDto";
 import {HeatmapDataResponseDto, HeatmapPointDto} from "../../../../application/dto/HeatmapPointDto";
+import {TopFacilitiesResponseDto} from "../../../../application/dto/TopFacilitiesResponseDto";
 
 export class MongoAnalyticsRepository {
 
@@ -153,5 +154,27 @@ export class MongoAnalyticsRepository {
         }
 
         return result.sort((a, b) => b.adherenceRate - a.adherenceRate);
+    }
+
+    async getTopFacilities(limit: number = 4): Promise<TopFacilitiesResponseDto> {
+        const facilities = await this.computeFacilitiesAnalytics();
+        const topFacilities = facilities
+            .sort((a, b) => b.adherenceRate - a.adherenceRate)
+            .slice(0, limit);
+
+        const items = topFacilities.map(f =>
+            new FacilityAnalyticsItemDto(
+                f.facilityId,
+                f.facilityName,
+                f.districtName,
+                f.adherenceRate,
+                f.riskLevel,
+                f.totalPatients,
+                f.totalConfirmed,
+                f.totalOmitted
+            )
+        );
+
+        return new TopFacilitiesResponseDto(items);
     }
 }
