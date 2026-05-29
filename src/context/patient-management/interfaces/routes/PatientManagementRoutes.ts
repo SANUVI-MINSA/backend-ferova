@@ -67,6 +67,48 @@ router.post(
 
 /**
  * @swagger
+ * /api/patients/my-patients:
+ *   get:
+ *     summary: Get mother's patients (only basic info)
+ *     tags:
+ *       - Patients
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Patients retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 motherId:
+ *                   type: string
+ *                 patients:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *       400:
+ *         description: Invalid request
+ *       404:
+ *         description: No patients found
+ *       500:
+ *         description: Internal server error
+ */
+router.get(
+    "/my-patients",
+    authenticate,
+    requireMother,
+    patientManagementController.getMyPatients
+);
+
+/**
+ * @swagger
  * /api/patients/assign-nurse:
  *   post:
  *     summary: Assign patient to nurse
@@ -111,41 +153,6 @@ router.post(
     patientManagementController.assignPatientToNurse
 );
 
-/**
- * @swagger
- * /api/patients/{id}:
- *   get:
- *     summary: Obtener información básica de un paciente
- *     tags:
- *       - Patients
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID del paciente
- *     responses:
- *       200:
- *         description: Información del paciente obtenida exitosamente
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: string
- *                 name:
- *                   type: string
- *                 lastName:
- *                   type: string
- *       404:
- *         description: Patient not found
- */
-router.get(
-    "/:id",
-    patientManagementController.getPatientBasicInfo  // ✅ Sin middlewares de autenticación
-);
 
 /**
  * @swagger
@@ -768,44 +775,38 @@ router.get(
 
 /**
  * @swagger
- * /api/patients/my-patients:
+ * /api/patients/{id}:
  *   get:
- *     summary: Get mother's patients (only basic info)
+ *     summary: Obtener información básica de un paciente
  *     tags:
  *       - Patients
- *     security:
- *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del paciente
  *     responses:
  *       200:
- *         description: Patients retrieved successfully
+ *         description: Información del paciente obtenida exitosamente
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 motherId:
+ *                 id:
  *                   type: string
- *                 patients:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: string
- *                       name:
- *                         type: string
- *       400:
- *         description: Invalid request
+ *                 name:
+ *                   type: string
+ *                 lastName:
+ *                   type: string
  *       404:
- *         description: No patients found
- *       500:
- *         description: Internal server error
+ *         description: Patient not found
  */
 router.get(
-    "/my-patients",
-    authenticate,
-    requireMother,
-    patientManagementController.getMyPatients
+    "/:id",
+    patientManagementController.getPatientBasicInfo  // ✅ Sin middlewares de autenticación
 );
 
 export default router;
