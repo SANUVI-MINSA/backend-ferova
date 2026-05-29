@@ -4,6 +4,8 @@ import {GetFacilityHeatmapDataQuery} from "../model/queries/GetFacilityHeatmapDa
 import {DashboardSummaryResponseDto} from "../../application/dto/DashboardSummaryResponseDto";
 import {FacilitiesAnalyticsResponseDto} from "../../application/dto/FacilityAnalyticsItemDto";
 import {HeatmapDataResponseDto} from "../../application/dto/HeatmapPointDto";
+import {GetTopFacilitiesQuery} from "../model/queries/GetTopFacilitiesQuery";
+import {TopFacilitiesResponseDto} from "../../application/dto/TopFacilitiesResponseDto";
 
 export interface AnalyticsQueryService {
     getDashboardSummary(
@@ -17,4 +19,7 @@ export interface AnalyticsQueryService {
     getFacilityHeatmapData(
         query: GetFacilityHeatmapDataQuery
     ): Promise<HeatmapDataResponseDto>;
+
+    getTopFacilities(query: GetTopFacilitiesQuery): Promise<TopFacilitiesResponseDto>;
+
 }
