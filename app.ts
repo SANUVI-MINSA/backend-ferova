@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";  // ✅ Importar CORS
 import { setupSwagger } from "./src/shared/infrastructure/documentation/swagger";
 import healthFacilityRoutes from "./src/context/Healthy-Facility/interfaces/routes/HealthFacilityRoutes";
 import userRoutes from "./src/context/iam/interfaces/routes/UserRoutes";
@@ -12,6 +13,15 @@ import AnalyticsRoutes from "./src/context/analytics-reporting/interfaces/routes
 import testRoutes from "./src/shared/test/route-testing"
 
 const app = express();
+
+app.use(cors({
+    origin: '*', // Permitir todas las origins (para desarrollo)
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}));
+
+
 
 app.use(express.json());
 
@@ -53,5 +63,27 @@ app.use("/api/analytics",
 app.use("/api/test",
         testRoutes
     );
+
+app.get('/', (req, res) => {
+    res.json({
+        message: 'Ferova API - Healthcare Management System',
+        version: '1.0.0',
+        status: 'online',
+        documentation: '/api-docs',
+        environment: process.env.NODE_ENV || 'development',
+        database: process.env.DB_TYPE || 'production',
+        endpoints: {
+            users: '/api/users',
+            patients: '/api/patients',
+            healthFacilities: '/api/health-facilities',
+            nutritionalDiary: '/api/nutritional-diary',
+            communication: '/api/communication',
+            treatmentTracking: '/api/treatment-tracking',
+            achievementsRewards: '/api/achievements-rewards',
+            analytics: '/api/analytics',
+            test: '/api/test'
+        }
+    });
+});
 
 export default app;
