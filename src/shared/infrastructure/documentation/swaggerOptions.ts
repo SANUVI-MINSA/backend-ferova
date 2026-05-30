@@ -10,7 +10,7 @@ const swaggerOptions: Options = {
         },
         servers: [
             {
-                url: "https://backend-ferova-production-a7ac.up.railway.app",
+                url: "https://ferova-production.up.railway.app",
                 description: "Production server (Railway)"
             }
         ],
