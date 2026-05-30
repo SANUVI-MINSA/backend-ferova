@@ -39,6 +39,12 @@ export class Control {
             this.hemoglobinLevel
                 .getValue();
 
+        if (value === null) {
+            throw new Error(
+                "Hemoglobin level cannot be null when calculating anemia status"
+            );
+        }
+
         if (value < 7) {
             return AnemiaStatus.SEVERE;
         }
