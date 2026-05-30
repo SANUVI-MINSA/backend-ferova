@@ -7,9 +7,8 @@
     "dev": "ts-node-dev --respawn --transpile-only server.ts",
     "dev:prod": "cross-env NODE_ENV=production ts-node-dev --respawn --transpile-only server.ts",
     "build": "tsc",
-    "_comentario": "El start se ejecuta el backend de manera local se cambio por un error que no corria por la dirrecion incorrecta  y por que no era la ejeucion de typescript",
-    "start": "cross-env NODE_ENV=production ts-node --transpile-only server.ts",
-    "seed:foods": "ts-node --transpile-only src/scripts/seed-food-items.ts"
+    "start": "cross-env NODE_ENV=production node dist/server.js",
+    "seed:foods": "node dist/src/scripts/seed-food-items.js"
   },
   "keywords": [],
   "author": "",

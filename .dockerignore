@@ -1,0 +1,36 @@
+# Dependencias
+node_modules
+
+# Compilado
+dist
+
+# Variables de entorno (secretos)
+.env
+.env.development
+.env.production
+.env.local
+.env.*.local
+
+# Control de versiones
+.git
+.gitignore
+
+# Archivos de logs
+*.log
+npm-debug.log*
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Railway
+.railway
+
+# Documentación (opcional)
+README.md
