@@ -7,10 +7,8 @@ export class ConfirmDoseCommandFromResourceAssembler {
         resource: ConfirmDoseResource
     ): ConfirmDoseCommand {
         return {
-            treatmentId: resource.treatmentId,
             patientId: resource.patientId,
             motherId: resource.motherId,
-            dailyDoseId: resource.dailyDoseId
         };
     }
 }
