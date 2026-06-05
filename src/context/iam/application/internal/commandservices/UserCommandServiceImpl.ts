@@ -145,32 +145,38 @@ export class UserCommandServiceImpl implements UserCommandService {
         return token;
     }
 
-    // En tu UserCommandServiceImpl.ts - método requestResetCode
-    async requestResetCode(command: RequestResetCodeCommand): Promise<void> {
-        console.log(`[DEBUG] 1. Iniciando requestResetCode para: ${command.email}`);
+    async requestResetCode(
+        command: RequestResetCodeCommand
+    ): Promise<void> {
 
         const email = new Email(command.email);
-        console.log(`[DEBUG] 2. Email validado: ${email.getValue()}`);
 
-        const user = await this.userRepository.findByEmail(email);
-        console.log(`[DEBUG] 3. Usuario encontrado? ${!!user}`);
+        const user =
+            await this.userRepository.findByEmail(email);
 
         if (!user) {
             throw new Error("User not found");
         }
 
-        const code = Math.floor(1000 + Math.random() * 9000).toString();
-        console.log(`[DEBUG] 4. Código generado: ${code}`);
+        const code = Math.floor(
+            1000 + Math.random() * 9000
+        ).toString();
 
-        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-        console.log(`[DEBUG] 5. Expira en: ${expiresAt}`);
+        const expiresAt =
+            new Date(
+                Date.now() + 10 * 60 * 1000
+            );
 
-        await this.userRepository.saveResetCode(email, code, expiresAt);
-        console.log(`[DEBUG] 6. Código guardado en DB`);
+        await this.userRepository.saveResetCode(
+            email,
+            code,
+            expiresAt
+        );
 
-        console.log(`[DEBUG] 7. Intentando enviar email a: ${command.email}`);
-        await this.emailService.sendResetCode(command.email, code);
-        console.log(`[DEBUG] 8. ✅ Email enviado exitosamente`);
+        await this.emailService.sendResetCode(
+            command.email,
+            code
+        );
     }
 
     async resetPassword(

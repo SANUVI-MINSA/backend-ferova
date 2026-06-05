@@ -1,55 +1,45 @@
-import nodemailer from "nodemailer";
-import dns from "dns";
+import { Resend } from 'resend';
 
 export class EmailService {
+    private resend: Resend;
 
-    async sendResetCode(email: string, code: string): Promise<void> {
-        console.log(`[EMAIL] 📧 Iniciando envío a: ${email}`);
-        console.log(`[EMAIL] 📧 Código: ${code}`);
-        console.log(`[EMAIL] 📧 EMAIL_USER: ${process.env.EMAIL_USER ? '✅ Configurado' : '❌ FALTA'}`);
-        console.log(`[EMAIL] 📧 EMAIL_PASS: ${process.env.EMAIL_PASS ? '✅ Configurado' : '❌ FALTA'}`);
+    constructor() {
+        this.resend = new Resend(process.env.RESEND_API_KEY);
+    }
 
-        // Verificar conectividad
-        const dns = require('dns');
-        dns.resolve4('smtp.gmail.com', (err, addresses) => {
-            console.log(`[EMAIL] 📡 Resolución IPv4 de smtp.gmail.com:`, addresses);
-        });
-
-        dns.resolve6('smtp.gmail.com', (err, addresses) => {
-            console.log(`[EMAIL] 📡 Resolución IPv6 de smtp.gmail.com:`, addresses);
-        });
-
+    async sendResetCode(
+        email: string,
+        code: string
+    ): Promise<void> {
         try {
-            const transporter = nodemailer.createTransport({
-                service: "gmail",
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS
-                },
-                family: 4,
-                tls: { rejectUnauthorized: false },
-                connectionTimeout: 10000,
-                greetingTimeout: 10000,
-                socketTimeout: 15000
-            } as any);
-
-            console.log(`[EMAIL] 📡 Transporter creado, enviando...`);
-
-            await transporter.sendMail({
-                from: process.env.EMAIL_USER,
+            const { data, error } = await this.resend.emails.send({
+                from: process.env.EMAIL_FROM || "Ferova <onboarding@resend.dev>",
                 to: email,
                 subject: "Ferova Password Reset",
-                text: `Your reset code is: ${code}`
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px;">
+                        <h2>Recuperación de Contraseña - Ferova</h2>
+                        <p>Haz solicitado restablecer tu contraseña.</p>
+                        <p>Tu código de verificación es:</p>
+                        <h1 style="color: #4F46E5; font-size: 32px;">${code}</h1>
+                        <p>Este código expira en 10 minutos.</p>
+                        <hr />
+                        <p style="font-size: 12px; color: #666;">Si no solicitaste este cambio, ignora este mensaje.</p>
+                    </div>
+                `,
+                text: `Tu código de recuperación es: ${code}`
             });
 
-            console.log(`[EMAIL] ✅ Enviado exitosamente a ${email}`);
+            if (error) {
+                console.error('Error sending email:', error);
+                throw new Error(`Failed to send email: ${error.message}`);
+            }
+
+            console.log(`Email sent to ${email}, id: ${data?.id}`);
 
         } catch (error) {
-            console.log(`[EMAIL] ❌ ERROR DETALLADO:`);
-            console.log(`[EMAIL] Mensaje: ${error.message}`);
-            console.log(`[EMAIL] Código: ${error.code}`);
-            console.log(`[EMAIL] Stack: ${error.stack}`);
-            throw error;
+            console.error('Email service error:', error);
+            throw new Error('Could not send reset code email');
         }
     }
 }
