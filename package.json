@@ -24,6 +24,7 @@
     "node-cron": "^4.2.1",
     "nodemailer": "^8.0.7",
     "pdfkit": "^0.18.0",
+    "resend": "^6.12.4",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
   },
