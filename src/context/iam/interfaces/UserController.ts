@@ -99,23 +99,17 @@ export class UserController {
         }
     };
 
-    requestResetCode = async (
-        req: Request,
-        res: Response
-    ) => {
+    requestResetCode = async (req: Request, res: Response) => {
+        console.log(`[CONTROLLER] 📨 Request recibida: POST /password/request-code`);
+        console.log(`[CONTROLLER] Body:`, req.body);
+
         try {
-            await this.userFacade.requestResetCode(
-                req.body
-            );
-
-            res.status(200).json({
-                message: "Reset code sent successfully"
-            });
-
+            await this.userFacade.requestResetCode(req.body);
+            console.log(`[CONTROLLER] ✅ Éxito`);
+            res.status(200).json({ message: "Reset code sent successfully" });
         } catch (error: any) {
-            res.status(400).json({
-                error: error.message
-            });
+            console.log(`[CONTROLLER] ❌ Error:`, error.message);
+            res.status(400).json({ error: error.message });
         }
     };
 
