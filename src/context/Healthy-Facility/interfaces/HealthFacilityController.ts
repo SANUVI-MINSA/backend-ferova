@@ -216,8 +216,8 @@ export class HealthFacilityController {
                     name: data.name,
                     status: data.status,
                     distanceKm: item.distanceKm,
-                    latitude: data.coordinates.latitude,
-                    longitude: data.coordinates.longitude
+                    latitude: data.coordinates.lat,
+                    longitude: data.coordinates.lng
                 };
             });
 
