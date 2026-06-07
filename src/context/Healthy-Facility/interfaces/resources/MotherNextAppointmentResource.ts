@@ -1,4 +1,5 @@
 export type MotherNextAppointmentResource = {
+    appointmentId: string;
     appointmentDate: string;
     appointmentTime: string;
     patientId: string;
