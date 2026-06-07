@@ -13,6 +13,9 @@ MotherNextAppointmentResourceAssembler {
                 .toPrimitives();
 
         return {
+            appointmentId:
+            data.id,
+
             appointmentDate:
             data.appointmentDate,
 
