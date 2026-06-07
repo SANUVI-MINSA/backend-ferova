@@ -42,6 +42,10 @@ export class UserFacade {
         );
     }
 
+    async getUserByEmail(email: string) {
+        return this.queryService.getUserByEmail({ email });
+    }
+
     async verifyResetCode(
         data: any
     ): Promise<void> {

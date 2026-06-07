@@ -159,5 +159,18 @@ export class UserController {
         }
     }
 
+    getUserByEmail = async (req: Request, res: Response) => {
+        try {
+            const user = await this.userFacade.getUserByEmail(req.params.email as string);
+            if (!user) {
+                return res.status(404).json({ error: "User not found" });
+            }
+            const response = UserResourceAssembler.toResource(user);
+            res.status(200).json(response);
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    };
+
 
 }
