@@ -107,6 +107,30 @@ router.post(
 
 /**
  * @swagger
+ * /api/users/email/{email}:
+ *   get:
+ *     summary: Get user by email
+ *     tags:
+ *       - Users
+ *     parameters:
+ *       - in: path
+ *         name: email
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User found
+ *       404:
+ *         description: User not found
+ */
+router.get(
+    "/email/:email",
+    userController.getUserByEmail
+);
+
+/**
+ * @swagger
  * /api/users/{id}:
  *   get:
  *     summary: Get user by id
