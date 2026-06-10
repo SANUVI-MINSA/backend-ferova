@@ -529,93 +529,49 @@ export class TreatmentQueryServiceImpl
 
     async getTodayDose(query: GetTodayDoseQuery): Promise<any> {
         // Validar pacientes
-        const patient =
-            await this
-                .patientRepository
-                .findById(
-                    query.patientId
-                );
+        const patient = await this.patientRepository.findById(query.patientId);
 
         if (!patient) {
             return {
                 canConfirm: false,
-                message:
-                    "Register your patient first"
+                message: "Register your patient first"
             };
         }
 
-        // Validar madre
+        const patientData = patient.toPrimitives();
 
-        const patientData =
-            patient.toPrimitives();
-
-        if (
-            patientData.motherId !==
-            query.motherId
-        ) {
-            throw new Error(
-                "Mother is not assigned to this patient"
-            );
+        if (patientData.motherId !== query.motherId) {
+            throw new Error("Mother is not assigned to this patient");
         }
 
-        // Buscar tratamiento activo
-
-        const treatment =
-            await this
-                .treatmentRepository
-                .findActiveByPatientId(
-                    query.patientId
-                );
+        const treatment = await this.treatmentRepository.findActiveByPatientId(query.patientId);
 
         if (!treatment) {
             return {
                 canConfirm: false,
-                message:
-                    "Treatment has not started yet"
+                message: "Treatment has not started yet"
             };
         }
 
-        // Buscar dosis de hoy
-
-        const todayDose =
-            await this
-                .dailyDoseRepository
-                .findTodayDose(
-                    treatment.getId()
-                );
+        const todayDose = await this.dailyDoseRepository.findTodayDose(treatment.getId());
 
         if (!todayDose) {
             return {
                 canConfirm: false,
-                message:
-                    "No scheduled dose for today"
+                message: "No scheduled dose for today"
             };
         }
 
-        // Responses
+        const treatmentData = treatment.toPrimitives();
 
         return {
-            patientId:
-            query.patientId,
-
-            treatmentId:
-                treatment.getId(),
-
-            dailyDoseId:
-                todayDose.getId(),
-
-            scheduledDate:
-                todayDose
-                    .getScheduledDate(),
-
-            status:
-                todayDose
-                    .getStatus(),
-
-            canConfirm:
-                todayDose
-                    .getStatus() ===
-                "PENDING"
+            patientId: query.patientId,
+            treatmentId: treatment.getId(),
+            dailyDoseId: todayDose.getId(),
+            scheduledDate: todayDose.getScheduledDate(),
+            status: todayDose.getStatus(),
+            canConfirm: todayDose.getStatus() === "PENDING",
+            dosingHours: treatmentData.dosingHours
         };
     }
 

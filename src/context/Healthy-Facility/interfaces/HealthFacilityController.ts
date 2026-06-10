@@ -207,7 +207,7 @@ export class HealthFacilityController {
                     userLatitude: latitude,
                     userLongitude: longitude,
                     motherId: motherId
-            });
+                });
 
             const response = facilities.map((item: any) => {
                 const data = item.facility.toPrimitives();
@@ -229,19 +229,18 @@ export class HealthFacilityController {
 
     getNurseAppointmentSchedule = async (req: AuthRequest, res: Response) => {
         try {
-            // ✅ CORRECTO: Obtener nurseId del token (similar a como se hace con motherId)
             const nurseId = req.user?.nurseId;
 
             if (!nurseId) {
                 return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
             }
 
-            const appointments = await this.healthFacilityFacade.getNurseAppointmentSchedule({
+            const enrichedAppointments = await this.healthFacilityFacade.getNurseAppointmentSchedule({
                 nurseId
             });
 
-            const response = appointments.map(appointment =>
-                NurseAppointmentScheduleAssembler.toResource(appointment)
+            const response = enrichedAppointments.map(item =>
+                NurseAppointmentScheduleAssembler.toResource(item.appointment, item.patientName)
             );
 
             res.status(200).json(response);
@@ -331,16 +330,16 @@ export class HealthFacilityController {
     };
 
     listDistricts = async (req: AuthRequest, res: Response) => {
-            try {
-                const districts = this.districtRepository.findAll();
-                const response = districts.map(district => ({
-                    id: district.getId(),
-                    name: district.getName()
-                }));
-                res.status(200).json(response);
-            } catch (error: any) {
-                res.status(400).json({ error: error.message });
-            }
+        try {
+            const districts = this.districtRepository.findAll();
+            const response = districts.map(district => ({
+                id: district.getId(),
+                name: district.getName()
+            }));
+            res.status(200).json(response);
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
     };
 
     /**
@@ -368,7 +367,7 @@ export class HealthFacilityController {
     };
 
 
-        // Ayuda a manejar parámetros que pueden ser string o array de strings (en caso de múltiples valores)
+    // Ayuda a manejar parámetros que pueden ser string o array de strings (en caso de múltiples valores)
     private getStringParam(param: string | string[] | undefined): string | undefined {
         if (!param) return undefined;
         return Array.isArray(param) ? param[0] : param;

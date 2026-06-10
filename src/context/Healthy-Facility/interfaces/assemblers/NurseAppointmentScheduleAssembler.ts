@@ -3,7 +3,8 @@ import {Appointment} from "../../domain/model/entities/Appointment";
 export class NurseAppointmentScheduleAssembler {
 
     static toResource(
-        appointment: Appointment
+        appointment: Appointment,
+        patientName: string
     ) {
         const data =
             appointment.toPrimitives();
@@ -13,6 +14,7 @@ export class NurseAppointmentScheduleAssembler {
             data.id,
             patientId:
             data.patientId,
+            patientName: patientName,
             appointmentDate:
             data.appointmentDate,
             appointmentTime:
