@@ -1,5 +1,7 @@
 export type ConfirmDoseCommand =
     Readonly<{
-        patientId: string
+        treatmentId: string;
+        patientId: string;
         motherId: string;
+        dailyDoseId: string;
     }>;
