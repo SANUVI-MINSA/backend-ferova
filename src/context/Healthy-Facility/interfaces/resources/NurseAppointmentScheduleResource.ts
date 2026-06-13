@@ -1,6 +1,7 @@
 export type NurseAppointmentScheduleResource = {
     appointmentId: string;
-    patientId: string; // Por ahora es un id patient, cuando construyamos el bounded context de paciente, lo cabiaremos a patientname
+    patientId: string;
+    patientName: string;
     appointmentDate: string;
     appointmentTime: string;
     status: string;

@@ -104,7 +104,7 @@ export class HealthFacilityFacade {
 
     async getNurseAppointmentSchedule(
         query: GetNurseAppointmentScheduleQuery
-    ): Promise<Appointment[]> {
+    ): Promise<any[]> {
 
         return await this.queryService
             .getNurseAppointmentSchedule(

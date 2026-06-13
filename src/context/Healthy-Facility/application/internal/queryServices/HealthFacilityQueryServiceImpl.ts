@@ -286,7 +286,7 @@ export class HealthFacilityQueryServiceImpl
 
     async getNurseAppointmentSchedule(
         query: GetNurseAppointmentScheduleQuery
-    ): Promise<Appointment[]> {
+    ): Promise<any[]> {
 
         // Obtener todas las citas confirmadas del enfermero
         const allAppointments = await this.appointmentRepository
@@ -301,10 +301,10 @@ export class HealthFacilityQueryServiceImpl
                 appointmentData.appointmentDate,
                 appointmentData.appointmentTime
             );
-            return appointmentDateTime > now; // Solo futuras
+            return appointmentDateTime > now;
         });
 
-        // Opcional: Ordenar por fecha y hora (más cercana primero)
+        // Ordenar por fecha y hora (más cercana primero)
         const sortedAppointments = futureAppointments.sort((a, b) => {
             const dateA = this.toDateTime(
                 a.toPrimitives().appointmentDate,
@@ -314,12 +314,30 @@ export class HealthFacilityQueryServiceImpl
                 b.toPrimitives().appointmentDate,
                 b.toPrimitives().appointmentTime
             );
-            return dateA.getTime() - dateB.getTime(); // Más cercana primero
+            return dateA.getTime() - dateB.getTime();
         });
 
-        return sortedAppointments;
-    }
+        const enrichedAppointments = await Promise.all(
+            sortedAppointments.map(async (appointment) => {
+                const appointmentData = appointment.toPrimitives();
 
+                // Obtener paciente por ID
+                const patient = await this.patientRepository
+                    .findById(appointmentData.patientId);
+
+                const patientName = patient
+                    ? `${patient.toPrimitives().name} ${patient.toPrimitives().lastName}`
+                    : "Desconocido";
+
+                return {
+                    appointment,
+                    patientName
+                };
+            })
+        );
+
+        return enrichedAppointments;
+    }
 
     async getFacilityAvailableSlots(
         query: GetFacilityAvailableSlotsQuery

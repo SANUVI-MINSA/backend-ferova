@@ -229,19 +229,18 @@ export class HealthFacilityController {
 
     getNurseAppointmentSchedule = async (req: AuthRequest, res: Response) => {
         try {
-            // ✅ CORRECTO: Obtener nurseId del token (similar a como se hace con motherId)
             const nurseId = req.user?.nurseId;
 
             if (!nurseId) {
                 return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
             }
 
-            const appointments = await this.healthFacilityFacade.getNurseAppointmentSchedule({
+            const enrichedAppointments = await this.healthFacilityFacade.getNurseAppointmentSchedule({
                 nurseId
             });
 
-            const response = appointments.map(appointment =>
-                NurseAppointmentScheduleAssembler.toResource(appointment)
+            const response = enrichedAppointments.map(item =>
+                NurseAppointmentScheduleAssembler.toResource(item.appointment, item.patientName)
             );
 
             res.status(200).json(response);
