@@ -1,14 +1,14 @@
 import { Request, Response } from "express";
-import {NutritionalDiaryFacade} from "./facade/NutritionalDiaryFacade";
+import { NutritionalDiaryFacade } from "./facade/NutritionalDiaryFacade";
 import {
     RegisterFoodEntryCommandFromResourceAssembler
 } from "./assemblers/RegisterFoodEntryCommandFromResourceAssembler";
-import {GetTodayNutritionalDiaryQueryAssembler} from "./assemblers/GetTodayNutritionalDiaryQueryAssembler";
-import {GetFoodItemsByCategoryQueryAssembler} from "./assemblers/GetFoodItemsByCategoryQueryAssembler";
-import {SearchFoodItemsQueryAssembler} from "./assemblers/SearchFoodItemsQueryAssembler";
-import {GetFoodItemDetailsQueryAssembler} from "./assemblers/GetFoodItemDetailsQueryAssembler";
-import {GetNutritionalHistoryQueryAssembler} from "./assemblers/GetNutritionalHistoryQueryAssembler";
-import {AuthRequest} from "../../../middlewares/auth.middleware";
+import { GetTodayNutritionalDiaryQueryAssembler } from "./assemblers/GetTodayNutritionalDiaryQueryAssembler";
+import { GetFoodItemsByCategoryQueryAssembler } from "./assemblers/GetFoodItemsByCategoryQueryAssembler";
+import { SearchFoodItemsQueryAssembler } from "./assemblers/SearchFoodItemsQueryAssembler";
+import { GetFoodItemDetailsQueryAssembler } from "./assemblers/GetFoodItemDetailsQueryAssembler";
+import { GetNutritionalHistoryQueryAssembler } from "./assemblers/GetNutritionalHistoryQueryAssembler";
+import { AuthRequest } from "../../../middlewares/auth.middleware";
 
 export class NutritionalDiaryController {
 
@@ -28,17 +28,14 @@ export class NutritionalDiaryController {
                 });
             }
 
-            // Tomar los datos del body sin motherId
             const { patientId, foodItemId, quantity } = req.body;
 
-            // Validar que todos los campos necesarios estén presentes
             if (!patientId || !foodItemId || !quantity) {
                 return res.status(400).json({
                     error: "Faltan campos requeridos: patientId, foodItemId, quantity"
                 });
             }
 
-            // Construir el command con el motherId del token
             const command = {
                 patientId,
                 motherId: motherIdFromToken,
@@ -46,19 +43,26 @@ export class NutritionalDiaryController {
                 quantity
             };
 
+            console.log(`[NutritionalDiaryController] registerFoodEntry - INICIO`);
+            console.log(`[NutritionalDiaryController] patientId: ${patientId}`);
+            console.log(`[NutritionalDiaryController] foodItemId: ${foodItemId}`);
+            console.log(`[NutritionalDiaryController] quantity: ${quantity}`);
+
             const result = await this.facade.registerFoodEntry(command);
             res.status(201).json(result);
 
         } catch (error: any) {
+            console.error(`[NutritionalDiaryController] registerFoodEntry - ERROR: ${error.message}`);
             res.status(400).json({ error: error.message });
         }
     };
 
-
+    /**
+     * ✅ MODIFICADO: Acepta fecha opcional en query param
+     */
     getTodayDiary = async (req: AuthRequest, res: Response) => {
         try {
             const motherId = req.user?.motherId;
-
 
             if (!motherId) {
                 return res.status(400).json({
@@ -67,6 +71,7 @@ export class NutritionalDiaryController {
             }
 
             const patientId = req.params.patientId as string;
+            const dateParam = req.query.date as string;  // ✅ Fecha opcional
 
             if (!patientId) {
                 return res.status(400).json({
@@ -74,15 +79,19 @@ export class NutritionalDiaryController {
                 });
             }
 
+            console.log(`[NutritionalDiaryController] getTodayDiary - patientId: ${patientId}`);
+            console.log(`[NutritionalDiaryController] getTodayDiary - dateParam: ${dateParam || 'no especificada'}`);
+
             await this.facade.validatePatientBelongsToMother(patientId, motherId);
 
-            const query = GetTodayNutritionalDiaryQueryAssembler.toQuery(patientId);
+            const query = GetTodayNutritionalDiaryQueryAssembler.toQuery(patientId, dateParam);
 
             const result = await this.facade.getTodayNutritionalDiary(query);
 
             res.status(200).json(result);
 
         } catch (error: any) {
+            console.error(`[NutritionalDiaryController] getTodayDiary - ERROR: ${error.message}`);
             res.status(400).json({ error: error.message });
         }
     };
@@ -187,7 +196,6 @@ export class NutritionalDiaryController {
                     error: "Mother ID no encontrado en el token"
                 });
             }
-
 
             const query =
                 GetNutritionalHistoryQueryAssembler

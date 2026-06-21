@@ -1,14 +1,15 @@
-import {NutritionalDiaryQueryService} from "../../model/services/NutritionalDiaryQueryService";
-import {NutritionalDiaryRepository} from "../../model/repositories/NutritionalDiaryRepository";
-import {FoodEntryRepository} from "../../model/repositories/FoodEntryRepository";
-import {FoodItemRepository} from "../../model/repositories/FoodItemRepository";
-import {GetFoodItemsByCategoryQuery} from "../../model/domain/queries/GetFoodItemsByCategoryQuery";
-import {SearchFoodItemsQuery} from "../../model/domain/queries/SearchFoodItemsQuery";
-import {GetFoodItemDetailsQuery} from "../../model/domain/queries/GetFoodItemDetailsQuery";
-import {Error, Promise} from "mongoose";
-import {GetNutritionalHistoryQuery} from "../../model/domain/queries/GetNutritionalHistoryQuery";
-import {GetTodayNutritionalDiaryQuery} from "../../model/domain/queries/GetTodayNutritionalDiaryQuery";
-import {FoodEntry} from "../../model/domain/entities/FoodEntry";
+import { NutritionalDiaryQueryService } from "../../model/services/NutritionalDiaryQueryService";
+import { NutritionalDiaryRepository } from "../../model/repositories/NutritionalDiaryRepository";
+import { FoodEntryRepository } from "../../model/repositories/FoodEntryRepository";
+import { FoodItemRepository } from "../../model/repositories/FoodItemRepository";
+import { GetFoodItemsByCategoryQuery } from "../../model/domain/queries/GetFoodItemsByCategoryQuery";
+import { SearchFoodItemsQuery } from "../../model/domain/queries/SearchFoodItemsQuery";
+import { GetFoodItemDetailsQuery } from "../../model/domain/queries/GetFoodItemDetailsQuery";
+import { Error, Promise } from "mongoose";
+import { GetNutritionalHistoryQuery } from "../../model/domain/queries/GetNutritionalHistoryQuery";
+import { GetTodayNutritionalDiaryQuery } from "../../model/domain/queries/GetTodayNutritionalDiaryQuery";
+import { FoodEntry } from "../../model/domain/entities/FoodEntry";
+import {NutritionalDiary} from "../../model/domain/aggregate/NutritionalDiary";
 
 export class NutritionalDiaryQueryServiceImpl
     implements NutritionalDiaryQueryService {
@@ -237,7 +238,6 @@ export class NutritionalDiaryQueryServiceImpl
         return "gramos";
     }
 
-    // NutritionalDiaryQueryServiceImpl.ts
     async getNutritionalHistory(
         query: GetNutritionalHistoryQuery
     ): Promise<any> {
@@ -245,6 +245,10 @@ export class NutritionalDiaryQueryServiceImpl
         const startDate = query.startDate || new Date(
             endDate.getTime() - (30 * 24 * 60 * 60 * 1000)
         );
+
+        console.log(`[NutritionalDiaryQueryService] getNutritionalHistory - patientId: ${query.patientId}`);
+        console.log(`[NutritionalDiaryQueryService] startDate: ${startDate.toISOString()}`);
+        console.log(`[NutritionalDiaryQueryService] endDate: ${endDate.toISOString()}`);
 
         const diaries = await this.diaryRepository.findByPatientAndDateRange(
             query.patientId,
@@ -261,7 +265,6 @@ export class NutritionalDiaryQueryServiceImpl
         for (const diary of sortedDiaries) {
             const diaryData = diary.toPrimitives();
 
-            // 🔹 DECLARAR CON TIPO EXPLÍCITO
             let entries: FoodEntry[] = [];
 
             try {
@@ -273,7 +276,6 @@ export class NutritionalDiaryQueryServiceImpl
 
             let inhibitorCount = 0;
 
-            // Procesar cada entry de manera segura
             for (let i = 0; i < entries.length; i++) {
                 const entry = entries[i];
                 try {
@@ -310,10 +312,38 @@ export class NutritionalDiaryQueryServiceImpl
         };
     }
 
+    /**
+     * ✅ MODIFICADO: Soporta fecha opcional para consultar el diario
+     */
     async getTodayNutritionalDiary(query: GetTodayNutritionalDiaryQuery): Promise<any> {
-        const diary = await this.diaryRepository.findTodayByPatientId(query.patientId);
+        console.log(`[NutritionalDiaryQueryService] getTodayNutritionalDiary - patientId: ${query.patientId}`);
+        console.log(`[NutritionalDiaryQueryService] date param: ${query.date || 'no especificada'}`);
+
+        let diary: NutritionalDiary | null = null;
+
+        // ✅ Si se envió una fecha, buscar por esa fecha
+        if (query.date) {
+            console.log(`[NutritionalDiaryQueryService] Buscando diario con fecha específica: ${query.date}`);
+            // Parsear la fecha
+            const [year, month, day] = query.date.split('-').map(Number);
+            const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+            const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+
+            // Buscar diario por rango de fecha
+            const diaries = await this.diaryRepository.findByPatientAndDateRange(
+                query.patientId,
+                startOfDay,
+                endOfDay
+            );
+
+            diary = diaries.length > 0 ? diaries[0] : null;
+        } else {
+            // ✅ Si no hay fecha, usar el método estándar
+            diary = await this.diaryRepository.findTodayByPatientId(query.patientId);
+        }
 
         if (!diary) {
+            console.log(`[NutritionalDiaryQueryService] No se encontró diario para patientId: ${query.patientId}`);
             return {
                 diaryId: null,
                 date: new Date(),
@@ -325,6 +355,9 @@ export class NutritionalDiaryQueryServiceImpl
         const diaryData =
             diary.
             toPrimitives();
+
+        console.log(`[NutritionalDiaryQueryService] Diario encontrado: ${diaryData.id}`);
+        console.log(`[NutritionalDiaryQueryService] Fecha del diario: ${diaryData.date.toISOString()}`);
 
         const entries =
             await this
@@ -360,6 +393,7 @@ export class NutritionalDiaryQueryServiceImpl
                 });
 
             } catch (error) {
+                console.error(`Error procesando entry:`, error);
                 enrichedEntries.push({
                     entryId: "error",
                     foodName: "Error al procesar",
@@ -371,12 +405,17 @@ export class NutritionalDiaryQueryServiceImpl
             }
         }
 
-        return {
+        const response = {
             diaryId: diaryData.id,
             date: diaryData.date,
             totalIronAbsorbed: Number(diaryData.totalIronAbsorbed.toFixed(2)),
             foodEntries: enrichedEntries
         };
+
+        console.log(`[NutritionalDiaryQueryService] getTodayNutritionalDiary - ÉXITO`);
+        console.log(`[NutritionalDiaryQueryService] Alimentos: ${enrichedEntries.length}, totalFe: ${response.totalIronAbsorbed}`);
+
+        return response;
     }
 
 }
