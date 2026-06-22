@@ -14,6 +14,10 @@ import {GetMotherNextAppointmentQuery} from "../../../domain/model/queries/GetMo
 import {ListUnassignedNursesQuery} from "../../../domain/model/queries/ListUnassignedNursesQuery";
 import {CanRegisterResponseDto} from "../../../application/dto/CanRegisterResponseDto";
 import {HealthFacilityAdminListResponseDto} from "../../../application/dto/HealthFacilityAdminListResponseDto";
+import {GetMyTopAppointmentsQuery} from "../../../domain/model/queries/GetMyTopAppointmentsQuery";
+import {GetMyAssignedFacilityQuery} from "../../../domain/model/queries/GetMyAssignedFacilityQuery";
+import {HealthFacility} from "../../../domain/model/aggregate/HealthFacility";
+import {NurseAssignment} from "../../../domain/model/entities/NurseAssignment";
 
 export class HealthFacilityFacade {
 
@@ -34,6 +38,18 @@ export class HealthFacilityFacade {
             .registerFacility(
                 command
             );
+    }
+
+    async getMyTopAppointments(
+        query: GetMyTopAppointmentsQuery
+    ): Promise<any[]> {
+        return await this.queryService.getMyTopAppointments(query);
+    }
+
+    async getMyAssignedFacility(
+        query: GetMyAssignedFacilityQuery
+    ): Promise<{ facility: HealthFacility; nurseAssignment: NurseAssignment } | null> {
+        return await this.queryService.getMyAssignedFacility(query);
     }
 
     async assignNurseToFacility(

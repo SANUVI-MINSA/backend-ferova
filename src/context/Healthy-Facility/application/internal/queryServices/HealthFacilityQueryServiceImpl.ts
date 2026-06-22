@@ -21,6 +21,10 @@ import {
     HealthFacilityAdminListResponseDto
 } from "../../dto/HealthFacilityAdminListResponseDto";
 import moment from 'moment-timezone';
+import { HealthFacility } from "../../../domain/model/aggregate/HealthFacility";
+import { NurseAssignment } from "../../../domain/model/entities/NurseAssignment";
+import { GetMyAssignedFacilityQuery } from "../../../domain/model/queries/GetMyAssignedFacilityQuery";
+import { GetMyTopAppointmentsQuery } from "../../../domain/model/queries/GetMyTopAppointmentsQuery";
 
 export class HealthFacilityQueryServiceImpl
     implements HealthFacilityQueryService {
@@ -34,6 +38,133 @@ export class HealthFacilityQueryServiceImpl
         private userRepository: UserRepository,
         private nurseAssignmentRepository: NurseAssignmentRepository
     ) {
+    }
+
+    /**
+     * Obtiene las top N citas más próximas para un enfermero
+     *
+     * @description
+     * Reglas de negocio:
+     * - Solo citas CONFIRMADAS
+     * - Solo citas futuras (fecha > hoy O fecha = hoy y hora > ahora)
+     * - Ordenadas por fecha y hora (más próxima primero)
+     * - Retorna máximo `limit` citas (default 4)
+     * - Incluye información del paciente (nombre, apellido)
+     * - Incluye nombre de la posta
+     *
+     * @param query - Contiene nurseId y limit opcional
+     * @returns Lista de citas enriquecidas
+     */
+    async getMyTopAppointments(
+        query: GetMyTopAppointmentsQuery
+    ): Promise<any[]> {
+        const { nurseId, limit = 4 } = query;
+
+        // Obtener todas las citas confirmadas del enfermero
+        const allAppointments = await this.appointmentRepository
+            .findConfirmedByNurseId(nurseId);
+
+        const nowPeru = moment().tz('America/Lima');
+        const today = nowPeru.format('YYYY-MM-DD');
+        const currentTime = nowPeru.format('HH:mm');
+
+        // Filtrar solo citas futuras
+        const futureAppointments = allAppointments.filter(appointment => {
+            const data = appointment.toPrimitives();
+            const appointmentDate = data.appointmentDate;
+            const appointmentTime = data.appointmentTime;
+
+            // Cita con fecha futura
+            if (appointmentDate > today) return true;
+            // Cita de hoy con hora posterior a la actual
+            if (appointmentDate === today && appointmentTime > currentTime) return true;
+            return false;
+        });
+
+        // Ordenar por fecha y hora (más cercana primero)
+        const sortedAppointments = futureAppointments.sort((a, b) => {
+            const dateA = this.toDateTime(
+                a.toPrimitives().appointmentDate,
+                a.toPrimitives().appointmentTime
+            );
+            const dateB = this.toDateTime(
+                b.toPrimitives().appointmentDate,
+                b.toPrimitives().appointmentTime
+            );
+            return dateA.getTime() - dateB.getTime();
+        });
+
+        // Tomar solo las primeras N (limit)
+        const topAppointments = sortedAppointments.slice(0, limit);
+
+        // Enriquecer con datos adicionales
+        const enrichedAppointments = await Promise.all(
+            topAppointments.map(async (appointment) => {
+                const appointmentData = appointment.toPrimitives();
+
+                // Obtener paciente
+                const patient = await this.patientRepository
+                    .findById(appointmentData.patientId);
+
+                const patientName = patient
+                    ? `${patient.toPrimitives().name} ${patient.toPrimitives().lastName}`
+                    : "Desconocido";
+
+                // Obtener posta
+                const facility = await this.healthFacilityRepository
+                    .findById(appointmentData.facilityId);
+
+
+                return {
+                    appointmentId: appointmentData.id,
+                    patientId: appointmentData.patientId,
+                    patientName,
+                    facilityId: appointmentData.facilityId,
+                    appointmentDate: appointmentData.appointmentDate,
+                    appointmentTime: appointmentData.appointmentTime,
+                    status: appointmentData.status
+                };
+            })
+        );
+
+        return enrichedAppointments;
+    }
+
+    /**
+     * Obtiene la posta asignada a un enfermero
+     *
+     * @description
+     * - Retorna la posta donde el enfermero está actualmente asignado
+     * - Si no tiene asignación, retorna null
+     *
+     * @param query - Contiene nurseId
+     * @returns Información de la posta y la asignación, o null
+     */
+    async getMyAssignedFacility(
+        query: GetMyAssignedFacilityQuery
+    ): Promise<{ facility: HealthFacility; nurseAssignment: NurseAssignment } | null> {
+        const { nurseId } = query;
+
+        // Buscar asignación activa del enfermero
+        const nurseAssignment = await this.nurseAssignmentRepository
+            .findActiveByNurseId(nurseId);
+
+        if (!nurseAssignment) {
+            return null;
+        }
+
+        // Obtener la posta
+        const facility = await this.healthFacilityRepository
+            .findById(nurseAssignment.getFacilityId());
+
+        if (!facility) {
+            return null;
+        }
+
+        return {
+            facility,
+            nurseAssignment
+        };
     }
 
     async canRegisterFacility(
