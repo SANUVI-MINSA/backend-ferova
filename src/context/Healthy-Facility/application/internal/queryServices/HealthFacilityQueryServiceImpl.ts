@@ -114,11 +114,15 @@ export class HealthFacilityQueryServiceImpl
                 const facility = await this.healthFacilityRepository
                     .findById(appointmentData.facilityId);
 
-                const facilityName = facility
-                    ?.toPrimitives().name || "Desconocida";
 
                 return {
-                    facilityName,
+                    appointmentId: appointmentData.id,
+                    patientId: appointmentData.patientId,
+                    patientName,
+                    facilityId: appointmentData.facilityId,
+                    appointmentDate: appointmentData.appointmentDate,
+                    appointmentTime: appointmentData.appointmentTime,
+                    status: appointmentData.status
                 };
             })
         );
@@ -427,7 +431,7 @@ export class HealthFacilityQueryServiceImpl
             const appointmentDateTime = this.toDateTime(
                 appointmentData.appointmentDate,
                 appointmentData.appointmentTime
-            );
+        );
             return appointmentDateTime > now;
         });
 
