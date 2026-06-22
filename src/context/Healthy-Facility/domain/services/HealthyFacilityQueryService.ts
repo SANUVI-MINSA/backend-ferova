@@ -11,6 +11,9 @@ import {CanRegisterFacilityQuery} from "../model/queries/CanRegisterFacilityQuer
 import {ListAllHealthFacilitiesQuery} from "../model/queries/ListAllHealthFacilitiesQuery";
 import {CanRegisterResponseDto} from "../../application/dto/CanRegisterResponseDto";
 import {HealthFacilityAdminListResponseDto} from "../../application/dto/HealthFacilityAdminListResponseDto";
+import {GetMyTopAppointmentsQuery} from "../model/queries/GetMyTopAppointmentsQuery";
+import {GetMyAssignedFacilityQuery} from "../model/queries/GetMyAssignedFacilityQuery";
+import {NurseAssignment} from "../model/entities/NurseAssignment";
 
 export interface HealthFacilityQueryService {
 
@@ -56,4 +59,23 @@ export interface HealthFacilityQueryService {
     listAllHealthFacilities(
         query: ListAllHealthFacilitiesQuery
     ): Promise<HealthFacilityAdminListResponseDto>;
+
+    /**
+     * Obtiene las top N citas más próximas para un enfermero
+     * @param query - Contiene nurseId y limit (opcional, default 4)
+     * @returns Lista de citas con información del paciente
+     */
+    getMyTopAppointments(
+        query: GetMyTopAppointmentsQuery
+    ): Promise<any[]>;
+
+    /**
+     * Obtiene la posta asignada a un enfermero
+     * @param query - Contiene nurseId
+     * @returns Información de la posta o null si no tiene asignación
+     */
+    getMyAssignedFacility(
+        query: GetMyAssignedFacilityQuery
+    ): Promise<{ facility: HealthFacility; nurseAssignment: NurseAssignment } | null>;
+
 }

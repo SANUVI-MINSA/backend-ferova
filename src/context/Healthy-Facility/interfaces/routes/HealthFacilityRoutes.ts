@@ -358,6 +358,135 @@ router.get(
 
 /**
  * @swagger
+ * /api/health-facilities/appointments/nurse/top:
+ *   get:
+ *     summary: Obtener las top 4 citas más próximas del enfermero
+ *     tags:
+ *       - Health Facilities
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 4
+ *         description: Número máximo de citas a retornar
+ *     responses:
+ *       200:
+ *         description: Top citas obtenidas exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 count:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       appointmentId:
+ *                         type: string
+ *                       patientId:
+ *                         type: string
+ *                       patientName:
+ *                         type: string
+ *                       facilityId:
+ *                         type: string
+ *                       facilityName:
+ *                         type: string
+ *                       appointmentDate:
+ *                         type: string
+ *                         example: 2026-06-10
+ *                       appointmentTime:
+ *                         type: string
+ *                         example: 09:00
+ *                       status:
+ *                         type: string
+ *                         example: CONFIRMED
+ *       401:
+ *         description: Unauthorized - Token requerido
+ *       403:
+ *         description: Forbidden - Se requiere rol de enfermero
+ */
+router.get(
+    "/appointments/nurse/top",
+    authenticate,
+    requireNurse,
+    healthFacilityController.getMyTopAppointments
+);
+
+/**
+ * @swagger
+ * /api/health-facilities/nurse/my-facility:
+ *   get:
+ *     summary: Obtener la posta asignada al enfermero
+ *     tags:
+ *       - Health Facilities
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Posta asignada obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     facility:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         name:
+ *                           type: string
+ *                         address:
+ *                           type: string
+ *                         districtName:
+ *                           type: string
+ *                         phoneNumber:
+ *                           type: string
+ *                         status:
+ *                           type: string
+ *                         services:
+ *                           type: array
+ *                           items:
+ *                             type: string
+ *                         scheduleOfOperation:
+ *                           type: string
+ *                     assignment:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         assignedAt:
+ *                           type: string
+ *                           format: date-time
+ *       404:
+ *         description: No hay posta asignada
+ *       401:
+ *         description: Unauthorized - Token requerido
+ *       403:
+ *         description: Forbidden - Se requiere rol de enfermero
+ */
+router.get(
+    "/nurse/my-facility",
+    authenticate,
+    requireNurse,
+    healthFacilityController.getMyAssignedFacility
+);
+
+/**
+ * @swagger
  * /api/health-facilities/{facilityId}/available-slots:
  *   get:
  *     summary: Get available appointment slots for a health facility
