@@ -15,6 +15,8 @@ export class NurseAppointmentScheduleAssembler {
             patientId:
             data.patientId,
             patientName: patientName,
+            facilityId:
+            data.facilityId,
             appointmentDate:
             data.appointmentDate,
             appointmentTime:

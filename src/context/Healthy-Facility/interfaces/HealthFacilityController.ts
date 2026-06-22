@@ -207,7 +207,7 @@ export class HealthFacilityController {
                     userLatitude: latitude,
                     userLongitude: longitude,
                     motherId: motherId
-            });
+                });
 
             const response = facilities.map((item: any) => {
                 const data = item.facility.toPrimitives();
@@ -373,5 +373,81 @@ export class HealthFacilityController {
         return Array.isArray(param) ? param[0] : param;
     }
 
+    /**
+     * Obtiene las top 4 citas más próximas del enfermero
+     */
+    getMyTopAppointments = async (req: AuthRequest, res: Response) => {
+        try {
+            const nurseId = req.user?.nurseId;
+
+            if (!nurseId) {
+                return res.status(400).json({
+                    error: "Nurse ID no encontrado en el token"
+                });
+            }
+
+            // Opcional: permitir limit como query param
+            const limit = req.query.limit ? parseInt(req.query.limit as string) : 4;
+
+            const appointments = await this.healthFacilityFacade
+                .getMyTopAppointments({
+                    nurseId,
+                    limit
+                });
+
+            res.status(200).json({
+                success: true,
+                data: appointments,
+                count: appointments.length
+            });
+
+        } catch (error: any) {
+            res.status(400).json({
+                success: false,
+                error: error.message
+            });
+        }
+    };
+
+    /**
+     * Obtiene la posta asignada al enfermero
+     */
+    getMyAssignedFacility = async (req: AuthRequest, res: Response) => {
+        try {
+            const nurseId = req.user?.nurseId;
+
+            if (!nurseId) {
+                return res.status(400).json({
+                    error: "Nurse ID no encontrado en el token"
+                });
+            }
+
+            const result = await this.healthFacilityFacade
+                .getMyAssignedFacility({ nurseId });
+
+            if (!result) {
+                return res.status(404).json({
+                    success: false,
+                    message: "No tienes una posta asignada actualmente"
+                });
+            }
+
+            // ✅ SOLO RETORNAR EL NOMBRE DE LA POSTA
+            const facilityData = result.facility.toPrimitives();
+
+            res.status(200).json({
+                success: true,
+                data: {
+                    facilityName: facilityData.name
+                }
+            });
+
+        } catch (error: any) {
+            res.status(400).json({
+                success: false,
+                error: error.message
+            });
+        }
+    };
 
 }
