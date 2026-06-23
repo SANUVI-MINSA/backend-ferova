@@ -1277,6 +1277,163 @@ Obtiene los horarios de una posta indicando cuáles están libres u ocupados.
 
 ---
 
+### 15. `GET /appointments/nurse/top` — Top citas más próximas
+
+Obtiene las primeras N citas confirmadas y futuras asignadas a la enfermera, ordenadas por fecha y hora (más cercana primero). Útil para mostrar en el dashboard principal del enfermero.
+
+```dart
+class TopAppointment {
+  final String appointmentId;
+  final String patientId;
+  final String patientName;
+  final String facilityId;
+  final String facilityName;
+  final String appointmentDate;
+  final String appointmentTime;
+  final String status;
+
+  TopAppointment({
+    required this.appointmentId,
+    required this.patientId,
+    required this.patientName,
+    required this.facilityId,
+    required this.facilityName,
+    required this.appointmentDate,
+    required this.appointmentTime,
+    required this.status,
+  });
+
+  factory TopAppointment.fromJson(Map<String, dynamic> json) => TopAppointment(
+    appointmentId: json['appointmentId'],
+    patientId: json['patientId'],
+    patientName: json['patientName'],
+    facilityId: json['facilityId'],
+    facilityName: json['facilityName'],
+    appointmentDate: json['appointmentDate'],
+    appointmentTime: json['appointmentTime'],
+    status: json['status'],
+  );
+}
+
+// services/health_facility_service.dart
+Future<List<TopAppointment>> getMyTopAppointments({int limit = 4}) async {
+  final response = await http.get(
+    Uri.parse('$baseUrl/api/health-facilities/appointments/nurse/top?limit=$limit'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    final data = json.decode(response.body);
+    final List<dynamic> appointments = data['data'];
+    return appointments.map((j) => TopAppointment.fromJson(j)).toList();
+  }
+  throw Exception('Failed to load appointments');
+}
+```
+
+**Query Parameters (Opcionales)**
+
+
+| Parámetro | Tipo | Default | Descripción |
+|-------|---------|-------|---------|
+| limit | number | 4 | Número máximo de citas a retornar|
+
+**Response 200**
+
+```json
+{
+  "success": true,
+  "count": 4,
+  "data": [
+    {
+      "appointmentId": "apt_001",
+      "patientId": "pat_001",
+      "patientName": "Juan Pérez Gómez",
+      "facilityId": "fac_001",
+      "facilityName": "Posta Médica Los Algarrobos",
+      "appointmentDate": "2026-06-25",
+      "appointmentTime": "09:00",
+      "status": "CONFIRMED"
+    },
+    {
+      "appointmentId": "apt_002",
+      "patientId": "pat_002",
+      "patientName": "María Rodríguez López",
+      "facilityId": "fac_001",
+      "facilityName": "Posta Médica Los Algarrobos",
+      "appointmentDate": "2026-06-25",
+      "appointmentTime": "11:00",
+      "status": "CONFIRMED"
+    },
+    {
+      "appointmentId": "apt_003",
+      "patientId": "pat_003",
+      "patientName": "Carlos García Mendez",
+      "facilityId": "fac_001",
+      "facilityName": "Posta Médica Los Algarrobos",
+      "appointmentDate": "2026-06-26",
+      "appointmentTime": "10:00",
+      "status": "CONFIRMED"
+    }
+  ]
+}
+```
+
+### 16. GET /nurse/my-facility — Mi posta asignada
+
+Obtiene el nombre de la posta médica donde el enfermero está actualmente asignado. Útil para mostrar en el dashboard del enfermero.
+
+> ⚠️ Solo retorna el nombre de la posta. Si el enfermero no tiene asignación, retorna 404 con mensaje.
+
+**Implementación Flutter (Ferova Clinic)**
+
+```dart
+// services/health_facility_service.dart
+/// Obtiene el nombre de la posta asignada al enfermero
+/// Retorna el nombre de la posta o null si no tiene asignación
+Future<String?> getMyFacilityName() async {
+  try {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/health-facilities/nurse/my-facility'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    final data = json.decode(response.body);
+
+    if (response.statusCode == 200 && data['success'] == true) {
+      return data['data']['facilityName'] as String?;
+    }
+    
+    // Si es 404, el enfermero no tiene posta asignada
+    if (response.statusCode == 404) {
+      return null;
+    }
+
+    throw Exception(data['error'] ?? 'Error al obtener la posta');
+    
+  } catch (e) {
+    throw Exception('Error al obtener la posta asignada: $e');
+  }
+}
+```
+
+**Response 200 — Tiene posta asignada**
+
+```json
+{
+  "success": true,
+  "data": {
+    "facilityName": "Posta Médica Los Algarrobos"
+  }
+}
+```
+
 ## Reglas de Negocio
 
 | Regla | Detalle |
