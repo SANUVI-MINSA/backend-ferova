@@ -221,18 +221,23 @@ export class CommunicationQueryServiceImpl
         return enrichedConsultations;
     }
 
-    // CommunicationQueryServiceImpl.ts
 
     async getOpenConsultationsByNurse(
         query: GetOpenConsultationsByNurseQuery
     ): Promise<any> {
 
+        // 1️⃣ Obtener las consultas activas del enfermero
         let consultations = await this
             .consultationRepository
             .findOpenByNurseId(query.nurseId);
 
-        // Enriquecer cada consulta con datos del paciente y la madre
-        const enrichedConsultations = await Promise.all(
+        // 2️⃣ Obtener los pacientes asignados al enfermero
+        const assignedPatients = await this
+            .patientRepository
+            .findByNurseId(query.nurseId);
+
+        // 3️⃣ Enriquecer cada consulta con datos del paciente y la madre
+        let enrichedConsultations = await Promise.all(
             consultations.map(async (consultation) => {
                 const consultationData = consultation.toPrimitives();
 
@@ -240,14 +245,14 @@ export class CommunicationQueryServiceImpl
                 const patient = await this.patientRepository.findById(consultationData.patientId);
                 const patientData = patient?.toPrimitives();
 
-                // Obtener datos de la madre (asumiendo que UserRepository tiene findById o similar)
+                // Obtener datos de la madre
                 const mother = await this.userRepository.findMotherById(consultationData.motherId);
                 const motherData = mother?.toPrimitives();
 
                 return {
                     consultationId: consultationData.id,
                     patientId: consultationData.patientId,
-                    patientName: patientData ? `${patientData.name} ${patientData.lastName || ''}` : 'Unknown',
+                    patientName: patientData ? `${patientData.name} ${patientData.lastName || ''}`.trim() : 'Unknown',
                     motherId: consultationData.motherId,
                     motherName: motherData?.name || 'Unknown',
                     nurseId: consultationData.nurseId,
@@ -263,15 +268,57 @@ export class CommunicationQueryServiceImpl
             })
         );
 
-        // Filtrar por searchTerm (ahora busca en patientName o motherName)
+        // 4️⃣ Determinar escenarios base
+        const hasAssignedPatients = assignedPatients.length > 0;
+        const hasConsultations = consultations.length > 0;
+
+        // ✅ Escenario 1: NO tiene pacientes asignados
+        if (!hasAssignedPatients) {
+            return {
+                consultations: [],
+                message: "No tienes pacientes asignados en tu cartera",
+                detail: "Puedes asignar pacientes a tu cartera desde el módulo de pacientes. Ve a 'Pacientes' y selecciona 'Asignar a mi cartera'.",
+                action: "Asignar pacientes",
+                status: "SIN_PACIENTES"
+            };
+        }
+
+        // ✅ Escenario 2: Tiene pacientes pero NO tiene consultas
+        if (!hasConsultations) {
+            return {
+                consultations: [],
+                message: "No tienes consultas activas aún",
+                detail: "Las madres pueden iniciar consultas para sus hijos. Cuando una madre inicie una consulta, aparecerá aquí.",
+                status: "NO_CONSULTAS"
+            };
+        }
+
+        // ✅ Escenario 3: Tiene consultas → Aplicar filtro de búsqueda
         if (query.searchTerm) {
-            const searchLower = query.searchTerm.toLowerCase();
-            return enrichedConsultations.filter(
+            const searchLower = query.searchTerm.toLowerCase().trim();
+
+            // Filtrar por nombre del paciente o nombre de la madre
+            const filteredConsultations = enrichedConsultations.filter(
                 c => c.patientName.toLowerCase().includes(searchLower) ||
                     c.motherName.toLowerCase().includes(searchLower)
             );
+
+            // Si después del filtro no hay resultados → BÚSQUEDA SIN RESULTADOS
+            if (filteredConsultations.length === 0) {
+                return {
+                    consultations: [],
+                    message: "No se encontraron consultas que coincidan con tu búsqueda",
+                    detail: `No hay consultas con "${query.searchTerm}" en el nombre del paciente o de la madre. Intenta con otro término.`,
+                    searchTerm: query.searchTerm,
+                    status: "BUSQUEDA_SIN_RESULTADOS"
+                };
+            }
+
+            // Devolver consultas filtradas
+            return filteredConsultations;
         }
 
+        // ✅ Escenario 4: Tiene consultas y NO hay búsqueda → devolver todas
         return enrichedConsultations;
     }
 
