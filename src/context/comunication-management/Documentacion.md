@@ -376,6 +376,10 @@ Lista todas las teleconsultas activas asignadas a una enfermera. Permite buscar 
 |-----------|------|-----------|-------------|
 | `searchTerm` | string | ❌ | Buscar por nombre del paciente o nombre de la madre |
 
+#### Responses
+
+##### Escenario 1: Con consultas activas
+
 #### Response `200 OK`
 
 ```json
@@ -392,23 +396,124 @@ Lista todas las teleconsultas activas asignadas a una enfermera. Permite buscar 
         "lastMessageDate": "2024-01-15T10:30:00.000Z",
         "createdAt": "2024-01-15T10:00:00.000Z",
         "messageCount": 5
+    },
+    {
+        "consultationId": "string",
+        "patientId": "string",
+        "patientName": "Valentina Gómez",
+        "motherId": "string",
+        "motherName": "María Gómez",
+        "nurseId": "string",
+        "nurseName": "María González",
+        "lastMessage": "Mi hija tiene fiebre...",
+        "lastMessageDate": "2024-01-15T11:00:00.000Z",
+        "createdAt": "2024-01-15T10:30:00.000Z",
+        "messageCount": 3
     }
 ]
+
+```
+##### Escenario 2: Tiene pacientes asignados pero NO tiene consultas activas
+
+**Response 200 OK**
+
+```json
+{
+    "consultations": [],
+    "message": "No tienes consultas activas aún",
+    "detail": "Las madres pueden iniciar consultas para sus hijos. Cuando una madre inicie una consulta, aparecerá aquí.",
+    "status": "NO_CONSULTAS"
+}
 ```
 
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
-| `consultationId` | string | ID único de la consulta |
-| `patientId` | string | ID del paciente |
-| `patientName` | string | Nombre completo del paciente |
-| `motherId` | string | ID de la madre |
-| `motherName` | string | Nombre de la madre |
-| `nurseId` | string | ID de la enfermera |
-| `nurseName` | string | Nombre de la enfermera |
-| `lastMessage` | string | Contenido del último mensaje |
-| `lastMessageDate` | string (ISO date) | Fecha del último mensaje |
-| `createdAt` | string (ISO date) | Fecha de creación de la consulta |
-| `messageCount` | number | Cantidad total de mensajes |
+| consultations | array | Lista vacía de consultas |
+| message | string | Mensaje principal para el usuarios |
+| detail | string | Mensaje secundario con más contexto |
+| status | string | Estado: NO_CONSULTAS |
+
+**¿Cuándo ocurre este escenario?**
+
+- La enfermera tiene pacientes asignados en su cartera
+
+- Pero ninguna madre ha iniciado una teleconsulta para esos pacientes
+
+##### Escenario 3: NO tiene pacientes asignados en su cartera
+
+**Response 200 OK**
+
+```json
+{
+    "consultations": [],
+    "message": "No tienes pacientes asignados en tu cartera",
+    "detail": "Puedes asignar pacientes a tu cartera desde el módulo de pacientes. Ve a 'Pacientes' y selecciona 'Asignar a mi cartera'.",
+    "action": "Asignar pacientes",
+    "status": "SIN_PACIENTES"
+}
+```
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| consultations | array | Lista vacía de consultas |
+| message | string | Mensaje principal para el usuarios |
+| detail | string | Mensaje secundario con más contexto |
+| action | string | Acción sugerida (texto para botón) |
+| status | string | Estado: SIN_PACIENTES |
+
+**¿Cuándo ocurre este escenario?**
+
+- La enfermera no ha asignado ningún paciente a su cartera
+
+- Por lo tanto, no puede tener consultas
+
+##### Escenario 4: Búsqueda sin resultados
+
+**Response 200 OK**
+
+
+```json
+{
+    "consultations": [],
+    "message": "No se encontraron consultas que coincidan con tu búsqueda",
+    "detail": "No hay consultas con \"Carlos\" en el nombre del paciente o de la madre. Intenta con otro término.",
+    "searchTerm": "Carlos",
+    "status": "BUSQUEDA_SIN_RESULTADOS"
+}
+```
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| consultations | array | Lista vacía de consultas |
+| message | string | Mensaje principal para el usuarios |
+| detail | string | Mensaje secundario con más contexto |
+| searchTerm | string | El término de búsqueda que no encontró resultados |
+| status | string | Estado: BUSQUEDA_SIN_RESULTADOS |
+
+**¿Cuándo ocurre este escenario?**
+
+- La enfermera tiene consultas activas
+
+- Pero el searchTerm no coincide con ningún nombre de paciente ni de madre
+
+| Estado | Significado | Acción sugerida en UI |
+|-------|------|-------------|
+| NO_CONSULTAS | Tiene pacientes pero sin consultas | Mostrar mensaje informativo |
+| SIN_PACIENTES | No tiene pacientes asignados | Mostrar botón "Asignar pacientes" |
+| BUSQUEDA_SIN_RESULTADOS | Búsqueda sin resultados | Mostrar botón "Limpiar búsqueda" |
+
+Ejemplo de flujo en UI (Ferova Clinic)
+
+| Paso | Escenario | UI |
+|-------|------|-------------|
+| 1 | Sin pacientes asignados | Pantalla vacía con botón "Asignar pacientes" → navega a módulo de pacientes |
+| 2 | Con pacientes pero sin consultas | Pantalla vacía con mensaje "No tienes consultas activas aún" |
+| 3 | Con consultas | Lista de tarjetas con las consultas activas |
+| 4 | Buscando y hay resultados | Lista filtrada de consultas |
+| 5 | Buscando y no hay resultados| Pantalla vacía con mensaje |
+
+
+
 
 ---
 
