@@ -1,4 +1,6 @@
 export type HemoglobinHistoryResource = {
+    patientId: string;
+    patientName: string;
     controls: any[];
     averageHemoglobin: number;
     totalControls: number ;

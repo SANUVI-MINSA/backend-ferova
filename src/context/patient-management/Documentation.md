@@ -293,6 +293,7 @@ Verifica si un paciente ya tiene una historia clínica registrada. Este endpoint
 **Response `200 OK` (con historia clínica):**
 ```json
 {
+  "patientId": "0c311ed8-ac1e-43d3-ba9c-d07518c23912",
   "hasMedicalRecord": true,
   "medicalRecordId": "880e8400-e29b-41d4-a716-446655440002"
 }
@@ -301,6 +302,7 @@ Verifica si un paciente ya tiene una historia clínica registrada. Este endpoint
 **Response 200 OK (sin historia clínica):**
 ```json
 {
+  "patientId": "0c311ed8-ac1e-43d3-ba9c-d07518c23912",
   "hasMedicalRecord": false
 }
 ```        
@@ -589,6 +591,8 @@ Controles de hemoglobina con estadísticas agregadas.
 **Response `200 OK` (con datos):**
 ```json
 {
+  "patientId": "660e8400-e29b-41d4-a716-446655440001",
+  "patientName": "Mateo Perez",
   "controls": [
     { "id": "...", "date": "2026-05-20T10:00:00.000Z", "hemoglobinLevel": 10.5, "anemiaStatus": "MILD" },
     { "id": "...", "date": "2026-05-22T10:00:00.000Z", "hemoglobinLevel": 11.2, "anemiaStatus": "CONTROLLED" }
@@ -602,7 +606,15 @@ Controles de hemoglobina con estadísticas agregadas.
 
 **Response `200 OK` (sin datos):**
 ```json
-{ "controls": [], "averageHemoglobin": 0, "totalControls": 0, "evolution": null, "trend": null }
+{
+  "patientId": "660e8400-e29b-41d4-a716-446655440001",
+  "patientName": "Mateo",
+  "controls": [],
+  "averageHemoglobin": 0,
+  "totalControls": 0,
+  "evolution": null,
+  "trend": null
+}
 ```
 
 **Errores `400`:**
@@ -610,6 +622,7 @@ Controles de hemoglobina con estadísticas agregadas.
 | Error | Causa |
 |---|---|
 | `Medical record not found` | No existe la historia clínica |
+| `` | El paciente asociado no existe |
 | `Access denied: This medical record does not belong to a patient assigned to you` | Sin acceso |
 
 ---

@@ -75,5 +75,5 @@ export interface PatientQueryService {
 
     checkPatientMedicalRecord(
         query: CheckPatientMedicalRecordQuery
-    ): Promise<{ hasMedicalRecord: boolean; medicalRecordId?: string}>;
+    ): Promise<{ patientId: string; hasMedicalRecord: boolean; medicalRecordId?: string}>;
 }
