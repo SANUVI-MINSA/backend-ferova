@@ -275,6 +275,93 @@ Crea la historia clínica del paciente. Solo se puede crear una por paciente.
 | `Antecedent description is required` | Descripción de antecedente vacía |
 
 ---
+### `GET /{patientId}/medical-record/check` — Verificar si tiene historia clínica
+
+Verifica si un paciente ya tiene una historia clínica registrada. Este endpoint es útil para validar si se puede registrar un control de hemoglobina.
+
+**Reglas de negocio:**
+- El paciente debe estar asignado a esta enfermera
+- Retorna `hasMedicalRecord: true` si existe historia clínica
+- Retorna `hasMedicalRecord: false` si no existe
+- Si existe, también retorna el `medicalRecordId`
+
+**Path params:**
+| Parámetro | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `patientId` | string | ✅ | ID del paciente |
+
+**Response `200 OK` (con historia clínica):**
+```json
+{
+  "hasMedicalRecord": true,
+  "medicalRecordId": "880e8400-e29b-41d4-a716-446655440002"
+}
+```
+
+**Response 200 OK (sin historia clínica):**
+```json
+{
+  "hasMedicalRecord": false
+}
+```        
+| Error | Causa |
+|---|--|
+| `Nurse ID no encontrado en el token` | Token inválido |
+| `Patient not found` | El paciente no existe |
+| `Access denied: This patient is not assigned to you` | Paciente no asignado a esta enfermera |
+
+**Uso en Frontend:**
+
+Este endpoint debe llamarse antes de mostrar el formulario de registro de hemoglobina. Si hasMedicalRecord es false, se debe mostrar un mensaje indicando que primero debe crearse la historia clínica.
+
+Ejemplo de UI recomendado:
+
+``` 
+   ⚠️ ACCION REQUERIDA
+
+Falta Historial Médico
+
+Para registrar un control de hemoglobina, primero es necesario 
+completar el historial médico del paciente.
+
+[Registrar Historial Médico]
+```            
+
+**Uso práctico desde el Frontend**
+
+```dart
+// Ejemplo en Flutter (Ferova Clinic)
+Future<void> checkAndRegisterHemoglobin(String patientId) async {
+  try {
+    // 1. Verificar si tiene historial médico
+    final response = await http.get(
+      Uri.parse('$baseUrl/patients/$patientId/medical-record/check'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    
+    final data = jsonDecode(response.body);
+    
+    // 2. Si NO tiene historial, mostrar el frame
+    if (!data['hasMedicalRecord']) {
+      showDialog(
+        context: context,
+        builder: (_) => MedicalRecordRequiredDialog(
+          patientId: patientId,
+          onRegister: () => navigateToMedicalRecordForm(patientId),
+        ),
+      );
+      return;
+    }
+    
+    // 3. Si SÍ tiene, mostrar el formulario de hemoglobina
+    navigateToHemoglobinForm(patientId, data['medicalRecordId']);
+    
+  } catch (e) {
+    // Manejar error
+    showError('Error al verificar el historial médico');
+  }
+}
+```            
 
 ### `PUT /medical-record/update` — Actualizar historia clínica
 
@@ -722,6 +809,7 @@ No requiere autenticación.
 | `POST` | `/hemoglobin-control` |
 | `PUT` | `/discharge` |
 | `GET` | `/nurse` |
+| **`GET`** | **`/{patientId}/medical-record/check`** |
 | `GET` | `/discharge/nurse` |
 | `GET` | `/{patientId}/medical-record` |
 | `GET` | `/medical-record/{medicalRecordId}/controls` |
@@ -749,6 +837,7 @@ No requiere autenticación.
 | `POST /register` | Usar date picker para `birthDate`. Validaciones en tiempo real. |
 | `POST /hemoglobin-control` | Validar que el valor esté entre 0 y 30 antes de enviar. |
 | `GET /{patientId}/hemoglobin-evolution` | Usar los datos para un gráfico de líneas (evolución temporal). |
+| **`GET /{patientId}/medical-record/check`** | **Llamar antes de mostrar el formulario de hemoglobina. Si `hasMedicalRecord: false`, mostrar un frame con el mensaje "Falta Historial Médico" y un botón para redirigir al registro.** |
 | `GET /medical-record/{id}/pdf` | Abrir en nueva pestaña o forzar descarga automática. |
 | `GET /mother/search/{dni}` | Mostrar spinner mientras se busca. Validar 8 dígitos antes de disparar la request. |
 | `PUT /discharge` | Mostrar diálogo de confirmación antes de enviar. |
