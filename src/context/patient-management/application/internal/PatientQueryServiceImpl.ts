@@ -143,10 +143,21 @@ export class PatientQueryServiceImpl
             throw new Error("Medical record not found");
         }
 
+        const medicalRecordData = medicalRecord.toPrimitives();
         const controls = medicalRecord.toPrimitives().controls;
+
+        const patient = await this.patientRepository.findById(medicalRecordData.patientId);
+
+        if (!patient) {
+            throw new Error("Patient not found")
+        }
+
+        const patientData = patient.toPrimitives();
 
         if (!controls.length) {
             return {
+                patient: patientData.id,
+                patientName: patientData.name,
                 controls: [],
                 averageHemoglobin: 0,
                 totalControls: 0,
@@ -169,6 +180,8 @@ export class PatientQueryServiceImpl
         if (evolution < 0) trend = 'DOWN';
 
         return {
+            patientId: patientData.id,
+            patientName: patientData.name + " " + patientData.lastName,
             controls,
             averageHemoglobin: average,
             totalControls: controls.length,
@@ -419,17 +432,27 @@ export class PatientQueryServiceImpl
 
     async checkPatientMedicalRecord(
         query: { patientId: string }
-    ): Promise<{ hasMedicalRecord: boolean; medicalRecordId?: string }> {
+    ): Promise<{ patientId: string; hasMedicalRecord: boolean; medicalRecordId?: string }> {
         const medicalRecord = await this.medicalRecordRepository
             .findByPatientId(query.patientId);
 
+        const patient = await this.patientRepository.findById(query.patientId);
+
+        if (!patient) {
+            throw new Error("Patient not found")
+        }
+
+        const patientData = patient.toPrimitives();
+
         if (!medicalRecord) {
             return {
+                patientId: patientData.id,
                 hasMedicalRecord: false
             };
         }
 
         return {
+            patientId: patientData.id,
             hasMedicalRecord: true,
             medicalRecordId: medicalRecord.toPrimitives().id
         };
