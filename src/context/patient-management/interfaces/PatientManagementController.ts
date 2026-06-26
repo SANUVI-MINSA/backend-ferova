@@ -452,4 +452,30 @@ export class PatientManagementController {
             res.status(400).json({ error: error.message });
         }
     };
+
+    checkPatientMedicalRecord = async (req: AuthRequest, res: Response) => {
+        try {
+            const nurseId = req.user?.nurseId;
+
+            if (!nurseId) {
+                return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
+            }
+
+            const patientId = req.params.patientId as string;
+
+            if (!patientId) {
+                return res.status(400).json({ error: "Patient ID es requerido" });
+            }
+
+            // Validar que el paciente está asignado a esta enfermera
+            await this.patientFacade.validateNurseHasPatient(nurseId, patientId);
+
+            const result = await this.patientFacade.checkPatientMedicalRecord(patientId);
+
+            res.status(200).json(result);
+
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    };
 }
