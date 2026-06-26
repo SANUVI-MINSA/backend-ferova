@@ -10,6 +10,7 @@ import {GetHemoglobinEvolutionChartQuery} from "../model/queries/getHemoglobinEv
 import {GetActivePatientsCountQuery} from "../model/queries/GetActivePatientsCountQuery";
 import {GetMotherPatientsSummaryQuery} from "../model/queries/GetMotherPatientsSummaryQuery";
 import {GetPatientBasicInfoQuery} from "../model/queries/GetPatientBasicInfoQuery";
+import {CheckPatientMedicalRecordQuery} from "../model/queries/checkPatientMedicalRecord";
 
 export interface PatientQueryService {
 
@@ -71,4 +72,8 @@ export interface PatientQueryService {
     getPatientBasicInfo(
         query: GetPatientBasicInfoQuery
     ): Promise<{ id: string; name: string; lastName: string } | null>;
+
+    checkPatientMedicalRecord(
+        query: CheckPatientMedicalRecordQuery
+    ): Promise<{ hasMedicalRecord: boolean; medicalRecordId?: string}>;
 }

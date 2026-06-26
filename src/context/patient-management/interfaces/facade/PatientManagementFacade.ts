@@ -257,4 +257,9 @@ export class PatientManagementFacade {
         return await this.queryService.getPatientBasicInfo(query);
     }
 
+    async checkPatientMedicalRecord(
+        patientId: string
+    ): Promise<{ hasMedicalRecord: boolean; medicalRecordId?: string }> {
+        return await this.queryService.checkPatientMedicalRecord({ patientId });
+    }
 }
