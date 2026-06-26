@@ -5,6 +5,8 @@ HemoglobinHistoryResourceAssembler {
         data: any
     ) {
         return {
+            patientId: data.patientId,
+            patientName: data.patientName,
             controls:
             data.controls,
             averageHemoglobin:
