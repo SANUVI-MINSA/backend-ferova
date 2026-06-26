@@ -773,6 +773,47 @@ router.get(
     patientManagementController.getActivePatientsCount
 );
 
+// PatientManagementRoutes.ts
+/**
+ * @swagger
+ * /api/patients/{patientId}/medical-record/check:
+ *   get:
+ *     summary: Verificar si un paciente tiene historial médico
+ *     tags:
+ *       - Patients
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: patientId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Resultado de la verificación
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 hasMedicalRecord:
+ *                   type: boolean
+ *                 medicalRecordId:
+ *                   type: string
+ *                   description: ID del historial médico (solo si existe)
+ *       400:
+ *         description: Error en la validación
+ *       404:
+ *         description: Patient not found
+ */
+router.get(
+    "/:patientId/medical-record/check",
+    authenticate,
+    requireNurse,
+    patientManagementController.checkPatientMedicalRecord
+);
+
 /**
  * @swagger
  * /api/patients/{id}:

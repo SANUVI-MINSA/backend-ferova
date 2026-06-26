@@ -416,4 +416,22 @@ export class PatientQueryServiceImpl
 
         return medicalRecord.toPrimitives();
     }
+
+    async checkPatientMedicalRecord(
+        query: { patientId: string }
+    ): Promise<{ hasMedicalRecord: boolean; medicalRecordId?: string }> {
+        const medicalRecord = await this.medicalRecordRepository
+            .findByPatientId(query.patientId);
+
+        if (!medicalRecord) {
+            return {
+                hasMedicalRecord: false
+            };
+        }
+
+        return {
+            hasMedicalRecord: true,
+            medicalRecordId: medicalRecord.toPrimitives().id
+        };
+    }
 }
