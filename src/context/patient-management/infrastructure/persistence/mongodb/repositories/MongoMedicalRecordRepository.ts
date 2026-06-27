@@ -85,4 +85,13 @@ MongoMedicalRecordRepository
                 data
             );
     }
+
+    async delete(
+        medicalRecordId: string
+    ): Promise<void> {
+        await MedicalRecordModel
+            .findOneAndDelete({
+                id: medicalRecordId
+            });
+    }
 }
