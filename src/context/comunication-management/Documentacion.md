@@ -167,14 +167,13 @@ La enfermera cierra una teleconsulta. Requisito: debe haber enviado al menos un 
 ```json
 {
     "consultationId": "string",
-    "nurseId": "string"
 }
 ```
 
 | Campo | Tipo | Requerido | Descripción |
 |-------|------|-----------|-------------|
 | `consultationId` | string | ✅ | ID de la consulta |
-| `nurseId` | string | ✅ | ID de la enfermera |
+| `nurseId` | string | ✅ | ID de la enfermera via token |
 
 #### Response `200 OK`
 
