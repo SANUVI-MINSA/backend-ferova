@@ -485,23 +485,79 @@ Cambia el `status` del paciente de `ACTIVE` a `DISCHARGED`.
 Retorna solo los pacientes con `status = ACTIVE` asignados a la enfermera autenticada.
 
 **Response `200 OK`:**
+
+```
+searchTermin: "D"
+
+```
+
 ```json
 [
+
   {
-    "patientId": "660e8400-...",
-    "fullName": "Mateo Perez",
+    "patientId": "bd16a94a-7171-4f5b-a561-0cf10db13770",
+    "fullName": "Diana Lucia Briceño Vera",
     "gender": "MALE",
     "status": "ACTIVE",
-    "facilityId": "770e8400-..."
+    "facilityId": "33e8ab63-2875-41b5-91f1-ac9a37d1ddc6"
+  },
+  {
+    "patientId": "8ad97c1d-7a3c-4101-b086-8551b0a85f6a",
+    "fullName": "Daniel Baca",
+    "gender": "MALE",
+    "status": "ACTIVE",
+    "facilityId": "33e8ab63-2875-41b5-91f1-ac9a37d1ddc6"
   }
 ]
 ```
 
-**Errores `400`:**
 
-| Error | Causa |
-|---|---|
-| `Nurse ID no encontrado en el token` | Token inválido |
+```
+searchTermin: "Diana"
+
+```
+
+```json
+[
+
+  {
+    "patientId": "bd16a94a-7171-4f5b-a561-0cf10db13770",
+    "fullName": "Diana Lucia Briceño Vera",
+    "gender": "MALE",
+    "status": "ACTIVE",
+    "facilityId": "33e8ab63-2875-41b5-91f1-ac9a37d1ddc6"
+  }
+]
+```
+
+```
+searchTermin: "Gonzalez"
+
+```
+
+```json
+[
+
+  {
+    "patientId": "bd16a94a-7171-4f5b-a561-0cf10db13770",
+    "fullName": "Diana Lucia Briceño Vera",
+    "gender": "MALE",
+    "status": "ACTIVE",
+    "facilityId": "33e8ab63-2875-41b5-91f1-ac9a37d1ddc6"
+  }
+]
+```
+
+
+```
+searchTermin: "Daniel"
+
+```
+
+```json
+[]
+```
+
 
 ---
 
@@ -672,13 +728,29 @@ Content-Disposition: attachment; filename=hemoglobin-report.pdf
 
 ---
 
-### `GET /mother/search/{dni}` — Buscar madre por DNI
+### `GET /mother/search/{search}` — Buscar madre por DNI
 
 **Reglas de negocio:** El DNI debe tener exactamente 8 dígitos numéricos.
 
 **Path params:** `dni` — 8 dígitos
 
-**Response `200 OK`:**
+
+```
+searchTermin: "123..."
+```
+
+```json
+{
+  "motherId": "550e8400-...",
+  "fullName": "Diana Carrillo",
+  "dni": "12345678"
+}
+```
+
+```
+searchTermin: "12345678"
+```
+
 ```json
 {
   "motherId": "550e8400-...",
@@ -689,9 +761,13 @@ Content-Disposition: attachment; filename=hemoglobin-report.pdf
 
 **Errores `400`:**
 
-| Error | Causa |
-|---|---|
-| `Mother not found` | No existe madre con ese DNI |
+```
+searchTermin: "12345"
+```
+
+```json
+  { "error": "No mothers found matching the search criteria" }
+```
 
 ---
 
@@ -828,7 +904,7 @@ No requiere autenticación.
 | `GET` | `/medical-record/{medicalRecordId}/controls` |
 | `GET` | `/medical-record/{medicalRecordId}/pdf` |
 | `GET` | `/medical-record/{medicalRecordId}/hemoglobin-report` |
-| `GET` | `/mother/search/{dni}` |
+| `GET` | `/mother/search/{searchterm}` |
 | `GET` | `/mother/{motherId}` |
 | `GET` | `/nurse/active-count` |
 
