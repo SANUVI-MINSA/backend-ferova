@@ -18,4 +18,8 @@ export interface MedicalRecordRepository {
     update(
         medicalRecord: MedicalRecord
     ): Promise<void>;
+
+    delete(
+        medicalRecordId: string
+    ): Promise<void>;
 }

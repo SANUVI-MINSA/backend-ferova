@@ -21,18 +21,25 @@ import {HemoglobinLevel} from "../../domain/model/value-objects/HemoglobinLevel"
 import {Control} from "../../domain/model/entities/Control";
 import {NurseAssignmentRepository} from "../../../Healthy-Facility/domain/repositories/NurseAssignmentRepository";
 import {Antecedente} from "../../domain/model/value-objects/Antecedente";
+import {TreatmentRepository} from "../../../treatment-tracking/model/repositories/TreatmentRepository";
+import {DailyDoseRepository} from "../../../treatment-tracking/model/repositories/DailyDoseRepository";
+import {AchievementRepository} from "../../../achievements-rewards/domain/repositories/AchievementRepository";
+import {BadgeRepository} from "../../../achievements-rewards/domain/repositories/BadgeRepository";
+import {ConsultationRepository} from "../../../comunication-management/domain/repositories/ConsultationRepository";
 
-export class PatientCommandServiceImpl
-    implements PatientCommandService {
+export class PatientCommandServiceImpl implements PatientCommandService {
 
     constructor(
-        private patientRepository:
-        PatientRepository,
-        private medicalRecordRepository:
-        MedicalRecordRepository,
-        // Inject NurseAssignmentRepository if needed for assigning nurses to patients or other operations related to nurse assignments
-        private nurseAssignmentRepository: NurseAssignmentRepository
-
+        private patientRepository: PatientRepository,
+        private medicalRecordRepository: MedicalRecordRepository,
+        private nurseAssignmentRepository: NurseAssignmentRepository,
+        private treatmentRepository: TreatmentRepository,
+        private dailyDoseRepository: DailyDoseRepository,
+        // ✅ Inyectar repositorios de achievements
+        private achievementRepository: AchievementRepository,
+        private badgeRepository: BadgeRepository,
+        // ✅ Inyectar repositorio de consultas
+        private consultationRepository: ConsultationRepository
     ) {
     }
 
@@ -69,6 +76,16 @@ export class PatientCommandServiceImpl
         const assignmentData =
             assignment.toPrimitives();
 
+        // ✅ Verificar si ya está asignado al mismo enfermero
+        const patientData = patient.toPrimitives();
+        const currentNurseId = patientData.nurseId;
+
+        if (currentNurseId === command.nurseId) {
+            console.log(`[assignPatientToNurse] Patient ${command.patientId} already assigned to nurse ${command.nurseId}`);
+            return;
+        }
+
+        // ✅ Solo asigna el paciente al nuevo enfermero (NO elimina tratamientos)
         patient.assignNurse(
             command.nurseId,
             assignmentData.facilityId
@@ -138,13 +155,23 @@ export class PatientCommandServiceImpl
             );
         }
 
+        // Validar que la enfermera asignada sea la que da de alta
         patient.discharge(
             command.nurseId
         );
 
+        // ELIMINAR TODOS los tratamientos y dosis del paciente al dar de alta
+        await this.deleteAllTreatmentsForPatient(command.patientId);
+
+        // ELIMINAR CONSULTA ACTIVA DEL PACIENTE
+        await this.deleteConsultationsForPatient(command.patientId);
+
+        // ELIMINAR MEDICAL RECORD DEL PACIENTE
+        await this.deleteMedicalRecordForPatient(command.patientId);
+
         await this
-            .patientRepository
-            .update(patient);
+            .patientRepository.
+            update(patient);
     }
 
     async registerHemoglobinControl(
@@ -260,5 +287,124 @@ export class PatientCommandServiceImpl
         );
 
         await this.medicalRecordRepository.update(medicalRecord);
+    }
+
+    /**
+     * ✅ ELIMINA completamente TODOS los tratamientos y dosis de un paciente
+     * (Se usa al dar de alta al paciente)
+     */
+    private async deleteAllTreatmentsForPatient(patientId: string): Promise<void> {
+        try {
+            // ✅ Buscar TODOS los tratamientos del paciente (ACTIVE, COMPLETED, ABANDONED)
+            const treatments = await this.treatmentRepository.findByPatientId(patientId);
+
+            if (treatments.length === 0) {
+                console.log(`[deleteAllTreatmentsForPatient] No treatments found for patient ${patientId}`);
+                return;
+            }
+
+            console.log(`[deleteAllTreatmentsForPatient] Found ${treatments.length} treatment(s) for patient ${patientId}`);
+
+            for (const treatment of treatments) {
+                const treatmentId = treatment.getId();
+                const status = treatment.getStatus();
+                console.log(`[deleteAllTreatmentsForPatient] Processing treatment ${treatmentId} with status: ${status}`);
+
+                // 1. Obtener todas las dosis del tratamiento
+                const doses = await this.dailyDoseRepository.findByTreatmentId(treatmentId);
+                const doseIds = doses.map(dose => dose.getId());
+
+                // 2. ELIMINAR dosis
+                if (doseIds.length > 0) {
+                    await this.dailyDoseRepository.deleteMany(doseIds);
+                    console.log(`[deleteAllTreatmentsForPatient] DELETED ${doseIds.length} doses for treatment ${treatmentId}`);
+                }
+
+                // 3. ✅ ELIMINAR Achievement y Badges asociados al tratamiento
+                await this.deleteAchievementAndBadgesForTreatment(treatmentId);
+
+
+                // 4. ELIMINAR el tratamiento (sin importar su estado)
+                await this.treatmentRepository.delete(treatmentId);
+                console.log(`[deleteAllTreatmentsForPatient] DELETED treatment ${treatmentId} (was ${status})`);
+            }
+
+            console.log(`[deleteAllTreatmentsForPatient] All treatments deleted for patient ${patientId}`);
+
+        } catch (error) {
+            console.error(`[deleteAllTreatmentsForPatient] Error deleting treatments for patient ${patientId}:`, error);
+            // No lanzamos el error para no interrumpir el alta
+        }
+    }
+
+    /**
+     * ✅ Elimina Achievement y Badges asociados a un tratamiento
+     */
+    private async deleteAchievementAndBadgesForTreatment(treatmentId: string): Promise<void> {
+        try {
+            // Buscar achievement por treatmentId
+            const achievement = await this.achievementRepository.findByTreatmentId(treatmentId);
+
+            if (achievement) {
+                const achievementId = achievement.getId();
+                console.log(`[deleteAchievementAndBadgesForTreatment] Found achievement ${achievementId} for treatment ${treatmentId}`);
+
+                // 1. Primero eliminar los badges asociados al achievement
+                await this.badgeRepository.deleteByAchievementId(achievementId);
+                console.log(`[deleteAchievementAndBadgesForTreatment] Deleted badges for achievement ${achievementId}`);
+
+                // 2. Luego eliminar el achievement
+                await this.achievementRepository.delete(achievementId);
+                console.log(`[deleteAchievementAndBadgesForTreatment] Deleted achievement ${achievementId}`);
+            } else {
+                console.log(`[deleteAchievementAndBadgesForTreatment] No achievement found for treatment ${treatmentId}`);
+            }
+        } catch (error) {
+            console.error(`[deleteAchievementAndBadgesForTreatment] Error deleting achievement and badges:`, error);
+        }
+    }
+
+    /**
+     *  Elimina todas las consultas activas de un paciente
+     */
+    private async deleteConsultationsForPatient(patientId: string): Promise<void> {
+        try {
+            const consultation = await this.consultationRepository.findOpenByPatientId(patientId);
+
+            if (consultation) {
+                const consultationId = consultation.getId();
+                console.log(`[deleteConsultationsForPatient] Found active consultation ${consultationId} for patient ${patientId}`);
+
+                // Eliminar la consulta
+                await this.consultationRepository.delete(consultationId);
+                console.log(`[deleteConsultationsForPatient] Deleted consultation ${consultationId}`);
+            } else {
+                console.log(`[deleteConsultationsForPatient] No active consultation found for patient ${patientId}`);
+            }
+        } catch (error) {
+            console.error(`[deleteConsultationsForPatient] Error deleting consultation:`, error);
+            // No lanzamos el error para no interrumpir el alta
+        }
+    }
+    /**
+     * ✅ Elimina el Medical Record de un paciente
+     */
+    private async deleteMedicalRecordForPatient(patientId: string): Promise<void> {
+        try {
+            const medicalRecord = await this.medicalRecordRepository.findByPatientId(patientId);
+
+            if (medicalRecord) {
+                const medicalRecordId = medicalRecord.toPrimitives().id;
+                console.log(`[deleteMedicalRecordForPatient] Found medical record ${medicalRecordId} for patient ${patientId}`);
+
+                await this.medicalRecordRepository.delete(medicalRecordId);
+                console.log(`[deleteMedicalRecordForPatient] Deleted medical record ${medicalRecordId}`);
+            } else {
+                console.log(`[deleteMedicalRecordForPatient] No medical record found for patient ${patientId}`);
+            }
+        } catch (error) {
+            console.error(`[deleteMedicalRecordForPatient] Error deleting medical record:`, error);
+            // No lanzamos el error para no interrumpir el alta
+        }
     }
 }

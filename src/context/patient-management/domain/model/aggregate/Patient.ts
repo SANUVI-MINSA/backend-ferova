@@ -17,7 +17,7 @@ export class Patient {
         private gender: Gender,
         private facilityId: string | null,
         private status: PatientStatus,
-) {}
+    ) {}
 
     private ensureMotherExists(): void {
         if(!this.motherId) {
@@ -40,23 +40,22 @@ export class Patient {
         }
 
         this.status = PatientStatus.DISCHARGED;
+
+        this.nurseId = null;
+        this.facilityId = null;
     }
 
-    assignNurse(
-        nurseId: string,
-        facilityId: string
-    ): void {
-
-        if (this.nurseId) {
-            throw new Error(
-                "Patient already has an assigned nurse"
-            );
+    assignNurse(nurseId: string, facilityId: string): void {
+        // ✅ Si el paciente ya tiene enfermera y NO está dado de alta, lanzar error
+        if (this.nurseId && this.status !== PatientStatus.DISCHARGED) {
+            throw new Error("Patient already has an assigned nurse");
         }
 
-        this.nurseId =
-            nurseId;
-
+        // ✅ Si el paciente está dado de alta, permitir reasignación
+        this.nurseId = nurseId;
         this.facilityId = facilityId;
+        // Opcional: Reactivar el paciente automáticamente al reasignarlo
+        this.status = PatientStatus.ACTIVE;
     }
 
     public toPrimitives() {

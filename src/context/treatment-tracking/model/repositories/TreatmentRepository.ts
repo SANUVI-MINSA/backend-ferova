@@ -35,4 +35,7 @@ export interface TreatmentRepository {
     ): Promise<Treatment[]>;
 
     findAllActive(): Promise<Treatment[]>;
+
+    delete(treatmentId: string): Promise<void>;
+
 }
