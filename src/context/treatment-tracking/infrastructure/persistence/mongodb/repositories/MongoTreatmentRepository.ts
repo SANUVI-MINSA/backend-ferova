@@ -166,5 +166,8 @@ export class MongoTreatmentRepository
                 data
             );
     }
-    
+
+    async delete(treatmentId: string): Promise<void> {
+        await TreatmentModel.findOneAndDelete({ id: treatmentId });
+    }
 }

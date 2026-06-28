@@ -32,10 +32,10 @@ export class TreatmentCommandServiceImpl
         PatientRepository,
 
         private achievementRepository:
-            AchievementRepository,
+        AchievementRepository,
 
         private badgeRepository:
-            BadgeRepository,
+        BadgeRepository,
     ) {}
 
     async abandonTreatment(command: AbandonTreatmentCommand): Promise<any> {
@@ -310,92 +310,91 @@ export class TreatmentCommandServiceImpl
 
     async startTreatment(command: StartTreatmentCommand): Promise<any> {
         // Validar paciente
-
-        const patient =
-            await this
-                .patientRepository
-                .findById(
-                    command.patientId
-                );
+        const patient = await this.patientRepository.findById(command.patientId);
 
         if (!patient) {
+            throw new Error("Patient not found");
+        }
+
+        // ✅ Obtener TODOS los tratamientos del paciente
+        const existingTreatments = await this.treatmentRepository.findByPatientId(command.patientId);
+
+        // ✅ Verificar si tiene un tratamiento COMPLETED
+        const completedTreatments = existingTreatments.filter(
+            t => t.getStatus() === TreatmentStatus.COMPLETED
+        );
+
+        if (completedTreatments.length > 0) {
             throw new Error(
-                "Patient not found"
+                "Cannot start a new treatment. The patient has already completed a treatment. " +
+                "Please discharge the patient if they need a new treatment."
             );
         }
 
-        // Validar Tratamiento activo existente
+        // ✅ Verificar si tiene tratamientos ACTIVOS para eliminarlos
+        const activeTreatments = existingTreatments.filter(
+            t => t.getStatus() === TreatmentStatus.ACTIVE
+        );
 
-        const activeTreatment =
-            await this
-                .treatmentRepository
-                .findActiveByPatientId(
-                    command.patientId
-                );
+        if (activeTreatments.length > 0) {
+            for (const treatment of activeTreatments) {
+                console.log(`[startTreatment] Patient ${command.patientId} has an ACTIVE treatment. Deleting it...`);
+                await this.deleteTreatmentCompletely(treatment.getId());
+            }
+        }
 
-        if (activeTreatment) {
-            throw new Error(
-                "Patient already has an active treatment"
-            );
+        // ✅ Verificar si tiene tratamientos ABANDONADOS para eliminarlos
+        const abandonedTreatments = existingTreatments.filter(
+            t => t.getStatus() === TreatmentStatus.ABANDONED
+        );
+
+        if (abandonedTreatments.length > 0) {
+            for (const treatment of abandonedTreatments) {
+                console.log(`[startTreatment] Patient ${command.patientId} has an ABANDONED treatment. Deleting it...`);
+                await this.deleteTreatmentCompletely(treatment.getId());
+            }
         }
 
         // Fechas
-
-        const startDate =
-            new Date();
-
-        const endDate =
-            new Date();
-
-        endDate.setDate(
-            endDate.getDate() +
-            command.durationDays
-        );
-
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + command.durationDays);
 
         // Risk Inicial
-
-        const initialRisk =
-            new RiskScore(
-                randomUUID(),
-                10,
-                RiskLevel.LOW,
-                new Date()
-            )
+        const initialRisk = new RiskScore(
+            randomUUID(),
+            10,
+            RiskLevel.LOW,
+            new Date()
+        );
 
         // Crear Treatment
-
-        const treatment =
-            new Treatment(
-                randomUUID(),
-                command.patientId,
-                command.nurseId,
-                command.supplementName,
-                command.quantity,
-                command.dosingHours,
-                command.durationDays,
-                startDate,
-                endDate,
-                TreatmentStatus.ACTIVE,
-                100,
-                0,
-                0,
-                0,
-                null,
-                null,
-                initialRisk
-            );
+        const treatment = new Treatment(
+            randomUUID(),
+            command.patientId,
+            command.nurseId,
+            command.supplementName,
+            command.quantity,
+            command.dosingHours,
+            command.durationDays,
+            startDate,
+            endDate,
+            TreatmentStatus.ACTIVE,
+            100,
+            0,
+            0,
+            0,
+            null,
+            null,
+            initialRisk
+        );
 
         // Generar Daily Doses automaticamente
         const doses: DailyDose[] = [];
 
-        for (let i=0; i < command.durationDays; i++) {
-            const scheduledDate =
-                new Date(startDate);
-
-            scheduledDate.setDate(
-                startDate.getDate() + i
-            );
+        for (let i = 0; i < command.durationDays; i++) {
+            const scheduledDate = new Date(startDate);
+            scheduledDate.setDate(startDate.getDate() + i);
 
             doses.push(
                 new DailyDose(
@@ -408,17 +407,11 @@ export class TreatmentCommandServiceImpl
             );
         }
 
-        await this
-            .treatmentRepository
-            .save(treatment);
+        await this.treatmentRepository.save(treatment);
+        await this.dailyDoseRepository.saveMany(doses);
 
-        await this
-            .dailyDoseRepository
-            .saveMany(doses);
-
-        // ========== PUBLICAR EVENTO ==========
+        // Publicar evento para Achievements
         const patientData = patient!.toPrimitives();
-
 
         await eventPublisher.publish("TreatmentStarted", {
             treatmentId: treatment.getId(),
@@ -429,15 +422,11 @@ export class TreatmentCommandServiceImpl
             startDate: startDate,
             endDate: endDate
         });
-        // =====================================
 
         return {
-            message:
-                "Treatment started successfully",
-            treatment:
-                treatment.toPrimitives(),
-            totalGeneratedDoses:
-            doses.length
+            message: "Treatment started successfully",
+            treatment: treatment.toPrimitives(),
+            totalGeneratedDoses: doses.length
         };
     }
 
@@ -602,5 +591,36 @@ export class TreatmentCommandServiceImpl
             dose: dose.toPrimitives(),
             treatment: treatment.toPrimitives()
         };
+    }
+
+    /**
+     * ✅ ELIMINA completamente un tratamiento con todo lo asociado
+     * (dosis, achievements, badges)
+     */
+    private async deleteTreatmentCompletely(treatmentId: string): Promise<void> {
+        try {
+            console.log(`[deleteTreatmentCompletely] Deleting treatment ${treatmentId}...`);
+
+            // 1. Obtener todas las dosis del tratamiento
+            const doses = await this.dailyDoseRepository.findByTreatmentId(treatmentId);
+            const doseIds = doses.map(dose => dose.getId());
+
+            // 2. ELIMINAR dosis
+            if (doseIds.length > 0) {
+                await this.dailyDoseRepository.deleteMany(doseIds);
+                console.log(`[deleteTreatmentCompletely] Deleted ${doseIds.length} doses`);
+            }
+
+            // 3. ELIMINAR Achievement y Badges asociados
+            await this.deleteAchievementAndBadgesForTreatment(treatmentId);
+
+            // 4. ELIMINAR el tratamiento
+            await this.treatmentRepository.delete(treatmentId);
+            console.log(`[deleteTreatmentCompletely] Treatment ${treatmentId} deleted`);
+
+        } catch (error) {
+            console.error(`[deleteTreatmentCompletely] Error:`, error);
+            // No lanzamos el error para no interrumpir el nuevo tratamiento
+        }
     }
 }
