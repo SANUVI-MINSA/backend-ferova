@@ -1,3 +1,3 @@
 export type SearchMotherByDniQuery = Readonly<{
-    dni: string;
+    searchTerm: string;
 }>;

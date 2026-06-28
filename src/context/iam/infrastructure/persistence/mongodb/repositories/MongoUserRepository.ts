@@ -176,6 +176,20 @@ export class MongoUserRepository implements UserRepository {
         return UserMapper.toDomain(user);
     }
 
+    async findMothersBySearchTerm(
+        searchTerm: string
+    ): Promise<User[]> {
+        const term = searchTerm.trim();
+
+        // Buscar SOLO por DNI (coincidencia parcial)
+        const users = await UserModel.find({
+            role: 'Mother',
+            dni: { $regex: term, $options: 'i' }
+        });
+
+        return users.map(user => UserMapper.toDomain(user));
+    }
+
     async findNurseById(id: string): Promise<User | null> {
             const user =
                 await UserModel.findOne({

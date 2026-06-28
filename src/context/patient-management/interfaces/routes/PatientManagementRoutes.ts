@@ -61,7 +61,7 @@ const router = express.Router();
 router.post(
     "/register",
     authenticate,
-    requireMother,  // ✅ Solo madres autenticadas
+    requireMother,
     patientManagementController.registerPatient
 );
 
@@ -174,7 +174,7 @@ router.post(
  *               - weight
  *               - height
  *               - motivoConsulta
- *               - observaciones    // ✅ Ahora es requerido
+ *               - observaciones
  *             properties:
  *               patientId:
  *                 type: string
@@ -273,7 +273,7 @@ router.post(
     patientManagementController.registerHemoglobinControl
 );
 
-// En PatientManagementRoutes.ts
+
 /**
  * @swagger
  * /api/patients/medical-record/update:
@@ -386,28 +386,30 @@ router.put(
 
 /**
  * @swagger
- * /api/patients/mother/search/{dni}:
+ * /api/patients/mother/search/{searchTerm}:
  *   get:
- *     summary: Search mother by DNI
+ *     summary: Search mothers by DNI (partial match)
  *     tags:
  *       - Patients
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: dni
+ *         name: searchTerm
  *         required: true
  *         schema:
  *           type: string
- *         example: 76543210
+ *         description: "DNI de la madre (ejemplo: 123 o 12345678)"
  *     responses:
  *       200:
- *         description: Mother found successfully
+ *         description: Mothers found successfully
+ *       400:
+ *         description: Search term is required
  *       404:
- *         description: Mother not found
+ *         description: No mothers found with matching DNI
  */
 router.get(
-    "/mother/search/:dni",
+    "/mother/search/:searchTerm",
     authenticate,
     requireNurse,
     patientManagementController
@@ -581,6 +583,13 @@ router.get(
  *       - Patients
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: searchTerm
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: "Buscar por nombre o apellido (ejemplo: mari o perez)"
  *     responses:
  *       200:
  *         description: Eligible patients retrieved successfully
@@ -694,11 +703,18 @@ router.get(
  * @swagger
  * /api/patients/nurse:
  *   get:
- *     summary: Get patients assigned to a nurse
+ *     summary: Get patients assigned to nurse with search by name
  *     tags:
  *       - Patients
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: searchTerm
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: "Buscar por nombre o apellido (ejemplo: juan o perez)"
  *     responses:
  *       200:
  *         description: List of assigned patients retrieved successfully
@@ -735,7 +751,7 @@ router.get(
 router.get(
     "/:patientId/hemoglobin-evolution",
     authenticate,
-    requireMother,  // ✅ Solo madres, con validación de pertenencia
+    requireMother,
     patientManagementController.getHemoglobinEvolutionChart
 );
 
@@ -773,7 +789,6 @@ router.get(
     patientManagementController.getActivePatientsCount
 );
 
-// PatientManagementRoutes.ts
 /**
  * @swagger
  * /api/patients/{patientId}/medical-record/check:
@@ -847,7 +862,7 @@ router.get(
  */
 router.get(
     "/:id",
-    patientManagementController.getPatientBasicInfo  // ✅ Sin middlewares de autenticación
+    patientManagementController.getPatientBasicInfo
 );
 
 export default router;
