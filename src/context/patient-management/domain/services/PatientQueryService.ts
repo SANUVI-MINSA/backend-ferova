@@ -48,13 +48,13 @@ export interface PatientQueryService {
     ): Promise<Buffer>;
 
     getPatientsEligibleForDischarge(
-        query:
-        GetPatientsEligibleForDischargeQuery
-    ): Promise<any[]>;
+        query: GetPatientsEligibleForDischargeQuery
+    ): Promise<{ patients: any[]; total: number; searchTerm?: string }>;
 
     getPatientsAssignedToNurse(
         query: GetPatientsAssignedToNurseQuery
-    ): Promise<any[]>;
+    ): Promise<{ patients: any[]; total: number; searchTerm?: string }>;
+
 
     getHemoglobinEvolutionChart(
         query: GetHemoglobinEvolutionChartQuery
