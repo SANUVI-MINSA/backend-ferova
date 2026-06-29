@@ -482,45 +482,347 @@ Cambia el `status` del paciente de `ACTIVE` a `DISCHARGED`.
 
 ### `GET /nurse` — Listar pacientes asignados
 
-Retorna solo los pacientes con `status = ACTIVE` asignados a la enfermera autenticada.
+Retorna los pacientes con `status = ACTIVE` asignados a la enfermera autenticada.
 
-**Response `200 OK`:**
+**Reglas de negocio:**
+- Solo retorna pacientes con `status = ACTIVE`
+- `nurseId` se extrae del token (no se envía en la URL)
+- `searchTerm` es opcional y filtra por nombre completo
+
+**Query params:**
+
+| Parámetro | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `searchTerm` | string | ❌ | Filtra por nombre o apellido (coincidencia parcial) |
+
+**Status de respuesta:**
+
+| Status | Significado | Cuándo ocurre |
+|---|---|---|
+| `SUCCESS` | Datos cargados exitosamente | Hay pacientes asignados y no hay búsqueda |
+| `EMPTY` | Sin datos | No hay pacientes asignados |
+| `SEARCH_SUCCESS` | Búsqueda con resultados | La búsqueda encontró coincidencias |
+| `SEARCH_EMPTY` | Búsqueda sin resultados | La búsqueda no encontró coincidencias |
+
+**Escenario 1: Con pacientes asignados (sin búsqueda)**
+
+Request:
+```http
+GET /api/patients/nurse
+Authorization: Bearer <token>
+```
+
+Response `200 OK`:
 ```json
-[
-  {
-    "patientId": "660e8400-...",
-    "fullName": "Mateo Perez",
-    "gender": "MALE",
-    "status": "ACTIVE",
-    "facilityId": "770e8400-..."
+{
+  "success": true,
+  "status": "SUCCESS",
+  "message": "Pacientes asignados recuperados exitosamente",
+  "data": {
+    "patients": [
+      {
+        "patientId": "bd16a94a-7171-4f5b-a561-0cf10db13770",
+        "fullName": "Diana Lucia Briceño Vera",
+        "gender": "FEMALE",
+        "status": "ACTIVE",
+        "facilityId": "33e8ab63-2875-41b5-91f1-ac9a37d1ddc6"
+      },
+      {
+        "patientId": "8ad97c1d-7a3c-4101-b086-8551b0a85f6a",
+        "fullName": "Daniel Baca",
+        "gender": "MALE",
+        "status": "ACTIVE",
+        "facilityId": "33e8ab63-2875-41b5-91f1-ac9a37d1ddc6"
+      }
+    ],
+    "total": 2,
+    "nurseId": "770e8400-e29b-41d4-a716-446655440000"
   }
-]
+}
+```
+
+**Escenario 2: Sin pacientes asignados**
+
+Request:
+```http
+GET /api/patients/nurse
+Authorization: Bearer <token>
+```
+
+Response `200 OK`:
+```json
+{
+  "success": true,
+  "status": "EMPTY",
+  "message": "No tienes pacientes asignados actualmente",
+  "data": {
+    "patients": [],
+    "total": 0,
+    "nurseId": "770e8400-e29b-41d4-a716-446655440000"
+  }
+}
+```
+
+**UI Recomendada:**
+```
+┌─────────────────────────────────────────┐
+│  📋 Sin pacientes asignados             │
+│                                         │
+│  Actualmente no tienes pacientes        │
+│  asignados.                             │
+│                                         │
+│  [➕ Asignar paciente]                  │
+└─────────────────────────────────────────┘
+```
+
+**Escenario 3: Búsqueda con resultados**
+
+Request:
+```http
+GET /api/patients/nurse?searchTerm=Diana
+Authorization: Bearer <token>
+```
+
+Response `200 OK`:
+```json
+{
+  "success": true,
+  "status": "SEARCH_SUCCESS",
+  "message": "Se encontraron 1 paciente(s) que coinciden con \"Diana\"",
+  "data": {
+    "patients": [
+      {
+        "patientId": "bd16a94a-7171-4f5b-a561-0cf10db13770",
+        "fullName": "Diana Lucia Briceño Vera",
+        "gender": "FEMALE",
+        "status": "ACTIVE",
+        "facilityId": "33e8ab63-2875-41b5-91f1-ac9a37d1ddc6"
+      }
+    ],
+    "total": 1,
+    "searchTerm": "Diana",
+    "nurseId": "770e8400-e29b-41d4-a716-446655440000"
+  }
+}
+```
+
+**Escenario 4: Búsqueda sin resultados**
+
+Request:
+```http
+GET /api/patients/nurse?searchTerm=Gonzalez
+Authorization: Bearer <token>
+```
+
+Response `200 OK`:
+```json
+{
+  "success": true,
+  "status": "SEARCH_EMPTY",
+  "message": "No se encontraron pacientes asignados que coincidan con \"Gonzalez\"",
+  "data": {
+    "patients": [],
+    "total": 0,
+    "searchTerm": "Gonzalez",
+    "nurseId": "770e8400-e29b-41d4-a716-446655440000"
+  }
+}
+```
+
+**UI Recomendada:**
+```
+┌─────────────────────────────────────────┐
+│  🔍 No se encontraron resultados        │
+│                                         │
+│  No hay pacientes que coincidan con     │
+│  "Gonzalez"                             │
+└─────────────────────────────────────────┘
 ```
 
 **Errores `400`:**
 
 | Error | Causa |
 |---|---|
-| `Nurse ID no encontrado en el token` | Token inválido |
+| `Nurse ID no encontrado en el token` | Token inválido o sin claim `nurseId` |
 
 ---
 
 ### `GET /discharge/nurse` — Pacientes elegibles para alta
 
-Lista de pacientes activos asignados a la enfermera, disponibles para ser dados de alta (`status ≠ DISCHARGED`).
+Lista de pacientes activos asignados a la enfermera, disponibles para ser dados de alta.
 
-**Response `200 OK`:**
+**Reglas de negocio:**
+- Solo retorna pacientes con `status = ACTIVE`
+- `nurseId` se extrae del token (no se envía en la URL)
+- `searchTerm` es opcional y filtra por nombre completo
+
+**Query params:**
+
+| Parámetro | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `searchTerm` | string | ❌ | Filtra por nombre o apellido (coincidencia parcial) |
+
+**Status de respuesta:**
+
+| Status | Significado | Cuándo ocurre |
+|---|---|---|
+| `SUCCESS` | Datos cargados exitosamente | Hay pacientes elegibles y no hay búsqueda |
+| `EMPTY` | Sin datos | No hay pacientes elegibles para alta |
+| `SEARCH_SUCCESS` | Búsqueda con resultados | La búsqueda encontró coincidencias |
+| `SEARCH_EMPTY` | Búsqueda sin resultados | La búsqueda no encontró coincidencias |
+
+**Escenario 1: Con pacientes elegibles (sin búsqueda)**
+
+Request:
+```http
+GET /api/patients/discharge/nurse
+Authorization: Bearer <token>
+```
+
+Response `200 OK`:
 ```json
-[
-  { "id": "660e8400-...", "name": "Mateo", "lastName": "Perez", "status": "ACTIVE" }
-]
+{
+  "success": true,
+  "status": "SUCCESS",
+  "message": "Pacientes elegibles para alta recuperados exitosamente",
+  "data": {
+    "patients": [
+      {
+        "id": "660e8400-e29b-41d4-a716-446655440001",
+        "name": "Mateo",
+        "lastName": "Perez",
+        "gender": "MALE",
+        "status": "ACTIVE",
+        "nurseId": "770e8400-e29b-41d4-a716-446655440000",
+        "motherId": "550e8400-e29b-41d4-a716-446655440000",
+        "birthDate": "2023-05-10T00:00:00.000Z",
+        "facilityId": "33e8ab63-2875-41b5-91f1-ac9a37d1ddc6"
+      },
+      {
+        "id": "8ad97c1d-7a3c-4101-b086-8551b0a85f6a",
+        "name": "Daniel",
+        "lastName": "Baca",
+        "gender": "MALE",
+        "status": "ACTIVE",
+        "nurseId": "770e8400-e29b-41d4-a716-446655440000",
+        "motherId": "550e8400-e29b-41d4-a716-446655440001",
+        "birthDate": "2023-06-15T00:00:00.000Z",
+        "facilityId": "33e8ab63-2875-41b5-91f1-ac9a37d1ddc6"
+      }
+    ],
+    "total": 2,
+    "nurseId": "770e8400-e29b-41d4-a716-446655440000"
+  }
+}
+```
+
+**Escenario 2: Sin pacientes elegibles**
+
+Request:
+```http
+GET /api/patients/discharge/nurse
+Authorization: Bearer <token>
+```
+
+Response `200 OK`:
+```json
+{
+  "success": true,
+  "status": "EMPTY",
+  "message": "No hay pacientes elegibles para alta en este momento",
+  "data": {
+    "patients": [],
+    "total": 0,
+    "nurseId": "770e8400-e29b-41d4-a716-446655440000"
+  }
+}
+```
+
+**UI Recomendada:**
+```
+┌─────────────────────────────────────────┐
+│  🏥 Sin pacientes para alta             │
+│                                         │
+│  No hay pacientes elegibles para dar    │
+│  de alta en este momento.               │
+│                                         │
+│  [➕ Asignar paciente]                  │
+└─────────────────────────────────────────┘
+```
+
+**Escenario 3: Búsqueda con resultados**
+
+Request:
+```http
+GET /api/patients/discharge/nurse?searchTerm=Carlos
+Authorization: Bearer <token>
+```
+
+Response `200 OK`:
+```json
+{
+  "success": true,
+  "status": "SEARCH_SUCCESS",
+  "message": "Se encontraron 1 paciente(s) elegibles para alta que coinciden con \"Carlos\"",
+  "data": {
+    "patients": [
+      {
+        "id": "660e8400-e29b-41d4-a716-446655440001",
+        "name": "Carlos",
+        "lastName": "Lopez",
+        "gender": "MALE",
+        "status": "ACTIVE",
+        "nurseId": "770e8400-e29b-41d4-a716-446655440000",
+        "motherId": "550e8400-e29b-41d4-a716-446655440000",
+        "birthDate": "2023-05-10T00:00:00.000Z",
+        "facilityId": "33e8ab63-2875-41b5-91f1-ac9a37d1ddc6"
+      }
+    ],
+    "total": 1,
+    "searchTerm": "Carlos",
+    "nurseId": "770e8400-e29b-41d4-a716-446655440000"
+  }
+}
+```
+
+**Escenario 4: Búsqueda sin resultados**
+
+Request:
+```http
+GET /api/patients/discharge/nurse?searchTerm=Ana
+Authorization: Bearer <token>
+```
+
+Response `200 OK`:
+```json
+{
+  "success": true,
+  "status": "SEARCH_EMPTY",
+  "message": "No se encontraron pacientes elegibles para alta que coincidan con \"Ana\"",
+  "data": {
+    "patients": [],
+    "total": 0,
+    "searchTerm": "Ana",
+    "nurseId": "770e8400-e29b-41d4-a716-446655440000"
+  }
+}
+```
+
+**UI Recomendada:**
+```
+┌─────────────────────────────────────────┐
+│  🔍 No se encontraron resultados        │
+│                                         │
+│  No hay pacientes elegibles para alta   │
+│  que coincidan con "Ana"                │
+└─────────────────────────────────────────┘
 ```
 
 **Errores `400`:**
 
 | Error | Causa |
 |---|---|
-| `Nurse ID no encontrado en el token` | Token inválido |
+| `Nurse ID no encontrado en el token` | Token inválido o sin claim `nurseId` |
 
 ---
 
@@ -672,13 +974,29 @@ Content-Disposition: attachment; filename=hemoglobin-report.pdf
 
 ---
 
-### `GET /mother/search/{dni}` — Buscar madre por DNI
+### `GET /mother/search/{search}` — Buscar madre por DNI
 
 **Reglas de negocio:** El DNI debe tener exactamente 8 dígitos numéricos.
 
 **Path params:** `dni` — 8 dígitos
 
-**Response `200 OK`:**
+
+```
+searchTermin: "123..."
+```
+
+```json
+{
+  "motherId": "550e8400-...",
+  "fullName": "Diana Carrillo",
+  "dni": "12345678"
+}
+```
+
+```
+searchTermin: "12345678"
+```
+
 ```json
 {
   "motherId": "550e8400-...",
@@ -689,9 +1007,13 @@ Content-Disposition: attachment; filename=hemoglobin-report.pdf
 
 **Errores `400`:**
 
-| Error | Causa |
-|---|---|
-| `Mother not found` | No existe madre con ese DNI |
+```
+searchTermin: "12345"
+```
+
+```json
+  { "error": "No mothers found matching the search criteria" }
+```
 
 ---
 
@@ -828,7 +1150,7 @@ No requiere autenticación.
 | `GET` | `/medical-record/{medicalRecordId}/controls` |
 | `GET` | `/medical-record/{medicalRecordId}/pdf` |
 | `GET` | `/medical-record/{medicalRecordId}/hemoglobin-report` |
-| `GET` | `/mother/search/{dni}` |
+| `GET` | `/mother/search/{searchterm}` |
 | `GET` | `/mother/{motherId}` |
 | `GET` | `/nurse/active-count` |
 

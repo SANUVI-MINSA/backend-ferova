@@ -258,22 +258,52 @@ export class PatientManagementController {
 
     getEligiblePatientsForDischarge = async (req: AuthRequest, res: Response) => {
         try {
-            // Obtener nurseId del token, no de params
             const nurseId = req.user?.nurseId;
 
             if (!nurseId) {
                 return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
             }
 
-            // Obtener searchTerm del query string
             const searchTerm = req.query.searchTerm as string;
 
-            const patients = await this.patientFacade.getPatientsEligibleForDischarge({nurseId, searchTerm});
+            const result = await this.patientFacade.getPatientsEligibleForDischarge({ nurseId, searchTerm });
 
-            res.status(200).json(patients);
+            // Determinar status y mensaje
+            let status: 'SUCCESS' | 'EMPTY' | 'SEARCH_EMPTY' | 'SEARCH_SUCCESS';
+            let message = "";
+
+            if (result.total === 0 && result.searchTerm) {
+                status = 'SEARCH_EMPTY';
+                message = `No se encontraron pacientes elegibles para alta que coincidan con "${result.searchTerm}"`;
+            } else if (result.total === 0 && !result.searchTerm) {
+                status = 'EMPTY';
+                message = "No hay pacientes elegibles para alta en este momento";
+            } else if (result.total > 0 && result.searchTerm) {
+                status = 'SEARCH_SUCCESS';
+                message = `Se encontraron ${result.total} paciente(s) elegibles para alta que coinciden con "${result.searchTerm}"`;
+            } else {
+                status = 'SUCCESS';
+                message = "Pacientes elegibles para alta recuperados exitosamente";
+            }
+
+            res.status(200).json({
+                success: true,
+                status,  // ← NUEVO campo
+                message,
+                data: {
+                    patients: result.patients,
+                    total: result.total,
+                    ...(result.searchTerm && { searchTerm: result.searchTerm }),
+                    nurseId
+                }
+            });
 
         } catch (error: any) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({
+                success: false,
+                status: 'ERROR',
+                error: error.message
+            });
         }
     };
 
@@ -357,22 +387,56 @@ export class PatientManagementController {
 
     getPatientsAssignedToNurse = async (req: AuthRequest, res: Response) => {
         try {
-            // Obtener nurseId del token, no de params
             const nurseId = req.user?.nurseId;
 
             if (!nurseId) {
                 return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
             }
 
-            // Obtener searchTerm del query string (SOLO nombre/apellido)
             const searchTerm = req.query.searchTerm as string;
 
-            const patients = await this.patientFacade.getPatientsAssignedToNurse({nurseId, searchTerm});
+            const result = await this.patientFacade.getPatientsAssignedToNurse({ nurseId, searchTerm });
 
-            res.status(200).json(patients);
+            // Determinar status y mensaje
+            let status: 'SUCCESS' | 'EMPTY' | 'SEARCH_EMPTY' | 'SEARCH_SUCCESS';
+            let message = "";
+
+            if (result.total === 0 && result.searchTerm) {
+                // Búsqueda SIN resultados
+                status = 'SEARCH_EMPTY';
+                message = `No se encontraron pacientes asignados que coincidan con "${result.searchTerm}"`;
+            } else if (result.total === 0 && !result.searchTerm) {
+                // Sin pacientes asignados
+                status = 'EMPTY';
+                message = "No tienes pacientes asignados actualmente";
+            } else if (result.total > 0 && result.searchTerm) {
+                // Búsqueda CON resultados
+                status = 'SEARCH_SUCCESS';
+                message = `Se encontraron ${result.total} paciente(s) que coinciden con "${result.searchTerm}"`;
+            } else {
+                // Con pacientes pero sin búsqueda
+                status = 'SUCCESS';
+                message = "Pacientes asignados recuperados exitosamente";
+            }
+
+            res.status(200).json({
+                success: true,
+                status,  // ← NUEVO campo
+                message,
+                data: {
+                    patients: result.patients,
+                    total: result.total,
+                    ...(result.searchTerm && { searchTerm: result.searchTerm }),
+                    nurseId
+                }
+            });
 
         } catch (error: any) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({
+                success: false,
+                status: 'ERROR',
+                error: error.message
+            });
         }
     };
 

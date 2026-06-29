@@ -156,26 +156,15 @@ export class PatientManagementFacade {
     }
 
     async getPatientsEligibleForDischarge(
-        query:
-        GetPatientsEligibleForDischargeQuery
-    ): Promise<any[]> {
-        return await this
-            .queryService
-            .getPatientsEligibleForDischarge(
-                query
-            );
+        query: GetPatientsEligibleForDischargeQuery
+    ): Promise<{ patients: any[]; total: number; searchTerm?: string }> {
+        return await this.queryService.getPatientsEligibleForDischarge(query);
     }
 
     async getPatientsAssignedToNurse(
-        query:
-        GetPatientsAssignedToNurseQuery
-    ): Promise<any[]> {
-
-        return await this
-            .queryService
-            .getPatientsAssignedToNurse(
-                query
-            );
+        query: GetPatientsAssignedToNurseQuery
+    ): Promise<{ patients: any[]; total: number; searchTerm?: string }> {
+        return await this.queryService.getPatientsAssignedToNurse(query);
     }
 
     async getHemoglobinEvolutionChart(
