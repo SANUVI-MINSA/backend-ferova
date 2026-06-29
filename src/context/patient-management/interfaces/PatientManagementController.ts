@@ -258,14 +258,17 @@ export class PatientManagementController {
 
     getEligiblePatientsForDischarge = async (req: AuthRequest, res: Response) => {
         try {
-            // ✅ Obtener nurseId del token, no de params
+            // Obtener nurseId del token, no de params
             const nurseId = req.user?.nurseId;
 
             if (!nurseId) {
                 return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
             }
 
-            const patients = await this.patientFacade.getPatientsEligibleForDischarge({ nurseId });
+            // Obtener searchTerm del query string
+            const searchTerm = req.query.searchTerm as string;
+
+            const patients = await this.patientFacade.getPatientsEligibleForDischarge({nurseId, searchTerm});
 
             res.status(200).json(patients);
 
@@ -336,15 +339,16 @@ export class PatientManagementController {
                 return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
             }
 
-            const dni = req.params.dni as string;
+            // Obtener searchTerm de params (SOLO DNI)
+            const searchTerm = req.params.searchTerm as string;
 
-            if (!dni) {
-                return res.status(400).json({ error: "DNI es requerido" });
+            if (!searchTerm) {
+                return res.status(400).json({ error: "Search term es requerido" });
             }
 
-            const mother = await this.patientFacade.searchMotherByDni({ dni });
+            const mothers = await this.patientFacade.searchMotherByDni({ searchTerm });
 
-            res.status(200).json(mother);
+            res.status(200).json(mothers);
 
         } catch (error: any) {
             res.status(400).json({ error: error.message });
@@ -353,14 +357,17 @@ export class PatientManagementController {
 
     getPatientsAssignedToNurse = async (req: AuthRequest, res: Response) => {
         try {
-            // ✅ Obtener nurseId del token, no de params
+            // Obtener nurseId del token, no de params
             const nurseId = req.user?.nurseId;
 
             if (!nurseId) {
                 return res.status(400).json({ error: "Nurse ID no encontrado en el token" });
             }
 
-            const patients = await this.patientFacade.getPatientsAssignedToNurse({ nurseId });
+            // Obtener searchTerm del query string (SOLO nombre/apellido)
+            const searchTerm = req.query.searchTerm as string;
+
+            const patients = await this.patientFacade.getPatientsAssignedToNurse({nurseId, searchTerm});
 
             res.status(200).json(patients);
 

@@ -42,4 +42,8 @@ export interface UserRepository {
     ): Promise<User | null>;
 
     findAllNurses(): Promise<User[]>;
+
+    findMothersBySearchTerm(
+        searchTerm: string
+    ): Promise<User[]>;
 }
