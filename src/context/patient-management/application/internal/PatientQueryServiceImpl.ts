@@ -31,6 +31,74 @@ export class PatientQueryServiceImpl
     ) {
     }
 
+    // MÉTODO PRIVADO: Filtro para pacientes elegibles (nombre y apellido)
+
+    private filterPatientsBySearchTerm<T extends { name: string; lastName: string }>(
+        items: T[],
+        searchTerm?: string
+    ): T[] {
+        if (!searchTerm) return items;
+
+        const terms = searchTerm.trim().toLowerCase().split(/\s+/);
+
+        return items.filter(item => {
+            const fullName = `${item.name} ${item.lastName}`.toLowerCase();
+            const nameLower = item.name.toLowerCase();
+            const lastNameLower = item.lastName.toLowerCase();
+
+            if (terms.length === 1) {
+                const term = terms[0];
+                return (
+                    nameLower.includes(term) ||
+                    lastNameLower.includes(term) ||
+                    fullName.includes(term)
+                );
+            }
+
+            return terms.every(term =>
+                nameLower.includes(term) ||
+                lastNameLower.includes(term) ||
+                fullName.includes(term)
+            );
+        });
+    }
+
+    // MÉTODO PRIVADO: Filtro para madres (SOLO DNI)
+    private filterMothersByDNI(
+        mothers: any[],
+        searchTerm?: string
+    ): any[] {
+        if (!searchTerm) return mothers;
+
+        const term = searchTerm.trim();
+
+        return mothers.filter(mother => {
+            const dni = mother.dni || '';
+            return dni.includes(term);
+        });
+    }
+
+    // MÉTODO PRIVADO: Filtro para pacientes asignados (SOLO nombre y apellido)
+    private filterAssignedPatientsByName(
+        items: any[],
+        searchTerm?: string
+    ): any[] {
+        if (!searchTerm) return items;
+
+        const terms = searchTerm.trim().toLowerCase().split(/\s+/);
+
+        return items.filter(item => {
+            const fullName = item.fullName.toLowerCase();
+
+            if (terms.length === 1) {
+                const term = terms[0];
+                return fullName.includes(term);
+            }
+
+            return terms.every(term => fullName.includes(term));
+        });
+    }
+
     async getPatientBasicInfo(
         query: GetPatientBasicInfoQuery
     ): Promise<{ id: string; name: string; lastName: string } | null> {
@@ -161,20 +229,20 @@ export class PatientQueryServiceImpl
                 controls: [],
                 averageHemoglobin: 0,
                 totalControls: 0,
-                evolution: null, // ✅ Sin evolución si no hay controles
-                trend: null      // ✅ Tendencia: 'UP', 'DOWN', 'STABLE'
+                evolution: null, // Sin evolución si no hay controles
+                trend: null      // Tendencia: 'UP', 'DOWN', 'STABLE'
             };
         }
 
         const levels = controls.map((c: any) => c.hemoglobinLevel);
         const average = levels.reduce((a: number, b: number) => a + b, 0) / levels.length;
 
-        // ✅ Calcular evolución (primer control - último control)
+        // Calcular evolución (primer control - último control)
         const firstControl = levels[0];
         const lastControl = levels[levels.length - 1];
         const evolution = lastControl - firstControl; // Positivo = subió, Negativo = bajó
 
-        // ✅ Determinar tendencia
+        // Determinar tendencia
         let trend: 'UP' | 'DOWN' | 'STABLE' = 'STABLE';
         if (evolution > 0) trend = 'UP';
         if (evolution < 0) trend = 'DOWN';
@@ -185,8 +253,8 @@ export class PatientQueryServiceImpl
             controls,
             averageHemoglobin: average,
             totalControls: controls.length,
-            evolution: evolution,           // ✅ Valor numérico (ej: +0.5, -0.3)
-            trend: trend,                   // ✅ Tendencia para el frontend
+            evolution: evolution,           // Valor numérico (ej: +0.5, -0.3)
+            trend: trend,                   // Tendencia para el frontend
         };
     }
     async getMedicalRecord(
@@ -224,22 +292,22 @@ export class PatientQueryServiceImpl
     }
 
     async getPatientsEligibleForDischarge(
-        query:
-        GetPatientsEligibleForDischargeQuery
-    ): Promise<any[]> {
+        query: GetPatientsEligibleForDischargeQuery
+    ): Promise<{ patients: any[]; total: number; searchTerm?: string }> {
+        const patients = await this.patientRepository.findPatientsEligibleForDischarge(query.nurseId);
 
-        const patients =
-            await this
-                .patientRepository
-                .findPatientsEligibleForDischarge(
-                    query.nurseId
-                );
+        let patientData = patients.map(patient => patient.toPrimitives());
 
-        return patients.map(
-            patient =>
-                patient
-                    .toPrimitives()
-        );
+        // Filtrar por searchTerm si existe (nombre y apellido)
+        if (query.searchTerm) {
+            patientData = this.filterPatientsBySearchTerm(patientData, query.searchTerm);
+        }
+
+        return {
+            patients: patientData,
+            total: patientData.length,
+            searchTerm: query.searchTerm || undefined
+        };
     }
 
     async listPatientsByMother(
@@ -288,72 +356,72 @@ export class PatientQueryServiceImpl
         query: SearchMotherByDniQuery
     ): Promise<any> {
 
-        const mother =
-            await this.userRepository
-                .findMotherByDni(
-                    query.dni
-                );
+        const { searchTerm } = query;
 
-        if (!mother) {
-            throw new Error(
-                "Mother not found"
-            );
+        if (!searchTerm) {
+            throw new Error("Search term is required");
         }
 
-        const data =
-            mother.toPrimitives();
+        // Buscar madres en el repositorio
+        const mothers =
+            await this.userRepository
+                .findMothersBySearchTerm(
+                    searchTerm
+                );
 
-        return {
-            motherId: data.id,
-            fullName:
-                `${data.name} ${data.lastname}`,
-            dni: data.dni
-        };
+        if (!mothers || mothers.length === 0) {
+            throw new Error("No mothers found matching the search criteria");
+        }
+
+        // Convertir a primitivos
+        let motherData = mothers.map(
+            mother => mother.toPrimitives()
+        );
+
+        // Filtrar SOLO por DNI (coincidencia parcial)
+        motherData = this.filterMothersByDNI(motherData, searchTerm);
+
+        if (motherData.length === 0) {
+            throw new Error("No mothers found with matching DNI");
+        }
+
+        return motherData.map(mother => ({
+            motherId: mother.id,
+            fullName: `${mother.name} ${mother.lastname || ''}`.trim(),
+            dni: mother.dni
+        }));
     }
 
     async getPatientsAssignedToNurse(
         query: GetPatientsAssignedToNurseQuery
-    ): Promise<any[]> {
+    ): Promise<{ patients: any[]; total: number; searchTerm?: string }> {
+        const patients = await this.patientRepository.findByNurseId(query.nurseId);
 
-        const patients =
-            await this
-                .patientRepository
-                .findByNurseId(
-                    query.nurseId
-                );
-
-        const activePatients =
-            patients.filter(
-                patient =>
-                    patient
-                        .toPrimitives()
-                        .status !== "DISCHARGED"
-            );
-
-        return activePatients.map(
-            patient => {
-
-                const data =
-                    patient.toPrimitives();
-
-                return {
-                    patientId:
-                    data.id,
-
-                    fullName:
-                        `${data.name} ${data.lastName}`,
-
-                    gender:
-                    data.gender,
-
-                    status:
-                    data.status,
-
-                    facilityId:
-                    data.facilityId
-                };
-            }
+        const activePatients = patients.filter(
+            patient => patient.toPrimitives().status !== "DISCHARGED"
         );
+
+        let patientData = activePatients.map(patient => {
+            const data = patient.toPrimitives();
+            return {
+                patientId: data.id,
+                fullName: `${data.name} ${data.lastName}`,
+                gender: data.gender,
+                status: data.status,
+                facilityId: data.facilityId
+            };
+        });
+
+        // Filtrar SOLO por nombre y apellido (NO por ID)
+        if (query.searchTerm) {
+            patientData = this.filterAssignedPatientsByName(patientData, query.searchTerm);
+        }
+
+        return {
+            patients: patientData,
+            total: patientData.length,
+            searchTerm: query.searchTerm || undefined
+        };
     }
 
     async getHemoglobinEvolutionChart(
