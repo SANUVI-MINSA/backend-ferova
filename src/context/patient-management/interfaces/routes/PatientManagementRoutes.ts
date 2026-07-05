@@ -126,7 +126,7 @@ router.get(
  *               patientId:
  *                 type: string
  *     responses:
- *       200:
+ *       201:
  *         description: Nurse assigned successfully
  *         content:
  *           application/json:
