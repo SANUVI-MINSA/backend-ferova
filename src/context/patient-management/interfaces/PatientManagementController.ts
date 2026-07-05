@@ -56,7 +56,7 @@ export class PatientManagementController {
 
             await this.patientFacade.assignPatientToNurse(command);
 
-            res.status(200).json({ message: "Patient assigned successfully" });
+            res.status(201).json({ message: "Patient assigned successfully" });
 
         } catch (error: any) {
             res.status(400).json({ error: error.message });
@@ -115,7 +115,7 @@ export class PatientManagementController {
 
             await this.patientFacade.registerHemoglobinControl(command);
 
-            res.status(200).json({ message: "Hemoglobin control registered successfully" });
+            res.status(201).json({ message: "Hemoglobin control registered successfully" });
 
         } catch (error: any) {
             res.status(400).json({ error: error.message });
